@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #0f1017;
+    --surface-1: #181922;
+    --surface-2: #212330;
+    --surface-3: #2a2d3d;
+    --border-subtle: #33374a;
+    --accent-lavender: #c0c1ff;
+    --accent-indigo: #4f46e5;
+    --alert-crimson: #dc2626;
+    --alert-light: #fca5a5;
+    --warning-amber: #d97706;
+    --biosecure-green: #16a34a;
+
+    font-size: 16px;
+  }
+
+  @media (min-width: 1440px) {
+    :root {
+      font-size: 17px;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    :root {
+      font-size: 18px;
+    }
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: #f8fafc;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom Clean Typography & Layout Scaling */
+.font-display {
+  font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+.font-sans {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Glassmorphism & Custom Surfaces */
+.glass-surface {
+  background: rgba(24, 25, 34, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(51, 55, 74, 0.8);
+}
+
+.surface-card {
+  background-color: #181922;
+  border: 1px solid #2d3142;
+  transition: all 0.2s ease-in-out;
+}
+
+.surface-card:hover {
+  border-color: rgba(192, 193, 255, 0.45);
+  box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.5);
+}
+
+.surface-elevated {
+  background-color: #212330;
+  border: 1px solid #33374a;
+}
+
+/* Glow effects */
+.glow-lavender {
+  box-shadow: 0 0 30px -5px rgba(192, 193, 255, 0.4);
+}
+
+.glow-crimson {
+  box-shadow: 0 0 30px -5px rgba(220, 38, 38, 0.55);
+}
+
+.glow-green {
+  box-shadow: 0 0 30px -5px rgba(22, 163, 74, 0.45);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f1017;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a2d3d;
+  border-radius: 9999px;
+  border: 2px solid #33374a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c0c1ff;
+}
+
+/* Pulse Keyframes for Urgent Alerts */
+@keyframes urgent-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
+    border-color: rgba(220, 38, 38, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 20px 6px rgba(220, 38, 38, 0.45);
+    border-color: rgba(252, 165, 165, 1);
+  }
+}
+
+.animate-urgent {
+  animation: urgent-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}

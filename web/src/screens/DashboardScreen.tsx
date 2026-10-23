@@ -1,351 +1,594 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { api, type RecentChecklistActivity } from '../services/api';
 import { useApp } from '../context/AppContext';
 import {
-  ShieldCheck,
-  AlertTriangle,
-  Building2,
-  ClipboardList,
-  Activity,
-  ArrowUpRight,
-  TrendingUp,
-  ChevronRight,
-  AlertCircle,
-  Info,
-  Clock,
+  ShieldCheck, AlertTriangle, Building2, ClipboardList, Activity,
+  ArrowUpRight, TrendingUp, ChevronRight, AlertCircle, Info, Clock,
+  RefreshCw, CheckCircle2,
 } from 'lucide-react';
+
+type Farm = { _id?: string; id?: string; name?: string; farmType?: string; location?: string };
+type Audit = { _id?: string; id?: string; title?: string; status?: string; dueDate?: string; riskLevel?: string; createdAt?: string; farmId?: any };
+type DiseaseReport = { _id?: string; id?: string; symptoms?: string; severity?: string; status?: string; animalType?: string; createdAt?: string; farmId?: any; description?: string };
+
+async function fetchCollection<T>(endpoint: string): Promise<T[]> {
+  const base = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
+  const response = await fetch(`${base}${endpoint}`);
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(`Non-JSON response from ${endpoint} (${response.status}). Check backend route and VITE_API_URL.`);
+  }
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || `Failed to load ${endpoint}`);
+  return Array.isArray(result.data) ? result.data : [];
+}
+
+type Stats = {
+  totalFarms: number; totalVisitors: number; totalAudits: number; pendingAudits: number;
+  totalDiseaseReports: number; activeDiseaseReports: number; totalInventoryItems: number; lowStockItems: number;
+};
+
+const emptyStats: Stats = {
+  totalFarms: 0, totalVisitors: 0, totalAudits: 0, pendingAudits: 0,
+  totalDiseaseReports: 0, activeDiseaseReports: 0, totalInventoryItems: 0, lowStockItems: 0,
+};
+
+const emptyChecklist = {
+  totalSubmissions: 0, totalItems: 0, passed: 0, warning: 0, critical: 0, compliancePercentage: 0,
+};
+
+/* ── Shared sub-components ── */
+const MetricCard: React.FC<{
+  label: string;
+  value: string | number;
+  sub?: string;
+  subColor?: string;
+  icon: React.ReactNode;
+  loading: boolean;
+  onClick?: () => void;
+  accentStyle?: React.CSSProperties;
+}> = ({ label, value, sub, subColor, icon, loading, onClick, accentStyle }) => (
+  <button
+    onClick={onClick}
+    className="fd-card-hover text-left p-5 flex flex-col justify-between min-h-[120px]"
+    disabled={!onClick}
+  >
+    <div className="flex items-center justify-between">
+      <span className="fd-label">{label}</span>
+      <span style={{ color: 'var(--lime)', ...accentStyle }}>{icon}</span>
+    </div>
+    <div>
+      <span
+        className="font-display text-4xl leading-none"
+        style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, color: 'var(--text-primary)' }}
+      >
+        {loading ? '—' : value}
+      </span>
+      {sub && (
+        <p className="text-xs font-medium mt-1" style={{ color: subColor || 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
+          {sub}
+        </p>
+      )}
+    </div>
+  </button>
+);
+
+const SectionHeader: React.FC<{ title: string; icon: React.ReactNode; action?: { label: string; onClick: () => void } }> = ({ title, icon, action }) => (
+  <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center gap-2">
+      <span style={{ color: 'var(--lime)' }}>{icon}</span>
+      <h3 className="text-sm font-bold uppercase tracking-wider" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
+        {title}
+      </h3>
+    </div>
+    {action && (
+      <button
+        onClick={action.onClick}
+        className="text-xs font-bold flex items-center gap-1 transition-colors"
+        style={{ color: 'var(--lime)', fontFamily: 'IBM Plex Mono, monospace' }}
+        onMouseOver={(e) => (e.currentTarget.style.color = 'var(--lime-dim)')}
+        onMouseOut={(e) => (e.currentTarget.style.color = 'var(--lime)')}
+      >
+        {action.label} <ChevronRight className="w-3.5 h-3.5" />
+      </button>
+    )}
+  </div>
+);
 
 export const DashboardScreen: React.FC = () => {
   const { navigateTo, userProfile } = useApp();
+  const [stats, setStats] = useState<Stats>(emptyStats);
+  const [checklistSummary, setChecklistSummary] = useState(emptyChecklist);
+  const [recentChecklistActivity, setRecentChecklistActivity] = useState<RecentChecklistActivity[]>([]);
+  const [farms, setFarms] = useState<Farm[]>([]);
+  const [audits, setAudits] = useState<Audit[]>([]);
+  const [diseaseReports, setDiseaseReports] = useState<DiseaseReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState('');
+
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
+    setApiError('');
+    try {
+      const [summaryResponse, farmData, auditData, diseaseData] = await Promise.all([
+        api.getDashboardSummary(),
+        fetchCollection<Farm>('/farms'),
+        fetchCollection<Audit>('/audits'),
+        fetchCollection<DiseaseReport>('/disease-reports'),
+      ]);
+
+      if (!summaryResponse?.success) throw new Error('Dashboard summary could not be loaded.');
+
+      const base = summaryResponse.data;
+      const normalizedAudits = auditData.map((a) => ({ ...a, status: String(a.status || 'pending').toLowerCase() }));
+      const normalizedReports = diseaseData.map((r) => ({ ...r, status: String(r.status || 'reported').toLowerCase() }));
+
+      setFarms(farmData);
+      setAudits(normalizedAudits);
+      setDiseaseReports(normalizedReports);
+      setStats({
+        totalFarms:           Number(base.totalFarms           ?? farmData.length),
+        totalVisitors:        Number(base.totalVisitors         ?? 0),
+        totalAudits:          Number(base.totalAudits           ?? auditData.length),
+        pendingAudits:        Number(base.pendingAudits         ?? normalizedAudits.filter((a) => a.status !== 'completed').length),
+        totalDiseaseReports:  Number(base.totalDiseaseReports   ?? diseaseData.length),
+        activeDiseaseReports: Number(base.activeDiseaseReports  ?? normalizedReports.filter((r) => r.status !== 'resolved').length),
+        totalInventoryItems:  Number(base.totalInventoryItems   ?? 0),
+        lowStockItems:        Number(base.lowStockItems         ?? 0),
+      });
+      setChecklistSummary(base.checklistSummary ?? emptyChecklist);
+      setRecentChecklistActivity(base.recentChecklistActivity ?? []);
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : 'Unable to connect to the backend.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadDashboard();
+    const onUpdate = () => void loadDashboard();
+    const events = [
+      'farms-updated', 'visitors-updated', 'audits-updated',
+      'disease-reports-updated', 'inventory-updated', 'checklist-submitted',
+    ];
+    events.forEach((e) => window.addEventListener(e, onUpdate));
+    return () => events.forEach((e) => window.removeEventListener(e, onUpdate));
+  }, [loadDashboard]);
+
+  const urgentReports = diseaseReports.filter((r) => {
+    const severity = String(r.severity || '').toLowerCase();
+    return r.status !== 'resolved' && ['urgent', 'critical', 'high', 'severe'].includes(severity);
+  });
+  const activeReports = diseaseReports.filter((r) => r.status !== 'resolved');
+  const pendingAudits = audits.filter((a) => a.status !== 'completed');
+  const recentAlerts = [
+    ...activeReports.map((r) => ({
+      id: String(r._id || r.id), title: r.symptoms || 'Disease report',
+      detail: `${r.farmId && typeof r.farmId === 'object' ? r.farmId.name || 'Farm' : 'Farm'} · ${r.animalType || 'Animal type not recorded'}`,
+      severity: String(r.severity || 'unknown').toLowerCase(),
+      time: r.createdAt ? new Date(r.createdAt).toLocaleString() : 'Date not recorded',
+      kind: 'disease' as const,
+    })),
+    ...pendingAudits.map((a) => ({
+      id: String(a._id || a.id), title: a.title || 'Pending audit',
+      detail: 'Audit requires completion',
+      severity: String(a.riskLevel || 'routine').toLowerCase(),
+      time: a.createdAt ? new Date(a.createdAt).toLocaleString() : 'Date not recorded',
+      kind: 'audit' as const,
+    })),
+  ].slice(0, 5);
+
+  const urgentCount = urgentReports.length;
+  const auditScore = stats.totalAudits ? Math.round(((stats.totalAudits - stats.pendingAudits) / stats.totalAudits) * 100) : 0;
+  const compliancePct = checklistSummary.compliancePercentage;
 
   return (
-    <div className="space-y-8 pb-20 animate-fadeIn font-sans">
-      {/* 1. Biosecurity Score Gauge Card */}
-      <div className="surface-card rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-[#2d3142] shadow-xl">
-        {/* Glow backdrop */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[#4f46e5]/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="w-full space-y-6 pb-20 animate-fadeIn">
 
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-8 relative z-10">
-          {/* Circular SVG Gauge (Clicking routes to Health Overview) */}
-          <div
-            onClick={() => navigateTo('health')}
-            className="cursor-pointer group flex flex-col items-center text-center flex-shrink-0"
-            title="Click to open Farm Health Overview"
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <p className="fd-label mb-1">FarmDrishti / Dashboard</p>
+          <h1
+            className="text-2xl sm:text-3xl font-bold leading-tight"
+            style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
           >
-            <div className="relative w-48 h-48 sm:w-52 sm:h-52 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  stroke="#212330"
-                  strokeWidth="10"
-                  fill="transparent"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  stroke="url(#scoreGradient)"
-                  strokeWidth="10"
-                  strokeDasharray={2 * Math.PI * 42}
-                  strokeDashoffset={2 * Math.PI * 42 * (1 - 0.82)}
-                  strokeLinecap="round"
-                  fill="transparent"
-                  className="transition-all duration-1000 ease-out group-hover:stroke-[#c0c1ff]"
-                />
-                <defs>
-                  <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#16a34a" />
-                    <stop offset="100%" stopColor="#c0c1ff" />
-                  </linearGradient>
-                </defs>
-              </svg>
-
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-display text-5xl sm:text-6xl text-white tracking-tight group-hover:scale-105 transition-transform">
-                  82
-                </span>
-                <span className="text-xs sm:text-sm font-sans text-slate-300 uppercase tracking-wider font-extrabold mt-1">
-                  out of 100
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-3 flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#16a34a]/20 border border-[#16a34a]/50 text-[#4CAF50] text-sm font-extrabold shadow-md">
-              <ShieldCheck className="w-4 h-4" /> Status: Optimal Baseline
-            </div>
-          </div>
-
-          {/* System Status Summary */}
-          <div className="flex-1 text-center lg:text-left space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#4f46e5]/20 text-[#c0c1ff] border border-[#c0c1ff]/40 text-xs sm:text-sm font-bold">
-              <Activity className="w-4 h-4 animate-pulse text-[#4f46e5]" /> Live Telemetry Vigilance Active
-            </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-display text-white tracking-tight leading-tight">
-              Biosecurity Defense Surveillance
-            </h2>
-            <p className="text-base sm:text-lg text-slate-200 font-sans leading-relaxed max-w-3xl font-medium">
-              "System status is vigilant and stable. Minor bio-alerts detected in Sector 4 require review by Lead Veterinarian <strong className="text-white font-bold">{userProfile.name}</strong>."
-            </p>
-            <div className="pt-2 flex flex-wrap gap-3 justify-center lg:justify-start">
-              <button
-                onClick={() => navigateTo('health')}
-                className="px-5 py-3 text-sm font-extrabold bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-xl flex items-center gap-2 transition-all shadow-md active:scale-95"
-              >
-                View Farm Health Telemetry <ArrowUpRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => navigateTo('surveillance')}
-                className="px-5 py-3 text-sm font-bold bg-[#212330] hover:bg-[#2a2d3d] text-slate-200 border border-[#33374a] rounded-xl flex items-center gap-2 transition-all active:scale-95"
-              >
-                Surveillance Risk Map
-              </button>
-            </div>
-          </div>
+            Biosecurity Field Console
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
+            Operator: <strong style={{ color: 'var(--text-primary)' }}>{userProfile?.name || 'Farm Manager'}</strong>
+            {' · '}
+            <span>
+              {stats.activeDiseaseReports} active alerts · {stats.pendingAudits} audits pending
+            </span>
+          </p>
         </div>
+        <button
+          id="dashboard-refresh"
+          onClick={() => void loadDashboard()}
+          className="fd-btn-ghost self-start flex items-center gap-1.5"
+        >
+          <RefreshCw className="w-3.5 h-3.5" /> Refresh
+        </button>
       </div>
 
-      {/* 2. 4-Metric Grid (Sikuda Hua Fix - Spacious Boxes & Large High-Contrast Numbers) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-        {/* Active Farms Card */}
-        <div
-          onClick={() => navigateTo('profile')}
-          className="surface-card p-6 sm:p-7 rounded-2xl border border-[#2d3142] hover:border-[#c0c1ff]/60 cursor-pointer transition-all active:scale-95 group flex flex-col justify-between min-h-[140px] shadow-lg"
-        >
-          <div className="flex items-center justify-between text-slate-200 mb-3">
-            <span className="text-base font-bold font-sans">Active Farms</span>
-            <div className="p-2.5 rounded-xl bg-[#4f46e5]/20 text-[#c0c1ff] group-hover:scale-110 transition-transform">
-              <Building2 className="w-6 h-6" />
-            </div>
-          </div>
-          <div className="flex items-baseline justify-between mt-2">
-            <span className="font-display text-5xl sm:text-6xl text-white tracking-tight">6</span>
-            <span className="text-xs sm:text-sm text-[#4CAF50] font-extrabold flex items-center bg-[#16a34a]/20 px-2.5 py-1 rounded-full border border-[#16a34a]/40">
-              <TrendingUp className="w-4 h-4 mr-1" /> All Online
-            </span>
+      {/* ── API Error Banner ── */}
+      {apiError && (
+        <div className="fd-card p-4 text-sm flex items-start gap-3" style={{ borderColor: 'var(--critical-dim)', background: 'var(--critical-bg)' }}>
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--critical)' }} />
+          <div>
+            <span style={{ color: 'var(--critical)' }}>Backend connection failed: </span>
+            <span style={{ color: 'var(--text-secondary)' }}>{apiError}</span>
+            <button onClick={() => void loadDashboard()} className="ml-2 underline text-xs" style={{ color: 'var(--lime)' }}>
+              Retry
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Open Alerts Card */}
-        <div
-          onClick={() => navigateTo('surveillance')}
-          className="surface-card p-6 sm:p-7 rounded-2xl border border-[#2d3142] hover:border-[#dc2626]/60 cursor-pointer transition-all active:scale-95 group flex flex-col justify-between min-h-[140px] shadow-lg"
-        >
-          <div className="flex items-center justify-between text-slate-200 mb-3">
-            <span className="text-base font-bold font-sans">Open Alerts</span>
-            <div className="p-2.5 rounded-xl bg-[#dc2626]/20 text-[#fca5a5] group-hover:scale-110 transition-transform animate-pulse">
-              <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
-            </div>
-          </div>
-          <div className="flex items-baseline justify-between mt-2">
-            <span className="font-display text-5xl sm:text-6xl text-[#fca5a5] tracking-tight">3</span>
-            <span className="text-xs sm:text-sm text-[#fca5a5] font-extrabold bg-[#dc2626]/30 px-2.5 py-1 rounded-full border border-[#dc2626]/50">
-              1 Urgent
-            </span>
-          </div>
-        </div>
-
-        {/* Audits This Week Card */}
-        <div
-          onClick={() => navigateTo('audits')}
-          className="surface-card p-6 sm:p-7 rounded-2xl border border-[#2d3142] hover:border-[#c0c1ff]/60 cursor-pointer transition-all active:scale-95 group flex flex-col justify-between min-h-[140px] shadow-lg"
-        >
-          <div className="flex items-center justify-between text-slate-200 mb-3">
-            <span className="text-base font-bold font-sans">Audits This Week</span>
-            <div className="p-2.5 rounded-xl bg-[#4f46e5]/20 text-[#c0c1ff] group-hover:scale-110 transition-transform">
-              <ClipboardList className="w-6 h-6" />
-            </div>
-          </div>
-          <div className="flex items-baseline justify-between mt-2">
-            <span className="font-display text-5xl sm:text-6xl text-white tracking-tight">11</span>
-            <span className="text-xs sm:text-sm text-slate-300 font-bold bg-[#212330] px-2.5 py-1 rounded-full border border-[#33374a]">
-              92% Pass
-            </span>
-          </div>
-        </div>
-
-        {/* Monitored Livestock Card */}
-        <div
-          onClick={() => navigateTo('health')}
-          className="surface-card p-6 sm:p-7 rounded-2xl border border-[#2d3142] hover:border-[#4CAF50]/60 cursor-pointer transition-all active:scale-95 group flex flex-col justify-between min-h-[140px] shadow-lg"
-        >
-          <div className="flex items-center justify-between text-slate-200 mb-3">
-            <span className="text-base font-bold font-sans">Monitored Livestock</span>
-            <div className="p-2.5 rounded-xl bg-[#16a34a]/20 text-[#4CAF50] group-hover:scale-110 transition-transform">
-              <Activity className="w-6 h-6" />
-            </div>
-          </div>
-          <div className="flex items-baseline justify-between mt-2">
-            <span className="font-display text-5xl sm:text-6xl text-white tracking-tight">2.4k</span>
-            <span className="text-xs sm:text-sm text-[#4CAF50] font-extrabold bg-[#16a34a]/20 px-2.5 py-1 rounded-full border border-[#16a34a]/40">
-              Healthy
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Active Bio-Alert Feed (Distinct Color Coding & Pulse Animations) */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold uppercase tracking-wider text-slate-200 font-sans flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-[#dc2626]" />
-            Active Bio-Alert Feed
-          </h3>
+      {/* ── Hero: Audit Score + Action Buttons ── */}
+      <div className="fd-card p-5 sm:p-6" style={{ borderColor: stats.pendingAudits > 0 ? 'var(--warning-dim)' : 'var(--border)' }}>
+        <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-8">
+          {/* Circular gauge */}
           <button
-            onClick={() => navigateTo('surveillance')}
-            className="text-sm sm:text-base text-[#c0c1ff] hover:underline font-extrabold"
+            onClick={() => navigateTo('health')}
+            className="group flex flex-col items-center text-center flex-shrink-0"
+            title="Open Farm Health Overview"
           >
-            View Surveillance Map →
+            <div className="relative w-40 h-40 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" stroke="var(--border-dim)" strokeWidth="8" fill="transparent" />
+                <circle
+                  cx="50" cy="50" r="42"
+                  stroke={auditScore >= 80 ? 'var(--success)' : auditScore >= 60 ? 'var(--warning)' : 'var(--critical)'}
+                  strokeWidth="8"
+                  strokeDasharray={2 * Math.PI * 42}
+                  strokeDashoffset={2 * Math.PI * 42 * (1 - auditScore / 100)}
+                  strokeLinecap="square"
+                  fill="transparent"
+                  className="transition-all duration-1000 ease-out"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span
+                  className="font-display text-4xl leading-none group-hover:scale-105 transition-transform"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, color: 'var(--text-primary)' }}
+                >
+                  {loading ? '—' : auditScore}
+                </span>
+                <span className="fd-label mt-1">Audit %</span>
+              </div>
+            </div>
+            <span
+              className="mt-2 text-xs font-semibold px-3 py-1"
+              style={{
+                background: stats.pendingAudits ? 'var(--warning-bg)' : 'var(--success-bg)',
+                color: stats.pendingAudits ? 'var(--warning)' : 'var(--success)',
+                border: `1px solid ${stats.pendingAudits ? 'var(--warning-dim)' : 'var(--success-dim)'}`,
+                borderRadius: '2px',
+                fontFamily: 'IBM Plex Mono, monospace',
+              }}
+            >
+              <ShieldCheck className="w-3 h-3 inline-block mr-1" />
+              {stats.pendingAudits ? `${stats.pendingAudits} Pending` : 'No Pending Audits'}
+            </span>
           </button>
-        </div>
 
-        <div className="space-y-4">
-          {/* Solid Red - Urgent Alert with Pulsing Animation */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[#dc2626] text-white border-2 border-[#fca5a5] shadow-xl animate-urgent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-white/20 text-white flex-shrink-0 mt-0.5">
-                <AlertTriangle className="w-7 h-7 stroke-[2.5]" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded text-xs font-extrabold uppercase bg-black/40 text-white tracking-wider">
-                    CRITICAL URGENT
-                  </span>
-                  <span className="text-xs text-red-100 font-mono flex items-center gap-1 font-bold">
-                    <Clock className="w-3.5 h-3.5" /> 10m ago
-                  </span>
-                </div>
-                <h4 className="text-lg sm:text-xl font-bold text-white leading-snug">
-                  Temperature Spike in Farrowing House 3
-                </h4>
-                <p className="text-sm text-red-100 font-sans font-medium">
-                  Sector 4 · Target threshold exceeded (28.4°C max limit)
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigateTo('health')}
-              className="px-5 py-3 rounded-xl bg-white text-[#dc2626] text-xs sm:text-sm font-extrabold hover:bg-red-50 transition-all shadow-md flex-shrink-0 self-end sm:self-center active:scale-95"
-            >
-              Investigate Telemetry
-            </button>
-          </div>
-
-          {/* Solid Yellow/Amber - Review Required Alert */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[#d97706] text-white border border-[#fcd34d] shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-black/20 text-white flex-shrink-0 mt-0.5">
-                <AlertCircle className="w-7 h-7 stroke-[2.5]" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded text-xs font-extrabold uppercase bg-black/40 text-white tracking-wider">
-                    REVIEW REQUIRED
-                  </span>
-                  <span className="text-xs text-amber-100 font-mono flex items-center gap-1 font-bold">
-                    <Clock className="w-3.5 h-3.5" /> 2h ago
-                  </span>
-                </div>
-                <h4 className="text-lg sm:text-xl font-bold text-white leading-snug">
-                  Unauthorized Vehicle Near Perimeter Gate B
-                </h4>
-                <p className="text-sm text-amber-100 font-sans font-medium">
-                  Zone 2 · Wheel decontamination wash bypassed
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigateTo('farm-map')}
-              className="px-5 py-3 rounded-xl bg-black/30 text-white hover:bg-black/50 text-xs sm:text-sm font-extrabold transition-all shadow-md flex-shrink-0 self-end sm:self-center active:scale-95"
-            >
-              Check Zone 2 Map
-            </button>
-          </div>
-
-          {/* Solid Grey - Low Priority Alert */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[#374151] text-slate-100 border border-[#4b5563] shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-black/20 text-slate-300 flex-shrink-0 mt-0.5">
-                <Info className="w-7 h-7" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded text-xs font-bold uppercase bg-black/30 text-slate-300">
-                    LOW PRIORITY
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono flex items-center gap-1 font-bold">
-                    <Clock className="w-3.5 h-3.5" /> Yesterday
-                  </span>
-                </div>
-                <h4 className="text-base sm:text-lg font-bold text-white leading-snug">
-                  Routine Sanitation Audit Pending
-                </h4>
-                <p className="text-sm text-slate-200 font-sans font-medium">
-                  Sector 2 Feed Mill · Scheduled inspection due in 2 days
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigateTo('audits')}
-              className="px-5 py-3 rounded-xl bg-[#1f2937] hover:bg-[#111827] text-slate-200 text-xs sm:text-sm font-extrabold border border-[#4b5563] transition-all flex-shrink-0 self-end sm:self-center active:scale-95"
-            >
-              Resume Audit
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Monitored Commercial Farm Units */}
-      <div>
-        <h3 className="text-base font-bold uppercase tracking-wider text-slate-200 mb-4 font-sans">
-          Monitored Commercial Farm Units
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Green Valley Pig Farm */}
-          <div className="surface-card p-6 rounded-2xl border border-[#2d3142] space-y-4 shadow-lg">
-            <div className="flex items-start justify-between">
-              <div>
-                <h4 className="text-lg sm:text-xl font-bold text-white font-sans">Green Valley Pig Farm</h4>
-                <p className="text-sm text-slate-300 font-sans font-medium mt-0.5">Swine Gestation · 1,400 Head</p>
-              </div>
-              <span className="px-3 py-1 rounded-full bg-[#16a34a]/20 text-[#4CAF50] text-xs font-extrabold border border-[#16a34a]/40">
-                Biosecurity: Optimal
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-sm sm:text-base text-slate-200 pt-3 border-t border-[#2d3142]">
-              <span>Biosecurity Score: <strong className="text-white font-display text-lg ml-1">82/100</strong></span>
-              <button
-                onClick={() => navigateTo('health')}
-                className="px-4 py-2.5 rounded-xl bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs sm:text-sm font-extrabold transition-all flex items-center gap-1 shadow-md active:scale-95"
+          {/* Text + actions */}
+          <div className="flex-1 space-y-4 text-center lg:text-left">
+            <div>
+              <span
+                className="fd-badge fd-badge-lime inline-flex mb-2"
               >
-                View Details <ChevronRight className="w-4 h-4" />
+                <Activity className="w-3 h-3" /> Live Monitoring
+              </span>
+              <h2
+                className="text-xl sm:text-2xl font-bold leading-tight"
+                style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}
+              >
+                Biosecurity Defense Surveillance
+              </h2>
+              <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                {stats.activeDiseaseReports > 0
+                  ? `${stats.activeDiseaseReports} active disease reports require attention.`
+                  : 'No active disease reports. All systems operational.'
+                }
+                {' '}{stats.pendingAudits > 0 ? `${stats.pendingAudits} audits pending review.` : ''}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
+              <button onClick={() => navigateTo('health')} className="fd-btn flex items-center gap-1.5">
+                Farm Health <ArrowUpRight className="w-3.5 h-3.5" />
               </button>
-            </div>
-          </div>
-
-          {/* Sunrise Poultry House */}
-          <div className="surface-card p-6 rounded-2xl border border-[#d97706]/50 space-y-4 shadow-lg">
-            <div className="flex items-start justify-between">
-              <div>
-                <h4 className="text-lg sm:text-xl font-bold text-white font-sans">Sunrise Poultry House</h4>
-                <p className="text-sm text-slate-300 font-sans font-medium mt-0.5">Broiler Facility · 1,000 Birds</p>
-              </div>
-              <span className="px-3 py-1 rounded-full bg-[#d97706]/20 text-[#fcd34d] text-xs font-extrabold border border-[#d97706]/40 animate-pulse">
-                Biosecurity: Monitoring
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-sm sm:text-base text-slate-200 pt-3 border-t border-[#2d3142]">
-              <span>Biosecurity Score: <strong className="text-white font-display text-lg ml-1">61/100</strong></span>
-              <button
-                onClick={() => navigateTo('farm-map')}
-                className="px-4 py-2.5 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white text-xs sm:text-sm font-extrabold transition-all flex items-center gap-1 shadow-md active:scale-95"
-              >
-                View Zone 2 Details <ChevronRight className="w-4 h-4" />
+              <button onClick={() => navigateTo('surveillance')} className="fd-btn-ghost flex items-center gap-1.5">
+                Surveillance Map
+              </button>
+              <button onClick={() => navigateTo('checklist')} className="fd-btn-ghost flex items-center gap-1.5">
+                Run Checklist
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ── Metric Cards Grid ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <MetricCard
+          label="Active Farms"
+          value={stats.totalFarms}
+          sub="Registered units"
+          loading={loading}
+          icon={<Building2 className="w-4 h-4" />}
+          onClick={() => navigateTo('profile')}
+        />
+        <MetricCard
+          label="Open Alerts"
+          value={stats.activeDiseaseReports}
+          sub={`${urgentCount} urgent`}
+          subColor={urgentCount > 0 ? 'var(--critical)' : 'var(--text-secondary)'}
+          loading={loading}
+          icon={<AlertTriangle className="w-4 h-4" />}
+          onClick={() => navigateTo('surveillance')}
+          accentStyle={{ color: urgentCount > 0 ? 'var(--critical)' : 'var(--lime)' }}
+        />
+        <MetricCard
+          label="Total Audits"
+          value={stats.totalAudits}
+          sub={`${stats.pendingAudits} pending`}
+          subColor={stats.pendingAudits > 0 ? 'var(--warning)' : 'var(--text-secondary)'}
+          loading={loading}
+          icon={<ClipboardList className="w-4 h-4" />}
+          onClick={() => navigateTo('audits')}
+        />
+        <MetricCard
+          label="Inventory Items"
+          value={stats.totalInventoryItems}
+          sub={`${stats.lowStockItems} low stock`}
+          subColor={stats.lowStockItems > 0 ? 'var(--warning)' : 'var(--text-secondary)'}
+          loading={loading}
+          icon={<Activity className="w-4 h-4" />}
+          onClick={() => navigateTo('inventory')}
+        />
+      </div>
+
+      {/* ── Two-column layout for compliance + alerts ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+
+        {/* ── Checklist Compliance Panel (3/5) ── */}
+        <section className="xl:col-span-3">
+          <SectionHeader
+            title="Biosecurity Checklist Compliance"
+            icon={<ClipboardList className="w-4 h-4" />}
+            action={{ label: 'Open Checklist', onClick: () => navigateTo('checklist') }}
+          />
+
+          {loading ? (
+            <div className="fd-card p-5 text-sm" style={{ color: 'var(--text-dim)' }}>Loading checklist stats…</div>
+          ) : checklistSummary.totalSubmissions === 0 ? (
+            <div className="fd-card p-5 text-sm" style={{ color: 'var(--text-dim)' }}>
+              No checklist submissions recorded yet. Submit your first daily biosecurity checklist to track compliance.
+            </div>
+          ) : (
+            <div className="fd-card p-5 space-y-4">
+              {/* Score row */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <p className="fd-label mb-1">Overall Compliance Rate</p>
+                  <div className="flex items-baseline gap-2">
+                    <span
+                      className="font-display text-5xl leading-none"
+                      style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, color: 'var(--text-primary)' }}
+                    >
+                      {compliancePct}%
+                    </span>
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                      {checklistSummary.passed}/{checklistSummary.totalItems} items
+                    </span>
+                  </div>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                    Across {checklistSummary.totalSubmissions} submission{checklistSummary.totalSubmissions !== 1 ? 's' : ''}
+                  </p>
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  <span className="fd-badge fd-badge-success">
+                    <CheckCircle2 className="w-3 h-3" /> {checklistSummary.passed} Passed
+                  </span>
+                  {checklistSummary.warning > 0 && (
+                    <span className="fd-badge fd-badge-warning">
+                      <AlertCircle className="w-3 h-3" /> {checklistSummary.warning} Warning
+                    </span>
+                  )}
+                  {checklistSummary.critical > 0 && (
+                    <span className="fd-badge fd-badge-critical">
+                      <AlertTriangle className="w-3 h-3" /> {checklistSummary.critical} Critical
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="fd-progress-track">
+                <div
+                  className="fd-progress-fill"
+                  style={{
+                    width: `${compliancePct}%`,
+                    background: compliancePct >= 80 ? 'var(--success)' : compliancePct >= 60 ? 'var(--warning)' : 'var(--critical)',
+                  }}
+                />
+              </div>
+
+              {/* Recent submissions */}
+              {recentChecklistActivity.length > 0 && (
+                <div>
+                  <p className="fd-label mb-2">Recent Submissions</p>
+                  <div className="space-y-1.5">
+                    {recentChecklistActivity.map((item) => {
+                      const pct = item.summary.total > 0
+                        ? Math.round((item.summary.passed / item.summary.total) * 100)
+                        : 0;
+                      return (
+                        <div
+                          key={item._id}
+                          className="fd-raised flex items-center justify-between gap-3 px-3 py-2.5"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)', fontFamily: 'Inter, sans-serif' }}>{item.zone}</p>
+                            <p className="text-xs truncate" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                              {item.farmName} · {new Date(item.submittedAt).toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <CheckCircle2 className="w-3.5 h-3.5" style={{ color: 'var(--success)' }} />
+                            <span className="text-sm font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'IBM Plex Mono, monospace' }}>{pct}%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* ── Active Bio-Alert Feed (2/5) ── */}
+        <section className="xl:col-span-2">
+          <SectionHeader
+            title="Active Bio-Alerts"
+            icon={<AlertTriangle className="w-4 h-4" style={{ color: 'var(--critical)' }} />}
+            action={{ label: 'Surveillance', onClick: () => navigateTo('surveillance') }}
+          />
+
+          {loading ? (
+            <div className="fd-card p-5 text-sm" style={{ color: 'var(--text-dim)' }}>Loading alerts…</div>
+          ) : recentAlerts.length === 0 ? (
+            <div className="fd-card p-5 text-sm" style={{ color: 'var(--text-dim)' }}>
+              No active alerts or pending audits.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {recentAlerts.map((alert) => {
+                const urgent = ['urgent', 'critical', 'high', 'severe'].includes(alert.severity);
+                const attention = ['attention', 'medium', 'moderate'].includes(alert.severity);
+                const borderColor = urgent ? 'var(--critical-dim)' : attention ? 'var(--warning-dim)' : 'var(--border)';
+                const bgColor = urgent ? 'var(--critical-bg)' : attention ? 'var(--warning-bg)' : 'var(--bg-panel)';
+
+                return (
+                  <div
+                    key={`${alert.kind}-${alert.id}`}
+                    className="fd-card p-4 flex flex-col gap-2.5"
+                    style={{ borderColor, background: bgColor }}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <span style={{ color: urgent ? 'var(--critical)' : attention ? 'var(--warning)' : 'var(--text-secondary)' }}>
+                        {urgent ? <AlertTriangle className="w-4 h-4" /> : attention ? <AlertCircle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="fd-label mb-0.5">
+                          {alert.kind === 'disease' ? 'Disease Report' : 'Audit'}
+                        </p>
+                        <p className="text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>{alert.title}</p>
+                        <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>{alert.detail}</p>
+                        <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                          <Clock className="w-3 h-3" /> {alert.time}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigateTo(alert.kind === 'disease' ? 'reports' : 'audits')}
+                      className="fd-btn-ghost text-xs w-full justify-center"
+                    >
+                      Review <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* ── Monitored Farm Units ── */}
+      <section>
+        <SectionHeader
+          title="Monitored Farm Units"
+          icon={<Building2 className="w-4 h-4" />}
+          action={{ label: 'Farm Health', onClick: () => navigateTo('health') }}
+        />
+        {loading ? (
+          <p className="text-sm" style={{ color: 'var(--text-dim)' }}>Loading farms…</p>
+        ) : farms.length === 0 ? (
+          <div className="fd-card p-5 text-sm" style={{ color: 'var(--text-dim)' }}>No farms registered yet.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {farms.slice(0, 4).map((farm) => {
+              const farmId = String(farm._id || farm.id);
+              const farmReports = diseaseReports.filter(
+                (r) => String(r.farmId && typeof r.farmId === 'object' ? r.farmId._id : r.farmId) === farmId && r.status !== 'resolved'
+              );
+              const hasIssues = farmReports.length > 0;
+              return (
+                <div key={farmId} className="fd-card-hover p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="text-base font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
+                        {farm.name || 'Unnamed farm'}
+                      </h4>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                        {farm.farmType || 'Farm'}{farm.location ? ` · ${farm.location}` : ''}
+                      </p>
+                    </div>
+                    <span className={`fd-badge ${hasIssues ? 'fd-badge-warning' : 'fd-badge-success'}`}>
+                      {hasIssues ? `${farmReports.length} open` : 'Clear'}
+                    </span>
+                  </div>
+                  <div className="fd-divider" />
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: 'var(--text-secondary)' }}>
+                      Total reports: <strong style={{ color: 'var(--text-primary)' }}>
+                        {diseaseReports.filter((r) => String(r.farmId && typeof r.farmId === 'object' ? r.farmId._id : r.farmId) === farmId).length}
+                      </strong>
+                    </span>
+                    <button onClick={() => navigateTo('health')} className="fd-btn-ghost text-xs py-1 px-3">
+                      Details <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* ── Database Totals ── */}
+      {!loading && checklistSummary.totalSubmissions > 0 && (
+        <section className="fd-card p-5">
+          <SectionHeader
+            title="Database Totals at a Glance"
+            icon={<TrendingUp className="w-4 h-4" />}
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'Disease Reports', value: stats.totalDiseaseReports, color: 'var(--critical)' },
+              { label: 'Audit Sessions',  value: stats.totalAudits,          color: 'var(--lime)' },
+              { label: 'Checklist Submissions', value: checklistSummary.totalSubmissions, color: 'var(--success)' },
+              { label: 'Visitor Records', value: stats.totalVisitors,        color: 'var(--warning)' },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="fd-raised p-4 text-center">
+                <p
+                  className="font-display text-3xl font-bold leading-none"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', color }}
+                >
+                  {value}
+                </p>
+                <p className="text-xs mt-1.5" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>{label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

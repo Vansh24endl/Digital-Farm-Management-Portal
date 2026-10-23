@@ -8,9 +8,24 @@ export const Toast: React.FC = () => {
   if (!toastMessage) return null;
 
   return (
-    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#1b1b22] border border-[#c0c1ff]/60 text-slate-100 shadow-2xl animate-bounce">
-      <CheckCircle2 className="w-5 h-5 text-[#4CAF50] flex-shrink-0" />
-      <span className="text-xs sm:text-sm font-semibold font-sans">{toastMessage}</span>
+    <div
+      className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-2.5 animate-fadeIn"
+      style={{
+        background: 'var(--bg-raised)',
+        border: '1px solid var(--success-dim)',
+        borderRadius: '3px',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+      }}
+      role="status"
+      aria-live="polite"
+    >
+      <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--success)' }} />
+      <span
+        className="text-xs font-semibold"
+        style={{ fontFamily: 'Inter, sans-serif', color: 'var(--text-primary)' }}
+      >
+        {toastMessage}
+      </span>
     </div>
   );
 };

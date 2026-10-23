@@ -40,7 +40,7 @@ const emergencyDirectory: EmergencyContact[] = [
   },
   {
     id: 'em-4',
-    name: 'Local Police & Bio-Perimeter Protection Station',
+    name: 'Local Police & Bio-Perimeter Protection',
     role: 'Perimeter Barrier & Traffic Lockdown',
     phone: '+91 100',
     category: 'Authorities',
@@ -64,6 +64,12 @@ const emergencyDirectory: EmergencyContact[] = [
   },
 ];
 
+const categoryIcon = (cat: string) => {
+  if (cat === 'Veterinary Services') return <Stethoscope className="w-4 h-4" style={{ color: 'var(--lime)' }} />;
+  if (cat === 'Authorities') return <Building className="w-4 h-4" style={{ color: 'var(--warning)' }} />;
+  return <Truck className="w-4 h-4" style={{ color: 'var(--success)' }} />;
+};
+
 export const EmergencyScreen: React.FC = () => {
   const { startEmergencyCall } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,119 +88,137 @@ export const EmergencyScreen: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6 pb-20 animate-fadeIn font-sans">
-      {/* 1. Red Emergency Alert Banner */}
-      <div className="p-5 rounded-2xl bg-[#ba1a1a]/25 border-2 border-[#ba1a1a] text-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
-        <div className="flex items-center gap-3.5">
-          <div className="p-3 rounded-2xl bg-[#ba1a1a] text-white animate-bounce flex-shrink-0">
-            <ShieldAlert className="w-7 h-7" />
+    <div className="space-y-5 pb-20 animate-fadeIn">
+
+      {/* ── Page Header ── */}
+      <div>
+        <p className="fd-label mb-1">FarmDrishti / Emergency</p>
+        <h1
+          className="text-2xl font-bold"
+          style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
+        >
+          Emergency Contacts
+        </h1>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
+          24/7 vet response & authorities
+        </p>
+      </div>
+
+      {/* ── Emergency Alert Banner ── */}
+      <div
+        className="fd-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-urgent"
+        style={{ borderColor: 'var(--critical-dim)', background: 'var(--critical-bg)' }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="p-2.5 flex-shrink-0"
+            style={{ background: 'var(--critical)', borderRadius: '2px' }}
+          >
+            <ShieldAlert className="w-5 h-5" style={{ color: '#111311' }} />
           </div>
           <div>
-            <span className="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-[#ba1a1a] text-white">
-              HOTLINE SYSTEM READY
-            </span>
-            <h3 className="text-lg font-bold font-serif text-white mt-1">
+            <span className="fd-badge fd-badge-critical block mb-1">HOTLINE SYSTEM READY</span>
+            <h3
+              className="text-sm font-bold"
+              style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}
+            >
               24/7 Bio-Hazard & Disease Containment Helpline
             </h3>
-            <p className="text-xs text-slate-300">
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
               Instant voice encryption for Dr. Reyes and field veterinary commanders.
             </p>
           </div>
         </div>
 
         <button
+          id="dial-lead-vet-btn"
           onClick={() => startEmergencyCall(emergencyDirectory[0])}
-          className="px-5 py-2.5 rounded-xl bg-[#ba1a1a] hover:bg-[#93000a] text-white text-xs font-bold flex items-center gap-2 transition-all shadow-xl active:scale-95 flex-shrink-0"
+          className="fd-btn flex items-center gap-2 flex-shrink-0 self-start sm:self-auto"
+          style={{ background: 'var(--critical)', borderColor: 'var(--critical)', color: '#111311' }}
         >
           <PhoneCall className="w-4 h-4" /> Dial Lead Vet Now
         </button>
       </div>
 
-      {/* 2. Title & Search Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold font-serif text-white flex items-center gap-2">
-            <PhoneCall className="w-5 h-5 text-[#ffb4ab]" />
-            Emergency Contacts Directory
-          </h2>
-          <p className="text-xs text-slate-400">
-            Rapid hotline response for veterinarians, state authorities, and suppliers
-          </p>
-        </div>
-
-        {/* Real-time Search Input */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+      {/* ── Search + Category Filters ── */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-dim)' }} />
           <input
+            id="emergency-search"
             type="text"
-            placeholder="Search contact or service..."
+            placeholder="Search contact or service…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#1b1b22] border border-[#34343c] text-slate-100 text-xs focus:border-[#ba1a1a] outline-none"
+            className="fd-input pl-9"
+            style={{ borderColor: 'var(--border)' }}
           />
+        </div>
+
+        <div className="flex items-center gap-1 p-1 overflow-x-auto" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', borderRadius: '3px' }}>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className="px-3 py-1.5 text-xs font-bold transition-all whitespace-nowrap"
+              style={{
+                borderRadius: '2px',
+                background: activeCategory === cat ? 'var(--critical-bg)' : 'transparent',
+                color: activeCategory === cat ? 'var(--critical)' : 'var(--text-secondary)',
+                border: activeCategory === cat ? '1px solid var(--critical-dim)' : '1px solid transparent',
+                fontFamily: 'IBM Plex Mono, monospace',
+              }}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* 3. Category Filter Chips */}
-      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#1f1f26] border border-[#34343c] overflow-x-auto">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-              activeCategory === cat
-                ? 'bg-[#ba1a1a] text-white shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+      {/* ── Contact Cards ── */}
+      <div className="space-y-2">
+        <h2 className="fd-label">Directory ({filteredContacts.length})</h2>
 
-      {/* 4. Categorized Directory Cards */}
-      <div className="space-y-3">
         {filteredContacts.map((contact) => (
           <div
             key={contact.id}
-            className="surface-card p-4 sm:p-5 rounded-2xl border border-[#34343c] hover:border-[#ba1a1a]/60 transition-all group"
+            className="fd-card-hover p-4 sm:p-5 group"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3.5">
-                <div className="p-3 rounded-2xl bg-[#1a178c]/40 text-[#c0c1ff] border border-[#c0c1ff]/30 flex-shrink-0">
-                  {contact.category === 'Veterinary Services' ? (
-                    <Stethoscope className="w-5 h-5 text-[#c0c1ff]" />
-                  ) : contact.category === 'Authorities' ? (
-                    <Building className="w-5 h-5 text-[#ffba3f]" />
-                  ) : (
-                    <Truck className="w-5 h-5 text-[#4CAF50]" />
-                  )}
+                <div
+                  className="p-2.5 flex-shrink-0"
+                  style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', borderRadius: '2px' }}
+                >
+                  {categoryIcon(contact.category)}
                 </div>
 
                 <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase text-[#c0c1ff]">
-                      {contact.category}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-slate-500" /> {contact.available}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="fd-label">{contact.category}</span>
+                    <span className="text-xs flex items-center gap-1" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                      <Clock className="w-3 h-3" /> {contact.available}
                     </span>
                   </div>
-
-                  <h3 className="text-base font-bold text-white font-serif group-hover:text-[#ffb4ab] transition-colors">
+                  <h3
+                    className="text-sm font-bold"
+                    style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}
+                  >
                     {contact.name}
                   </h3>
-                  <p className="text-xs text-slate-300 font-sans">{contact.role}</p>
-                  <p className="text-xs font-mono font-bold text-[#c0c1ff] pt-1">{contact.phone}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{contact.role}</p>
+                  <p className="text-xs font-bold pt-1" style={{ color: 'var(--lime)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                    {contact.phone}
+                  </p>
                 </div>
               </div>
 
-              {/* Dial Button Triggering Live Call Dialer Modal */}
               <button
                 onClick={() => startEmergencyCall(contact)}
-                className="px-4 py-2.5 rounded-xl bg-[#ba1a1a] hover:bg-[#93000a] text-white text-xs font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95 self-end sm:self-center flex-shrink-0"
+                className="fd-btn self-end sm:self-center flex items-center gap-2 flex-shrink-0"
+                style={{ background: 'var(--critical)', borderColor: 'var(--critical)', color: '#111311' }}
               >
-                <Phone className="w-4 h-4 fill-current" /> Simulated Call
+                <Phone className="w-4 h-4 fill-current" /> Call
               </button>
             </div>
           </div>

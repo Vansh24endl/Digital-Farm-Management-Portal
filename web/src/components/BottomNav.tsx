@@ -10,38 +10,50 @@ interface TabItem {
 
 const tabs: TabItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'grid_view' },
-  { id: 'farm-map', label: 'Farm Map', icon: 'map' },
-  { id: 'audits', label: 'Audits', icon: 'assignment_turned_in' },
-  { id: 'health', label: 'Health', icon: 'favorite' },
-  { id: 'profile', label: 'Settings', icon: 'settings' },
+  { id: 'farm-map',  label: 'Farm Map',  icon: 'map' },
+  { id: 'audits',    label: 'Audits',    icon: 'assignment_turned_in' },
+  { id: 'health',    label: 'Health',    icon: 'favorite' },
+  { id: 'profile',   label: 'Settings',  icon: 'settings' },
 ];
 
 export const BottomNav: React.FC = () => {
   const { activeScreen, navigateTo } = useApp();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#181922]/98 backdrop-blur-md border-t border-[#2d3142] px-2 py-2">
+    <nav
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-1 py-1.5"
+      style={{ background: 'var(--bg-panel)', borderTop: '1px solid var(--border)' }}
+    >
       <div className="max-w-md mx-auto flex items-center justify-around">
         {tabs.map((tab) => {
           const isActive = activeScreen === tab.id;
           return (
             <button
               key={tab.id}
+              id={`bottom-nav-${tab.id}`}
               onClick={() => navigateTo(tab.id)}
-              className={`flex flex-col items-center justify-center w-16 py-1.5 rounded-xl transition-all duration-200 active:scale-95 ${
-                isActive
-                  ? 'text-[#c0c1ff] bg-[#4f46e5]/40 font-bold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#212330]'
-              }`}
+              className="flex flex-col items-center justify-center w-14 py-1.5 rounded-sm transition-colors active:scale-95"
+              style={{
+                color: isActive ? 'var(--lime)' : 'var(--text-dim)',
+                background: isActive ? 'var(--lime-subtle)' : 'transparent',
+              }}
+              aria-label={tab.label}
+              aria-current={isActive ? 'page' : undefined}
             >
-              <span className={`material-symbols-outlined text-2xl ${isActive ? 'fill-1' : ''}`}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
                 {tab.icon}
               </span>
-              <span className="text-xs font-bold tracking-tight mt-0.5 font-sans">
+              <span
+                className="text-[10px] font-bold tracking-tight mt-0.5"
+                style={{ fontFamily: 'IBM Plex Mono, monospace', letterSpacing: '0.02em' }}
+              >
                 {tab.label}
               </span>
               {isActive && (
-                <span className="w-1.5 h-1.5 bg-[#c0c1ff] rounded-full mt-0.5 animate-pulse"></span>
+                <span
+                  className="w-4 h-0.5 mt-0.5 rounded-full"
+                  style={{ background: 'var(--lime)' }}
+                />
               )}
             </button>
           );

@@ -1,124 +1,322 @@
+/* ─── FarmDrishti — Retro Biosecurity Field Console ───────────────────────── */
+/* Font imports: Space Grotesk (headings), Inter (body), IBM Plex Mono (code) */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
 @import "tailwindcss";
 
+/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
 @layer base {
   :root {
-    --bg-main: #0f1017;
-    --surface-1: #181922;
-    --surface-2: #212330;
-    --surface-3: #2a2d3d;
-    --border-subtle: #33374a;
-    --accent-lavender: #c0c1ff;
-    --accent-indigo: #4f46e5;
-    --alert-crimson: #dc2626;
-    --alert-light: #fca5a5;
-    --warning-amber: #d97706;
-    --biosecure-green: #16a34a;
+    /* Backgrounds */
+    --bg-main:      #111311;
+    --bg-panel:     #1A1C19;
+    --bg-raised:    #232620;
+    --bg-hover:     #2A2D28;
 
-    font-size: 16px;
+    /* Borders */
+    --border:       #484A43;
+    --border-dim:   #333531;
+
+    /* Text */
+    --text-primary:   #F1F0E7;
+    --text-secondary: #A6AA9B;
+    --text-dim:       #6B6E64;
+
+    /* Accents */
+    --lime:         #D7E86A;
+    --lime-dim:     #B5C447;
+    --lime-subtle:  rgba(215,232,106,0.12);
+
+    /* Status colors */
+    --success:      #87D6A2;
+    --success-dim:  #5BB87D;
+    --success-bg:   rgba(135,214,162,0.10);
+
+    --warning:      #FFB547;
+    --warning-dim:  #E09A30;
+    --warning-bg:   rgba(255,181,71,0.10);
+
+    --critical:     #FF765F;
+    --critical-dim: #E05540;
+    --critical-bg:  rgba(255,118,95,0.10);
+
+    /* Sidebar widths */
+    --sidebar-w:    220px;
+    --sidebar-w-sm: 52px;
+
+    font-size: 15px;
   }
 
-  @media (min-width: 1440px) {
-    :root {
-      font-size: 17px;
-    }
-  }
+  @media (min-width: 1440px) { :root { font-size: 16px; } }
+  @media (min-width: 1920px) { :root { font-size: 17px; } }
 
-  @media (min-width: 1920px) {
-    :root {
-      font-size: 18px;
-    }
-  }
+  *, *::before, *::after { box-sizing: border-box; }
 
   body {
     background-color: var(--bg-main);
-    color: #f8fafc;
+    color: var(--text-primary);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
-    line-height: 1.6;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Focus ring — keyboard only */
+  :focus-visible {
+    outline: 2px solid var(--lime);
+    outline-offset: 2px;
   }
 }
 
-/* Custom Clean Typography & Layout Scaling */
+/* ─── Typography classes ─────────────────────────────────────────────────────── */
+
+/* Headings / large display numbers */
 .font-display {
-  font-family: 'Inter', system-ui, sans-serif;
-  letter-spacing: -0.02em;
-  font-weight: 800;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.025em;
+  font-weight: 700;
 }
 
+/* Mono — timestamps, IDs, section identifiers */
+.font-mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Body */
 .font-sans {
   font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* Glassmorphism & Custom Surfaces */
-.glass-surface {
-  background: rgba(24, 25, 34, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(51, 55, 74, 0.8);
+/* ─── Panel / Card Surfaces ──────────────────────────────────────────────────── */
+
+/* Base card — no hover effects by default */
+.fd-card {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 3px;
 }
 
-.surface-card {
-  background-color: #181922;
-  border: 1px solid #2d3142;
-  transition: all 0.2s ease-in-out;
+/* Interactive card — gains border highlight on hover */
+.fd-card-hover {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.fd-card-hover:hover {
+  border-color: var(--lime-dim);
+  background-color: var(--bg-raised);
 }
 
-.surface-card:hover {
-  border-color: rgba(192, 193, 255, 0.45);
-  box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.5);
+/* Raised panel — slightly elevated, used for sub-sections */
+.fd-raised {
+  background-color: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
 }
 
-.surface-elevated {
-  background-color: #212330;
-  border: 1px solid #33374a;
+/* ─── Buttons ────────────────────────────────────────────────────────────────── */
+
+/* Primary action — lime fill */
+.fd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.125rem;
+  background-color: var(--lime);
+  color: #111311;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: 1px solid var(--lime);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+.fd-btn:hover  { background-color: var(--lime-dim); border-color: var(--lime-dim); }
+.fd-btn:active { opacity: 0.85; }
+.fd-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Ghost button — bordered outline */
+.fd-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.125rem;
+  background-color: transparent;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+  white-space: nowrap;
+}
+.fd-btn-ghost:hover  { border-color: var(--lime-dim); color: var(--lime); background-color: var(--lime-subtle); }
+.fd-btn-ghost:active { opacity: 0.8; }
+.fd-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Danger ghost */
+.fd-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.125rem;
+  background-color: transparent;
+  color: var(--critical);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1px solid var(--critical-dim);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.fd-btn-danger:hover { background-color: var(--critical-bg); }
+
+/* Icon-only square button */
+.fd-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4375rem;
+  background-color: var(--bg-raised);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.fd-btn-icon:hover { color: var(--text-primary); border-color: var(--lime-dim); }
+
+/* ─── Status Badges ──────────────────────────────────────────────────────────── */
+
+/* shared badge base */
+.fd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.125rem 0.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  border: 1px solid;
+  white-space: nowrap;
 }
 
-/* Glow effects */
-.glow-lavender {
-  box-shadow: 0 0 30px -5px rgba(192, 193, 255, 0.4);
+.fd-badge-success  { background: var(--success-bg);  color: var(--success);  border-color: var(--success-dim); }
+.fd-badge-warning  { background: var(--warning-bg);  color: var(--warning);  border-color: var(--warning-dim); }
+.fd-badge-critical { background: var(--critical-bg); color: var(--critical); border-color: var(--critical-dim); }
+.fd-badge-lime     { background: var(--lime-subtle); color: var(--lime);     border-color: var(--lime-dim); }
+.fd-badge-neutral  { background: var(--bg-raised);   color: var(--text-secondary); border-color: var(--border); }
+
+/* ─── Section labels ─────────────────────────────────────────────────────────── */
+.fd-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 
-.glow-crimson {
-  box-shadow: 0 0 30px -5px rgba(220, 38, 38, 0.55);
+/* ─── Form controls ──────────────────────────────────────────────────────────── */
+.fd-input {
+  width: 100%;
+  background-color: var(--bg-raised);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  transition: border-color 0.15s;
 }
+.fd-input:focus { border-color: var(--lime-dim); }
+.fd-input::placeholder { color: var(--text-dim); }
 
-.glow-green {
-  box-shadow: 0 0 30px -5px rgba(22, 163, 74, 0.45);
+.fd-select {
+  appearance: none;
+  width: 100%;
+  background-color: var(--bg-raised);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
 }
+.fd-select:focus { border-color: var(--lime-dim); }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* ─── Progress bar ───────────────────────────────────────────────────────────── */
+.fd-progress-track {
+  width: 100%;
+  height: 4px;
+  background-color: var(--border-dim);
+  border-radius: 0;
+  overflow: hidden;
 }
-
-::-webkit-scrollbar-track {
-  background: #0f1017;
+.fd-progress-fill {
+  height: 100%;
+  background-color: var(--lime);
+  transition: width 0.5s ease;
 }
+.fd-progress-fill-success  { background-color: var(--success); }
+.fd-progress-fill-warning  { background-color: var(--warning); }
+.fd-progress-fill-critical { background-color: var(--critical); }
 
-::-webkit-scrollbar-thumb {
-  background: #2a2d3d;
-  border-radius: 9999px;
-  border: 2px solid #33374a;
+/* ─── Divider ────────────────────────────────────────────────────────────────── */
+.fd-divider { border-top: 1px solid var(--border-dim); }
+
+/* ─── Custom Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--lime-dim); }
+
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+.animate-fadeIn { animation: fadeIn 0.18s ease-out both; }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #c0c1ff;
-}
-
-/* Pulse Keyframes for Urgent Alerts */
 @keyframes urgent-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
-    border-color: rgba(220, 38, 38, 0.9);
-  }
-  50% {
-    box-shadow: 0 0 20px 6px rgba(220, 38, 38, 0.45);
-    border-color: rgba(252, 165, 165, 1);
-  }
+  0%, 100% { border-color: var(--critical-dim); }
+  50%       { border-color: var(--critical); box-shadow: 0 0 12px 2px var(--critical-bg); }
 }
+.animate-urgent { animation: urgent-pulse 2s infinite ease-in-out; }
 
-.animate-urgent {
-  animation: urgent-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 0.9s linear infinite; }
+
+/* Legacy surface-card — kept so unrewritten screens keep working */
+.surface-card {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  transition: border-color 0.15s;
 }
+.surface-card:hover { border-color: var(--lime-dim); }
+
+.glass-surface { background: var(--bg-panel); border: 1px solid var(--border); }
+.surface-elevated { background-color: var(--bg-raised); border: 1px solid var(--border-dim); }
+
+/* Legacy glow — neutralized so they don't visually conflict */
+.glow-lavender, .glow-crimson, .glow-green { box-shadow: none; }

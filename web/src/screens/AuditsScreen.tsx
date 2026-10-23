@@ -1,182 +1,294 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  ClipboardCheck,
-  Plus,
-  Clock,
-  ChevronRight,
-  TrendingUp,
-  CheckCircle2,
+  ClipboardCheck, Plus, Clock, ChevronRight, TrendingUp, CheckCircle2,
+  RefreshCw, AlertTriangle, AlertCircle,
 } from 'lucide-react';
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
 
+type AuditRecord = {
+  id: string;
+  title: string;
+  sector: string;
+  auditor: string;
+  dueDate: string;
+  progress: number;
+  severity: 'urgent' | 'attention' | 'routine';
+  status: 'pending' | 'in-progress' | 'completed';
+  riskLevel?: string;
+  findings?: string;
+  createdAt?: string;
+  farmId?: any;
+  raw?: any;
+};
+
+function normalizeAudit(a: any): AuditRecord {
+  const farm = a.farmId && typeof a.farmId === 'object' ? a.farmId : null;
+  const risk = String(a.riskLevel || 'routine').toLowerCase();
+  const status = ['pending', 'in-progress', 'completed'].includes(a.status) ? a.status : 'pending';
+  const progress = status === 'completed' ? 100 : status === 'in-progress' ? 50 : 0;
+  const created = a.createdAt ? new Date(a.createdAt) : null;
+  return {
+    id: String(a._id || a.id),
+    title: a.title || 'Untitled audit',
+    sector: farm ? `${farm.name || 'Farm'}${farm.farmType ? ` · ${farm.farmType}` : ''}` : 'Farm audit',
+    auditor: a.auditor || 'Assigned auditor',
+    dueDate: a.dueDate ? new Date(a.dueDate).toLocaleDateString() : created && !Number.isNaN(created.getTime()) ? created.toLocaleDateString() : 'Not set',
+    progress,
+    severity: ['urgent', 'high', 'critical'].includes(risk) ? 'urgent' : ['attention', 'medium', 'moderate'].includes(risk) ? 'attention' : 'routine',
+    status: status as AuditRecord['status'],
+    riskLevel: a.riskLevel,
+    findings: a.findings,
+    createdAt: a.createdAt,
+    farmId: a.farmId,
+    raw: a,
+  };
+}
+
+async function readJson(response: Response) {
+  const type = response.headers.get('content-type') || '';
+  if (!type.includes('application/json')) {
+    throw new Error(`API returned a non-JSON response (${response.status}). Check VITE_API_URL and backend route.`);
+  }
+  const data = await response.json();
+  if (!response.ok || data.success === false) throw new Error(data.message || 'Audit request failed');
+  return data;
+}
 
 export const AuditsScreen: React.FC = () => {
-  const { audits, openModal, openAuditInspector } = useApp();
+  const { openModal, openAuditInspector } = useApp();
+  const [audits, setAudits] = useState<AuditRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadAudits = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`${API_BASE_URL}/audits`);
+      const result = await readJson(response);
+      setAudits((Array.isArray(result.data) ? result.data : []).map(normalizeAudit));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not load audits');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAudits();
+    const onUpdated = () => void loadAudits();
+    window.addEventListener('audits-updated', onUpdated);
+    return () => window.removeEventListener('audits-updated', onUpdated);
+  }, [loadAudits]);
 
   const pendingAudits = audits.filter((a) => a.status !== 'completed');
-  const completedCount = audits.filter((a) => a.status === 'completed').length + 14;
+  const completedAudits = audits.filter((a) => a.status === 'completed');
+  const completedCount = completedAudits.length;
+  const overdueCount = pendingAudits.filter((a) => {
+    if (a.dueDate === 'Not set') return false;
+    const due = new Date(a.dueDate);
+    return !Number.isNaN(due.getTime()) && due < new Date(new Date().toDateString());
+  }).length;
+  const complianceScore = audits.length
+    ? Math.round((completedCount / audits.length) * 100)
+    : 0;
+
+  const severityStyle = (severity: AuditRecord['severity']) => {
+    if (severity === 'urgent') return { borderColor: 'var(--critical-dim)', background: 'var(--critical-bg)' };
+    if (severity === 'attention') return { borderColor: 'var(--warning-dim)', background: 'var(--warning-bg)' };
+    return { borderColor: 'var(--border)', background: 'var(--bg-panel)' };
+  };
 
   return (
-    <div className="space-y-6 pb-20 animate-fadeIn font-sans">
-      {/* 1. Audit Metrics Summary Bar */}
+    <div className="space-y-5 pb-20 animate-fadeIn">
+
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div>
+          <p className="fd-label mb-1">FarmDrishti / Audits & Compliance</p>
+          <h1
+            className="text-2xl font-bold"
+            style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
+          >
+            Inspection & Compliance Audits
+          </h1>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
+            Mandatory biosecurity verification, footbath protocols and entrance logs
+          </p>
+        </div>
+        <div className="flex gap-2 self-start">
+          <button onClick={() => void loadAudits()} className="fd-btn-icon" title="Refresh audits">
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+          <button
+            id="add-audit-btn"
+            onClick={() => openModal('add-audit')}
+            className="fd-btn flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" /> Schedule Audit
+          </button>
+        </div>
+      </div>
+
+      {/* ── Summary Metric Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="surface-card p-4 rounded-xl border border-[#34343c]">
-          <span className="text-xs font-sans text-slate-400">Total Pending</span>
-          <p className="font-display text-3xl text-[#c0c1ff]">{pendingAudits.length}</p>
-          <span className="text-[10px] text-slate-400">Active Schedules</span>
+        <div className="fd-card p-4">
+          <span className="fd-label block mb-1">Pending</span>
+          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
+            {loading ? '—' : pendingAudits.length}
+          </p>
+          <span className="text-xs" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>Active Schedules</span>
         </div>
 
-        <div className="surface-card p-4 rounded-xl border border-[#ba1a1a]/60">
-          <span className="text-xs font-sans text-slate-400">Overdue Audits</span>
-          <p className="font-display text-3xl text-[#ffb4ab]">1</p>
-          <span className="text-[10px] text-[#ffb4ab] font-bold">Action Needed</span>
+        <div className="fd-card p-4" style={{ borderColor: 'var(--critical-dim)', background: 'var(--critical-bg)' }}>
+          <span className="fd-label block mb-1">Overdue</span>
+          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--critical)' }}>
+            {loading ? '—' : overdueCount}
+          </p>
+          <span className="text-xs font-bold" style={{ color: 'var(--critical)', fontFamily: 'IBM Plex Mono, monospace' }}>Action Required</span>
         </div>
 
-        <div className="surface-card p-4 rounded-xl border border-[#34343c]">
-          <span className="text-xs font-sans text-slate-400">Completed Audits</span>
-          <p className="font-display text-3xl text-white">{completedCount}</p>
-          <span className="text-[10px] text-[#4CAF50] font-semibold">100% Passed</span>
+        <div className="fd-card p-4">
+          <span className="fd-label block mb-1">Completed</span>
+          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
+            {loading ? '—' : completedCount}
+          </p>
+          <span className="text-xs font-semibold" style={{ color: 'var(--success)', fontFamily: 'IBM Plex Mono, monospace' }}>From database</span>
         </div>
 
-        <div className="surface-card p-4 rounded-xl border border-[#4CAF50]/50">
-          <span className="text-xs font-sans text-slate-400">Compliance Score</span>
-          <p className="font-display text-3xl text-[#4CAF50]">92%</p>
-          <span className="text-[10px] text-[#4CAF50] font-semibold flex items-center">
-            <TrendingUp className="w-3 h-3 mr-0.5" /> Grade A Target
+        <div className="fd-card p-4" style={{ borderColor: 'var(--success-dim)', background: 'var(--success-bg)' }}>
+          <span className="fd-label block mb-1">Completion</span>
+          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--success)' }}>
+            {loading ? '—' : `${complianceScore}%`}
+          </p>
+          <span className="text-xs font-semibold flex items-center gap-1" style={{ color: 'var(--success)', fontFamily: 'IBM Plex Mono, monospace' }}>
+            <TrendingUp className="w-3 h-3" /> Score
           </span>
         </div>
       </div>
 
-      {/* 2. Header Title & Add Audit CTA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold font-serif text-white flex items-center gap-2">
-            <ClipboardCheck className="w-5 h-5 text-[#c0c1ff]" />
-            Inspection & Compliance Audits
-          </h2>
-          <p className="text-xs text-slate-400">
-            Mandatory biosecurity verification, footbath protocols, and entrance logs
-          </p>
+      {/* ── Error Banner ── */}
+      {error && (
+        <div className="fd-card p-4 flex items-start gap-3" style={{ borderColor: 'var(--critical-dim)', background: 'var(--critical-bg)' }}>
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--critical)' }} />
+          <div>
+            <p className="text-sm font-semibold" style={{ color: 'var(--critical)' }}>Could not load audits</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{error}</p>
+            <button onClick={() => void loadAudits()} className="text-xs underline mt-1" style={{ color: 'var(--lime)' }}>
+              Try again
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Pending Audits ── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="fd-label">Pending & In-Progress ({pendingAudits.length})</h2>
+          <ClipboardCheck className="w-4 h-4" style={{ color: 'var(--text-dim)' }} />
         </div>
 
-        <button
-          onClick={() => openModal('add-audit')}
-          className="px-4 py-2 rounded-xl bg-[#1a178c] hover:bg-[#1a178c]/80 text-[#c0c1ff] border border-[#c0c1ff]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" /> + Schedule New Audit
-        </button>
-      </div>
-
-      {/* 3. Pending Audits List */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-sans">
-          Pending & In-Progress Inspection Schedules
-        </h3>
-
-        {pendingAudits.map((audit) => {
+        {loading ? (
+          <div className="fd-card p-5 text-sm" style={{ color: 'var(--text-dim)' }}>Loading audits from database…</div>
+        ) : pendingAudits.length === 0 ? (
+          <div className="fd-card p-5 text-sm" style={{ color: 'var(--text-dim)' }}>
+            No pending audits. Schedule an audit to get started.
+          </div>
+        ) : pendingAudits.map((audit) => {
           const isUrgent = audit.severity === 'urgent';
           const isAttention = audit.severity === 'attention';
-
           return (
             <div
               key={audit.id}
-              className={`surface-card p-4 sm:p-5 rounded-2xl border transition-all ${
-                isUrgent
-                  ? 'border-[#ba1a1a]/60 bg-[#ba1a1a]/10'
-                  : isAttention
-                  ? 'border-[#ffba3f]/50 bg-[#ffba3f]/10'
-                  : 'border-[#34343c]'
-              }`}
+              className="fd-card p-4 sm:p-5"
+              style={severityStyle(audit.severity)}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        isUrgent
-                          ? 'bg-[#ba1a1a] text-white'
-                          : isAttention
-                          ? 'bg-[#ffba3f] text-black'
-                          : 'bg-[#1a178c] text-[#c0c1ff]'
-                      }`}
-                    >
-                      {isUrgent ? 'Urgent Warning' : isAttention ? 'Needs Attention' : 'Routine Audit'}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="space-y-2 flex-1">
+                  {/* Badge + due date */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`fd-badge ${isUrgent ? 'fd-badge-critical' : isAttention ? 'fd-badge-warning' : 'fd-badge-neutral'}`}>
+                      {isUrgent ? <AlertTriangle className="w-3 h-3" /> : isAttention ? <AlertCircle className="w-3 h-3" /> : null}
+                      {isUrgent ? 'Urgent' : isAttention ? 'Attention' : 'Routine'}
                     </span>
-                    <span className="text-xs text-slate-400 font-sans flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-slate-500" /> Due: {audit.dueDate}
+                    <span className="text-xs flex items-center gap-1" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                      <Clock className="w-3 h-3" /> Due: {audit.dueDate}
                     </span>
+                    <span className="fd-badge fd-badge-neutral text-xs uppercase">{audit.status}</span>
                   </div>
 
-                  <h4 className="text-base font-bold text-white font-serif">{audit.title}</h4>
-                  <p className="text-xs font-semibold text-[#c0c1ff]">{audit.sector}</p>
-                  <p className="text-xs text-slate-400">Auditor: {audit.auditor}</p>
+                  <h3 className="text-base font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
+                    {audit.title}
+                  </h3>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--lime)', fontFamily: 'IBM Plex Mono, monospace' }}>{audit.sector}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Auditor: {audit.auditor}</p>
+                  {audit.findings && <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{audit.findings}</p>}
 
-                  {/* Inspection Progress Bar */}
-                  <div className="pt-2 max-w-xs">
-                    <div className="flex justify-between text-[11px] text-slate-300 mb-1">
+                  {/* Progress */}
+                  <div className="max-w-xs space-y-1">
+                    <div className="flex justify-between text-xs" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
                       <span>Inspection Progress</span>
-                      <span className="font-bold text-white">{audit.progress}%</span>
+                      <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{audit.progress}%</span>
                     </div>
-                    <div className="w-full bg-[#12131a] h-2 rounded-full overflow-hidden border border-[#34343c]">
+                    <div className="fd-progress-track">
                       <div
-                        className="bg-gradient-to-r from-[#1a178c] to-[#c0c1ff] h-full transition-all duration-500"
-                        style={{ width: `${audit.progress}%` }}
-                      ></div>
+                        className="fd-progress-fill"
+                        style={{
+                          width: `${audit.progress}%`,
+                          background: isUrgent ? 'var(--critical)' : isAttention ? 'var(--warning)' : 'var(--lime)',
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Audit Action Button */}
-                <div className="flex items-center gap-2 self-end sm:self-center">
-                  <button
-                    onClick={() => openAuditInspector(audit)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 ${
-                      isUrgent
-                        ? 'bg-[#ba1a1a] hover:bg-[#93000a] text-white'
-                        : isAttention
-                        ? 'bg-[#ffba3f] text-black hover:bg-[#ffba3f]/90'
-                        : 'bg-[#1a178c] text-[#c0c1ff] border border-[#c0c1ff]/40 hover:bg-[#1a178c]/80'
-                    }`}
-                  >
-                    {audit.progress > 0 ? 'Resume Inspection' : 'Begin Audit Checklist'}
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => openAuditInspector(audit.raw || audit)}
+                  className={`fd-btn self-end sm:self-center flex items-center gap-1.5 ${isUrgent ? '' : 'fd-btn-ghost'}`}
+                  style={isUrgent
+                    ? { background: 'var(--critical)', borderColor: 'var(--critical)', color: '#111311' }
+                    : isAttention
+                    ? { borderColor: 'var(--warning-dim)', color: 'var(--warning)' }
+                    : {}
+                  }
+                >
+                  {audit.status === 'in-progress' ? 'Resume' : 'Begin Audit'}
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* 4. Completed Audits History */}
-      <div className="surface-card p-5 rounded-2xl border border-[#34343c] space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#4CAF50] font-sans flex items-center gap-1.5">
-          <CheckCircle2 className="w-4 h-4" />
-          Recent Verified Completed Audits
-        </h3>
-
-        <div className="space-y-2 text-xs">
-          <div className="p-3 rounded-xl bg-[#1f1f26] border border-[#34343c] flex items-center justify-between">
-            <div>
-              <p className="font-bold text-white">Quarantine Lock Barrier Inspection</p>
-              <p className="text-slate-400 font-sans">Sector 1 · Swine Gestation · Oct 02, 2026</p>
-            </div>
-            <span className="px-2.5 py-0.5 rounded-full bg-[#316342]/40 text-[#4CAF50] font-bold border border-[#4CAF50]/40">
-              100% Passed
-            </span>
-          </div>
-
-          <div className="p-3 rounded-xl bg-[#1f1f26] border border-[#34343c] flex items-center justify-between">
-            <div>
-              <p className="font-bold text-white">HVAC Bio-Filter Pressure Calibration</p>
-              <p className="text-slate-400 font-sans">Zone 2 Poultry House · Oct 01, 2026</p>
-            </div>
-            <span className="px-2.5 py-0.5 rounded-full bg-[#316342]/40 text-[#4CAF50] font-bold border border-[#4CAF50]/40">
-              100% Passed
-            </span>
-          </div>
+      {/* ── Completed Audits ── */}
+      <div className="fd-card p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--success)' }} />
+          <h3 className="fd-label" style={{ color: 'var(--success)' }}>Recent Completed Audits</h3>
         </div>
+
+        {loading ? (
+          <p className="text-xs" style={{ color: 'var(--text-dim)' }}>Loading completed audits…</p>
+        ) : completedAudits.length === 0 ? (
+          <p className="text-xs" style={{ color: 'var(--text-dim)' }}>No completed audits recorded yet.</p>
+        ) : (
+          <div className="space-y-1.5">
+            {completedAudits.slice(0, 5).map((audit) => (
+              <div key={audit.id} className="fd-raised flex items-center justify-between gap-3 px-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)', fontFamily: 'Space Grotesk, sans-serif' }}>{audit.title}</p>
+                  <p className="text-xs truncate" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                    {audit.sector}{audit.createdAt ? ` · ${new Date(audit.createdAt).toLocaleDateString()}` : ''}
+                  </p>
+                </div>
+                <span className="fd-badge fd-badge-success flex-shrink-0">Completed</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

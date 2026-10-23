@@ -1,31 +1,104 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 import { X, PackagePlus, Plus, FileSpreadsheet, Download } from 'lucide-react';
 
-
 export const AddInventoryModal: React.FC = () => {
-  const { activeModal, closeModal, addInventoryItem } = useApp();
+  const { activeModal, closeModal, showToast } = useApp();
 
+  const [farmId, setFarmId] = useState('');
+  const [farms, setFarms] = useState<any[]>([]);
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<'Disinfectants' | 'PPE' | 'Vaccines' | 'Medical Supplies' | 'Feed Additives'>('Disinfectants');
+  const [category, setCategory] = useState<
+    'disinfectant' | 'ppe' | 'medicine' | 'equipment' | 'other'
+  >('disinfectant');
   const [quantity, setQuantity] = useState(10);
-  const [unit, setUnit] = useState('Barrels');
-  const [minThreshold, setMinThreshold] = useState(5);
-  const [location, setLocation] = useState('Central Chemical Shed');
+  const [unit, setUnit] = useState('pieces');
+  const [minimumStock, setMinimumStock] = useState(5);
+  const [saving, setSaving] = useState(false);
+  const [loadingFarms, setLoadingFarms] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (activeModal !== 'add-inventory') return;
+
+    const loadFarms = async () => {
+      try {
+        setLoadingFarms(true);
+        setError('');
+
+        const response = await api.getFarms() as any;
+        const list = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data)
+            ? response.data
+            : [];
+
+        setFarms(list);
+        if (list.length > 0) {
+          setFarmId((current) => current || list[0]._id || list[0].id || '');
+        } else {
+          setError('No farms found. Add a farm before adding inventory.');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not load farms.');
+      } finally {
+        setLoadingFarms(false);
+      }
+    };
+
+    loadFarms();
+  }, [activeModal]);
 
   if (activeModal !== 'add-inventory') return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addInventoryItem({
-      name: name || 'Chemical Virucide Solution',
-      category,
-      quantity: Number(quantity),
-      unit,
-      minThreshold: Number(minThreshold),
-      location,
-      lastRestocked: 'Just Now',
-    });
+
+    if (!farmId) {
+      setError('Select a farm before saving this inventory item.');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError('');
+
+      const baseUrl =
+        import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${baseUrl}/inventory`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          farmId,
+          itemName: name.trim(),
+          category,
+          quantity: Number(quantity),
+          unit: unit.trim(),
+          minimumStock: Number(minimumStock),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.success === false) {
+        throw new Error(result.message || 'Failed to save inventory item.');
+      }
+
+      window.dispatchEvent(new Event('inventory-updated'));
+      showToast('Inventory item saved successfully.');
+      setName('');
+      setQuantity(10);
+      setMinimumStock(5);
+      closeModal();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Could not save inventory item.'
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -36,12 +109,32 @@ export const AddInventoryModal: React.FC = () => {
             <PackagePlus className="w-5 h-5 text-[#c0c1ff]" />
             <h3 className="text-base font-bold font-serif text-white">Add Stock Item to Inventory</h3>
           </div>
-          <button onClick={closeModal} className="p-1 text-slate-400 hover:text-white rounded-lg">
+          <button type="button" onClick={closeModal} className="p-1 text-slate-400 hover:text-white rounded-lg">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">Farm</label>
+            <select
+              value={farmId}
+              onChange={(e) => setFarmId(e.target.value)}
+              className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+              required
+              disabled={loadingFarms || farms.length === 0}
+            >
+              <option value="">
+                {loadingFarms ? 'Loading farms...' : 'Select a farm'}
+              </option>
+              {farms.map((farm) => (
+                <option key={farm._id || farm.id} value={farm._id || farm.id}>
+                  {farm.name || 'Unnamed farm'}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1">Item Name</label>
             <input
@@ -59,14 +152,14 @@ export const AddInventoryModal: React.FC = () => {
               <label className="block text-xs font-semibold text-slate-300 mb-1">Category</label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value as any)}
+                onChange={(e) => setCategory(e.target.value as typeof category)}
                 className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
               >
-                <option value="Disinfectants">Disinfectants</option>
-                <option value="PPE">PPE Equipment</option>
-                <option value="Vaccines">Vaccines & Serology</option>
-                <option value="Medical Supplies">Medical Supplies</option>
-                <option value="Feed Additives">Feed Additives</option>
+                <option value="disinfectant">Disinfectant</option>
+                <option value="ppe">PPE</option>
+                <option value="medicine">Medicine / Vaccines</option>
+                <option value="equipment">Equipment</option>
+                <option value="other">Other</option>
               </select>
             </div>
             <div>
@@ -86,6 +179,7 @@ export const AddInventoryModal: React.FC = () => {
               <label className="block text-xs font-semibold text-slate-300 mb-1">Initial Quantity</label>
               <input
                 type="number"
+                min="0"
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
                 className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
@@ -93,41 +187,39 @@ export const AddInventoryModal: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Min Threshold</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Minimum Stock</label>
               <input
                 type="number"
-                value={minThreshold}
-                onChange={(e) => setMinThreshold(Number(e.target.value))}
+                min="0"
+                value={minimumStock}
+                onChange={(e) => setMinimumStock(Number(e.target.value))}
                 className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
                 required
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Depot Storage Location</label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
-              required
-            />
-          </div>
+          {error && (
+            <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+              {error}
+            </p>
+          )}
 
           <div className="pt-3 border-t border-[#34343c] flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={closeModal}
               className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+              disabled={saving}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#1a178c] hover:bg-[#1a178c]/80 text-[#c0c1ff] border border-[#c0c1ff]/40 rounded-xl flex items-center gap-1.5 shadow-md"
+              disabled={saving || loadingFarms || farms.length === 0}
+              className="px-5 py-2 text-xs font-bold bg-[#1a178c] hover:bg-[#1a178c]/80 text-[#c0c1ff] border border-[#c0c1ff]/40 rounded-xl flex items-center gap-1.5 shadow-md disabled:opacity-50"
             >
-              <Plus className="w-4 h-4" /> Add Item
+              <Plus className="w-4 h-4" /> {saving ? 'Saving...' : 'Add Item'}
             </button>
           </div>
         </form>

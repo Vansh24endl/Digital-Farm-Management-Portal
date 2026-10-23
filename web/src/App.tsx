@@ -70,17 +70,17 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1017] text-slate-100 flex flex-col font-sans selection:bg-[#4f46e5] selection:text-white">
+    <div className="min-h-screen flex flex-col font-sans" style={{ background: 'var(--bg-main)', color: 'var(--text-primary)' }}>
       {/* Sticky Top App Bar */}
       <Navbar />
 
-      {/* Main Body with Centered Max-Width Container (Max 1440px, Centered) */}
-      <div className="flex flex-1 w-full max-w-[1440px] mx-auto">
+      {/* Main Body Layout: Sidebar + Full Available Content Area */}
+      <div className="flex flex-1 w-full">
         {/* Collapsible Left Sidebar Navigation */}
         <Sidebar />
 
-        {/* Dynamic Center Screen Container with Spacious Padding */}
-        <main className="flex-1 p-5 sm:p-6 lg:p-8 overflow-x-hidden">
+        {/* Dynamic Center Screen Container with Responsive Padding */}
+        <main className="flex-1 min-w-0 w-full p-4 sm:p-6 lg:p-8 overflow-x-hidden">
           {renderScreen()}
         </main>
       </div>

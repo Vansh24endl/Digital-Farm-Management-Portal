@@ -1,4 +1,5 @@
-import React from 'react';
+import { ChecklistHistory } from './ChecklistHistory';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   ClipboardList,
@@ -6,8 +7,18 @@ import {
   AlertTriangle,
   AlertCircle,
   Send,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
+type ChecklistStatus = 'passed' | 'warning' | 'critical';
+
+const statusConfig: Record<ChecklistStatus, { label: string; badgeClass: string; iconColor: string; borderColor: string; bgColor: string }> = {
+  passed:   { label: 'PASSED',   badgeClass: 'fd-badge-success',  iconColor: 'var(--success)',  borderColor: 'var(--success-dim)',  bgColor: 'var(--success-bg)' },
+  warning:  { label: 'WARNING',  badgeClass: 'fd-badge-warning',  iconColor: 'var(--warning)',  borderColor: 'var(--warning-dim)',  bgColor: 'var(--warning-bg)' },
+  critical: { label: 'CRITICAL', badgeClass: 'fd-badge-critical', iconColor: 'var(--critical)', borderColor: 'var(--critical-dim)', bgColor: 'var(--critical-bg)' },
+};
 
 export const ChecklistScreen: React.FC = () => {
   const {
@@ -18,6 +29,12 @@ export const ChecklistScreen: React.FC = () => {
     submitChecklist,
   } = useApp();
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
+
   const zones = [
     'Zone A Rearing Facility',
     'Zone B Poultry House',
@@ -25,168 +42,271 @@ export const ChecklistScreen: React.FC = () => {
     'Zone D Storage & Chemical Depot',
   ];
 
-  const totalItems = checklist.length;
-  const passedItems = checklist.filter((i) => i.status === 'passed').length;
-  const warningItems = checklist.filter((i) => i.status === 'warning').length;
-  const criticalItems = checklist.filter((i) => i.status === 'critical').length;
-  const passPercentage = Math.round((passedItems / totalItems) * 100);
+  const zoneChecklist = useMemo(
+    () =>
+      checklist.filter((item: any) => {
+        return !item.zone || item.zone === selectedZone;
+      }),
+    [checklist, selectedZone]
+  );
+
+  const totalItems = zoneChecklist.length;
+  const passedItems  = zoneChecklist.filter((item: any) => item.status === 'passed').length;
+  const warningItems = zoneChecklist.filter((item: any) => item.status === 'warning').length;
+  const criticalItems = zoneChecklist.filter((item: any) => item.status === 'critical').length;
+  const passPercentage = totalItems > 0 ? Math.round((passedItems / totalItems) * 100) : 0;
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setSubmitMessage('');
+    setSubmitError('');
+
+    try {
+      await Promise.resolve(submitChecklist());
+      setSubmitMessage('Checklist submitted successfully.');
+      setHistoryRefreshKey((k) => k + 1);
+      window.dispatchEvent(new CustomEvent('checklist-submitted'));
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : 'Could not submit the checklist. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="space-y-6 pb-20 animate-fadeIn font-sans">
-      {/* 1. Facility Zone Selector Dropdown */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="space-y-5 pb-20 animate-fadeIn">
+
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold font-serif text-white flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-[#c0c1ff]" />
-            Daily Biosecurity Protocol Checklist
-          </h2>
-          <p className="text-xs text-slate-400">
+          <p className="fd-label mb-1">FarmDrishti / Biosecurity Checklist</p>
+          <h1
+            className="text-2xl font-bold"
+            style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
+          >
+            Daily Inspection Protocol
+          </h1>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
             Mandatory sanitation audit checklist for active farm personnel
           </p>
         </div>
 
-        <select
-          value={selectedZone}
-          onChange={(e) => setSelectedZone(e.target.value)}
-          className="px-4 py-2.5 rounded-xl bg-[#1b1b22] border border-[#34343c] text-slate-100 font-bold font-serif text-xs focus:border-[#c0c1ff] outline-none cursor-pointer shadow-md self-start sm:self-auto"
-        >
-          {zones.map((z) => (
-            <option key={z} value={z}>
-              {z}
-            </option>
-          ))}
-        </select>
+        {/* Zone Selector */}
+        <div className="flex flex-col gap-1 self-start">
+          <label className="fd-label" htmlFor="zone-select">Inspection Zone</label>
+          <div className="relative">
+            <select
+              id="zone-select"
+              value={selectedZone}
+              onChange={(e) => setSelectedZone(e.target.value)}
+              className="fd-select pr-8"
+              style={{ minWidth: '220px' }}
+            >
+              {zones.map((zone) => (
+                <option key={zone} value={zone}>{zone}</option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
-      {/* 2. Dynamic Overall Progress Card */}
-      <div className="surface-card rounded-2xl p-5 border border-[#34343c] space-y-3">
+      {/* ── Compliance Summary Card ── */}
+      <div className="fd-card p-5 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400">
-              Zone Decontamination Status
-            </span>
+            <p className="fd-label mb-1">Zone Decontamination Status</p>
             <div className="flex items-baseline gap-2">
-              <span className="font-display text-4xl text-white">{passedItems}/{totalItems}</span>
-              <span className="text-sm font-bold text-[#c0c1ff]">Passed ({passPercentage}%)</span>
+              <span
+                className="font-display text-4xl leading-none"
+                style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, color: 'var(--text-primary)' }}
+              >
+                {passedItems}/{totalItems}
+              </span>
+              <span className="text-sm font-bold" style={{ color: 'var(--lime)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                {passPercentage}% Passed
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
-            <span className="px-2.5 py-1 rounded-full bg-[#316342]/40 text-[#4CAF50] font-bold border border-[#4CAF50]/40">
-              {passedItems} Passed
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="fd-badge fd-badge-success">
+              <CheckCircle2 className="w-3 h-3" /> {passedItems} Passed
             </span>
             {warningItems > 0 && (
-              <span className="px-2.5 py-1 rounded-full bg-[#ffba3f]/20 text-[#ffba3f] font-bold border border-[#ffba3f]/40">
-                {warningItems} Warning
+              <span className="fd-badge fd-badge-warning">
+                <AlertCircle className="w-3 h-3" /> {warningItems} Warning
               </span>
             )}
             {criticalItems > 0 && (
-              <span className="px-2.5 py-1 rounded-full bg-[#ba1a1a]/30 text-[#ffb4ab] font-bold border border-[#ba1a1a]/60">
-                {criticalItems} Critical
+              <span className="fd-badge fd-badge-critical">
+                <AlertTriangle className="w-3 h-3" /> {criticalItems} Critical
               </span>
             )}
           </div>
         </div>
 
-        {/* Animated Progress Bar */}
-        <div className="w-full bg-[#12131a] h-3 rounded-full overflow-hidden border border-[#34343c]">
+        {/* Progress bar */}
+        <div className="fd-progress-track">
           <div
-            className="bg-gradient-to-r from-[#1a178c] via-[#c0c1ff] to-[#4CAF50] h-full transition-all duration-500"
-            style={{ width: `${passPercentage}%` }}
-          ></div>
+            className="fd-progress-fill"
+            style={{
+              width: `${passPercentage}%`,
+              background: passPercentage >= 80 ? 'var(--success)' : passPercentage >= 60 ? 'var(--warning)' : 'var(--critical)',
+            }}
+          />
         </div>
 
-        <p className="text-[11px] text-slate-400 font-sans italic">
-          * Tap any checklist item below to cycle its state: Passed → Pending Warning → Critical Pending.
+        <p className="text-xs italic" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+          Click a row to cycle: Passed → Warning → Critical → Passed
         </p>
       </div>
 
-      {/* 3. Interactive Checklist Items */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-sans">
-          Interactive Inspection Checklist Items
-        </h3>
+      {/* ── Checklist Items ── */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="fd-label">Inspection Items ({totalItems})</h2>
+          <ClipboardList className="w-4 h-4" style={{ color: 'var(--text-dim)' }} />
+        </div>
 
-        {checklist.map((item) => {
-          const isPassed = item.status === 'passed';
-          const isWarning = item.status === 'warning';
+        {zoneChecklist.length === 0 ? (
+          <div className="fd-card p-8 text-center">
+            <ClipboardList className="w-8 h-8 mx-auto mb-3" style={{ color: 'var(--text-dim)' }} />
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No checklist items available for this zone.</p>
+          </div>
+        ) : (
+          zoneChecklist.map((item: any) => {
+            const status = item.status as ChecklistStatus;
+            const config = statusConfig[status];
+            const isPassed = status === 'passed';
+            const isWarning = status === 'warning';
 
-
-          return (
-            <div
-              key={item.id}
-              onClick={() => cycleChecklistItemStatus(item.id)}
-              className={`surface-card p-4 rounded-2xl border cursor-pointer transition-all active:scale-98 group ${
-                isPassed
-                  ? 'border-[#316342] bg-[#316342]/10 hover:border-[#4CAF50]'
-                  : isWarning
-                  ? 'border-[#ffba3f]/60 bg-[#ffba3f]/10 hover:border-[#ffba3f]'
-                  : 'border-[#ba1a1a] bg-[#ba1a1a]/15 hover:border-[#ffb4ab]'
-              }`}
-              title="Click to cycle status (Passed -> Warning -> Critical)"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0 mt-0.5 transition-transform group-hover:scale-110 ${
-                      isPassed
-                        ? 'bg-[#4CAF50] border-[#4CAF50] text-black'
-                        : isWarning
-                        ? 'bg-[#ffba3f] border-[#ffba3f] text-black'
-                        : 'bg-[#ba1a1a] border-[#ba1a1a] text-white animate-pulse'
-                    }`}
-                  >
-                    {isPassed ? (
-                      <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
-                    ) : isWarning ? (
-                      <AlertCircle className="w-5 h-5 stroke-[2.5]" />
-                    ) : (
-                      <AlertTriangle className="w-5 h-5 stroke-[2.5]" />
-                    )}
-                  </div>
-
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#c0c1ff]">
-                        {item.category}
-                      </span>
+            return (
+              <button
+                type="button"
+                key={item.id}
+                onClick={() => cycleChecklistItemStatus(item.id)}
+                className="w-full text-left p-4 transition-all active:scale-[0.995] group"
+                style={{
+                  background: isPassed ? 'var(--success-bg)' : isWarning ? 'var(--warning-bg)' : 'var(--critical-bg)',
+                  border: `1px solid ${config.borderColor}`,
+                  borderRadius: '3px',
+                }}
+                title="Click to cycle status (Passed → Warning → Critical)"
+                aria-label={`${item.title}, current status ${config.label}. Click to change status.`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    {/* Status Icon */}
+                    <div
+                      className="w-8 h-8 flex items-center justify-center flex-shrink-0 mt-0.5 transition-transform group-hover:scale-110"
+                      style={{
+                        border: `1px solid ${config.borderColor}`,
+                        borderRadius: '2px',
+                        color: config.iconColor,
+                        background: isPassed ? 'var(--success-bg)' : isWarning ? 'var(--warning-bg)' : 'var(--critical-bg)',
+                      }}
+                    >
+                      {isPassed ? (
+                        <CheckCircle2 className="w-4 h-4" />
+                      ) : isWarning ? (
+                        <AlertCircle className="w-4 h-4" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4" />
+                      )}
                     </div>
-                    <h4 className="text-base font-bold text-white font-serif group-hover:text-[#c0c1ff] transition-colors">
-                      {item.title}
-                    </h4>
-                    <p className="text-xs text-slate-300 font-sans">{item.description}</p>
+
+                    <div className="space-y-0.5">
+                      <span className="fd-label">{item.category}</span>
+                      <h4
+                        className="text-sm font-bold"
+                        style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}
+                      >
+                        {item.title}
+                      </h4>
+                      <p className="text-xs leading-snug" style={{ color: 'var(--text-secondary)' }}>
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className={`fd-badge ${config.badgeClass}`}>
+                      {config.label}
+                    </span>
+                    <span className="text-[9px]" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>tap to cycle</span>
                   </div>
                 </div>
-
-                {/* State Pill Badge */}
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase border shadow-md ${
-                      isPassed
-                        ? 'bg-[#316342] text-[#4CAF50] border-[#4CAF50]'
-                        : isWarning
-                        ? 'bg-[#ffba3f]/20 text-[#ffba3f] border-[#ffba3f]'
-                        : 'bg-[#ba1a1a] text-white border-[#ffb4ab]'
-                    }`}
-                  >
-                    {isPassed ? 'PASSED' : isWarning ? 'WARNING' : 'CRITICAL'}
-                  </span>
-                  <span className="text-[9px] text-slate-400 font-sans">Tap to cycle</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+              </button>
+            );
+          })
+        )}
       </div>
 
-      {/* 4. Submit Daily Checklist CTA */}
-      <div className="pt-2">
+      {/* ── Submit Section ── */}
+      <div className="pt-2 space-y-3">
+        {submitMessage && (
+          <div
+            className="fd-card p-3 flex items-center gap-2 text-sm"
+            style={{ borderColor: 'var(--success-dim)', background: 'var(--success-bg)' }}
+            role="status"
+          >
+            <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--success)' }} />
+            <span style={{ color: 'var(--success)' }}>{submitMessage}</span>
+          </div>
+        )}
+
+        {submitError && (
+          <div
+            className="fd-card p-3 flex items-center gap-2 text-sm"
+            style={{ borderColor: 'var(--critical-dim)', background: 'var(--critical-bg)' }}
+            role="alert"
+          >
+            <AlertTriangle className="w-4 h-4" style={{ color: 'var(--critical)' }} />
+            <span style={{ color: 'var(--critical)' }}>{submitError}</span>
+          </div>
+        )}
+
         <button
-          onClick={submitChecklist}
-          className="w-full py-3.5 rounded-2xl bg-[#1a178c] hover:bg-[#1a178c]/90 text-[#c0c1ff] border border-[#c0c1ff]/50 text-sm font-extrabold shadow-2xl flex items-center justify-center gap-2 transition-all active:scale-95"
+          id="checklist-submit-btn"
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSubmitting || totalItems === 0}
+          className="fd-btn w-full py-3.5 text-sm"
         >
-          <Send className="w-4 h-4" /> Submit Daily Biosecurity Checklist to HQ
+          {isSubmitting ? (
+            <RefreshCw className="w-4 h-4 animate-spin" />
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
+          {isSubmitting
+            ? 'Submitting Checklist…'
+            : 'Submit Daily Biosecurity Checklist to HQ'}
         </button>
+      </div>
+
+      {/* ── Checklist History ── */}
+      <div className="pt-3" style={{ borderTop: '1px solid var(--border-dim)' }}>
+        <button
+          id="checklist-history-toggle"
+          type="button"
+          onClick={() => setShowHistory((prev) => !prev)}
+          className="fd-btn-ghost w-full justify-between"
+        >
+          <span className="flex items-center gap-2">
+            <ClipboardList className="w-4 h-4" />
+            {showHistory ? 'Hide Checklist History' : 'View Submission History'}
+          </span>
+          {showHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+
+        {showHistory && (
+          <div className="mt-4">
+            <ChecklistHistory refreshKey={historyRefreshKey} />
+          </div>
+        )}
       </div>
     </div>
   );

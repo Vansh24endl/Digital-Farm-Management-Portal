@@ -1,11 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import type { ScreenId } from '../types';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ShieldCheck,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
 
 interface SidebarItem {
   id: ScreenId;
@@ -13,188 +9,148 @@ interface SidebarItem {
   icon: string;
   category: 'core' | 'quick' | 'companion';
   badge?: string;
+  badgeKind?: 'critical' | 'warning' | 'lime';
 }
 
 const navItems: SidebarItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'grid_view', category: 'core' },
-  { id: 'farm-map', label: 'Farm Map (Zone 2)', icon: 'map', category: 'companion', badge: 'Alert' },
-  { id: 'surveillance', label: 'Surveillance Map', icon: 'coronavirus', category: 'core', badge: 'High Risk' },
-  { id: 'health', label: 'Farm Health Overview', icon: 'favorite', category: 'core' },
-  { id: 'audits', label: 'Audits & Compliance', icon: 'assignment_turned_in', category: 'core' },
-  
-  // Quick Access Section (Moved to Sidebar!)
-  { id: 'checklist', label: 'Biosecurity Checklist', icon: 'fact_check', category: 'quick' },
-  { id: 'visitors', label: 'Visitor Control Log', icon: 'badge', category: 'quick' },
-  { id: 'weather', label: 'Micro-Climate Weather', icon: 'partly_cloudy_day', category: 'quick' },
-  { id: 'emergency', label: 'Emergency Contacts', icon: 'emergency', category: 'quick', badge: '24/7' },
-  { id: 'training', label: 'Training & SOPs', icon: 'menu_book', category: 'quick' },
-  { id: 'inventory', label: 'Chemical & PPE Stock', icon: 'inventory_2', category: 'quick' },
-  { id: 'reports', label: 'Reports & Analytics', icon: 'analytics', category: 'companion' },
-  { id: 'profile', label: 'User Profile & Settings', icon: 'settings', category: 'core' },
+  { id: 'dashboard',    label: 'Dashboard',             icon: 'grid_view',           category: 'core' },
+  { id: 'farm-map',     label: 'Farm Map (Zone 2)',      icon: 'map',                 category: 'companion', badge: 'Alert',    badgeKind: 'critical' },
+  { id: 'surveillance', label: 'Surveillance Map',       icon: 'coronavirus',         category: 'core',      badge: 'High Risk', badgeKind: 'critical' },
+  { id: 'health',       label: 'Farm Health Overview',   icon: 'favorite',            category: 'core' },
+  { id: 'audits',       label: 'Audits & Compliance',    icon: 'assignment_turned_in', category: 'core' },
+  { id: 'checklist',   label: 'Biosecurity Checklist',  icon: 'fact_check',          category: 'quick' },
+  { id: 'visitors',    label: 'Visitor Control Log',    icon: 'badge',               category: 'quick' },
+  { id: 'weather',     label: 'Micro-Climate Weather',  icon: 'partly_cloudy_day',   category: 'quick' },
+  { id: 'emergency',   label: 'Emergency Contacts',     icon: 'emergency',           category: 'quick',     badge: '24/7',     badgeKind: 'warning' },
+  { id: 'training',    label: 'Training & SOPs',        icon: 'menu_book',           category: 'quick' },
+  { id: 'inventory',   label: 'Chemical & PPE Stock',   icon: 'inventory_2',         category: 'quick' },
+  { id: 'reports',     label: 'Reports & Analytics',    icon: 'analytics',           category: 'companion' },
+  { id: 'profile',     label: 'Profile & Settings',     icon: 'settings',            category: 'core' },
 ];
+
+const categoryGroups: { key: 'core' | 'quick' | 'companion'; label: string }[] = [
+  { key: 'core',      label: 'Core Operations' },
+  { key: 'quick',     label: 'Quick Access' },
+  { key: 'companion', label: 'Analytics & Maps' },
+];
+
+const badgeStyle: Record<string, React.CSSProperties> = {
+  critical: { background: 'var(--critical-bg)', color: 'var(--critical)', border: '1px solid var(--critical-dim)', fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', borderRadius: '2px', padding: '1px 5px' },
+  warning:  { background: 'var(--warning-bg)',  color: 'var(--warning)',  border: '1px solid var(--warning-dim)',  fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', borderRadius: '2px', padding: '1px 5px' },
+  lime:     { background: 'var(--lime-subtle)', color: 'var(--lime)',     border: '1px solid var(--lime-dim)',     fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', borderRadius: '2px', padding: '1px 5px' },
+};
 
 export const Sidebar: React.FC = () => {
   const { activeScreen, navigateTo, isSidebarCollapsed, toggleSidebar } = useApp();
 
   return (
     <aside
-      className={`hidden md:flex flex-col bg-[#181922] border-r border-[#2d3142] h-[calc(100vh-61px)] sticky top-[61px] transition-all duration-300 z-30 select-none ${
-        isSidebarCollapsed ? 'w-16' : 'w-64'
+      className={`hidden md:flex flex-col flex-shrink-0 h-[calc(100vh-56px)] sticky top-14 transition-all duration-300 z-30 select-none ${
+        isSidebarCollapsed ? 'w-14' : 'w-56'
       }`}
+      style={{ background: 'var(--bg-panel)', borderRight: '1px solid var(--border)' }}
     >
-      {/* Sidebar Header & Collapse Toggle */}
-      <div className="p-3 border-b border-[#2d3142] flex items-center justify-between">
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-3 py-2.5 flex-shrink-0"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
         {!isSidebarCollapsed && (
-          <div className="flex items-center gap-2 px-1">
-            <ShieldCheck className="w-5 h-5 text-[#c0c1ff]" />
-            <span className="text-xs font-bold font-sans tracking-wide text-white uppercase">
-              AgroShield Portal
+          <div className="flex items-center gap-2 min-w-0">
+            <ShieldCheck className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--lime)' }} />
+            <span
+              className="text-xs font-bold uppercase tracking-widest truncate"
+              style={{ fontFamily: 'IBM Plex Mono, monospace', color: 'var(--text-secondary)' }}
+            >
+              FarmDrishti
             </span>
           </div>
         )}
         <button
           onClick={toggleSidebar}
-          className={`p-1.5 rounded-xl bg-[#212330] hover:bg-[#2a2d3d] border border-[#33374a] text-slate-300 hover:text-white transition-all ${
-            isSidebarCollapsed ? 'mx-auto' : ''
-          }`}
-          title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          className="fd-btn-icon flex-shrink-0"
+          style={isSidebarCollapsed ? { marginLeft: 'auto', marginRight: 'auto' } : {}}
+          title={isSidebarCollapsed ? 'Expand' : 'Collapse'}
         >
-          {isSidebarCollapsed ? (
-            <ChevronRight className="w-4 h-4 text-[#c0c1ff]" />
-          ) : (
-            <ChevronLeft className="w-4 h-4 text-[#c0c1ff]" />
-          )}
+          {isSidebarCollapsed
+            ? <ChevronRight className="w-3.5 h-3.5" />
+            : <ChevronLeft className="w-3.5 h-3.5" />
+          }
         </button>
       </div>
 
-      {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-4 font-sans">
-        {/* Core Operations Group */}
-        <div>
-          {!isSidebarCollapsed && (
-            <span className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Core Operations
-            </span>
-          )}
-          <div className="mt-1 space-y-1">
-            {navItems
-              .filter((item) => item.category === 'core')
-              .map((item) => {
-                const isActive = activeScreen === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => navigateTo(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      isActive
-                        ? 'bg-[#4f46e5] text-white shadow-md font-bold'
-                        : 'text-slate-300 hover:text-white hover:bg-[#212330]'
-                    } ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
-                    title={isSidebarCollapsed ? item.label : undefined}
-                  >
-                    <span className={`material-symbols-outlined text-xl flex-shrink-0 ${isActive ? 'fill-1' : ''}`}>
-                      {item.icon}
-                    </span>
-                    {!isSidebarCollapsed && (
-                      <div className="flex-1 flex items-center justify-between min-w-0">
-                        <span className="truncate">{item.label}</span>
-                        {item.badge && (
-                          <span className="px-1.5 py-0.2 text-[9px] font-bold uppercase rounded bg-[#dc2626]/30 text-[#fca5a5] border border-[#dc2626]/50">
-                            {item.badge}
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto py-2">
+        {categoryGroups.map(({ key, label }, gi) => {
+          const items = navItems.filter((item) => item.category === key);
+          return (
+            <div key={key} className={gi > 0 ? 'mt-3' : ''}>
+              {/* Group label */}
+              {!isSidebarCollapsed && (
+                <div className="px-3 mb-1">
+                  <span className="fd-label">{label}</span>
+                </div>
+              )}
+              <div className="space-y-0.5 px-2">
+                {items.map((item) => {
+                  const isActive = activeScreen === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => navigateTo(item.id)}
+                      title={isSidebarCollapsed ? item.label : undefined}
+                      className={`w-full flex items-center gap-2.5 py-2 rounded-sm transition-colors text-left ${
+                        isSidebarCollapsed ? 'justify-center px-2' : 'px-2.5'
+                      }`}
+                      style={{
+                        background: isActive ? 'var(--lime-subtle)' : 'transparent',
+                        color: isActive ? 'var(--lime)' : 'var(--text-secondary)',
+                        borderLeft: isActive ? '2px solid var(--lime)' : '2px solid transparent',
+                      }}
+                      onMouseOver={(e) => {
+                        if (!isActive) e.currentTarget.style.background = 'var(--bg-raised)';
+                      }}
+                      onMouseOut={(e) => {
+                        if (!isActive) e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <span className={`material-symbols-outlined flex-shrink-0 ${isActive ? '' : ''}`} style={{ fontSize: '18px' }}>
+                        {item.icon}
+                      </span>
+                      {!isSidebarCollapsed && (
+                        <div className="flex-1 flex items-center justify-between min-w-0">
+                          <span
+                            className="text-xs font-semibold truncate"
+                            style={{
+                              fontFamily: 'Inter, sans-serif',
+                              color: isActive ? 'var(--lime)' : 'var(--text-secondary)',
+                              fontWeight: isActive ? 700 : 500,
+                            }}
+                          >
+                            {item.label}
                           </span>
-                        )}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-          </div>
-        </div>
-
-        {/* Quick Access Modules Group (Moved to Sidebar!) */}
-        <div>
-          {!isSidebarCollapsed && (
-            <span className="px-2 text-[10px] font-bold uppercase tracking-wider text-[#c0c1ff]">
-              Quick Access Modules
-            </span>
-          )}
-          <div className="mt-1 space-y-1">
-            {navItems
-              .filter((item) => item.category === 'quick')
-              .map((item) => {
-                const isActive = activeScreen === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => navigateTo(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      isActive
-                        ? 'bg-[#4f46e5] text-white shadow-md font-bold'
-                        : 'text-slate-300 hover:text-white hover:bg-[#212330]'
-                    } ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
-                    title={isSidebarCollapsed ? item.label : undefined}
-                  >
-                    <span className={`material-symbols-outlined text-xl flex-shrink-0 ${isActive ? 'fill-1' : ''}`}>
-                      {item.icon}
-                    </span>
-                    {!isSidebarCollapsed && (
-                      <div className="flex-1 flex items-center justify-between min-w-0">
-                        <span className="truncate">{item.label}</span>
-                        {item.badge && (
-                          <span className="px-1.5 py-0.2 text-[9px] font-bold uppercase rounded bg-[#d97706]/30 text-[#fcd34d] border border-[#d97706]/50">
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-          </div>
-        </div>
-
-        {/* Companion Modules Group */}
-        <div>
-          {!isSidebarCollapsed && (
-            <span className="px-2 text-[10px] font-bold uppercase tracking-wider text-[#d97706]">
-              Analytics & Maps
-            </span>
-          )}
-          <div className="mt-1 space-y-1">
-            {navItems
-              .filter((item) => item.category === 'companion')
-              .map((item) => {
-                const isActive = activeScreen === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => navigateTo(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      isActive
-                        ? 'bg-[#4f46e5] text-white shadow-md font-bold'
-                        : 'text-slate-300 hover:text-white hover:bg-[#212330]'
-                    } ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
-                    title={isSidebarCollapsed ? item.label : undefined}
-                  >
-                    <span className={`material-symbols-outlined text-xl flex-shrink-0 ${isActive ? 'fill-1' : ''}`}>
-                      {item.icon}
-                    </span>
-                    {!isSidebarCollapsed && (
-                      <div className="flex-1 flex items-center justify-between min-w-0">
-                        <span className="truncate">{item.label}</span>
-                        {item.badge && (
-                          <span className="px-1.5 py-0.2 text-[9px] font-bold uppercase rounded bg-[#dc2626]/30 text-[#fca5a5] border border-[#dc2626]/50">
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-          </div>
-        </div>
+                          {item.badge && (
+                            <span style={badgeStyle[item.badgeKind || 'lime']}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {/* Footer version */}
+      {!isSidebarCollapsed && (
+        <div className="px-3 py-2 flex-shrink-0" style={{ borderTop: '1px solid var(--border-dim)' }}>
+          <p className="fd-label">v2.0 · Field Console</p>
+        </div>
+      )}
     </aside>
   );
 };

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
 import type {
   ScreenId,
@@ -68,7 +68,7 @@ interface AppContextType {
   selectedZone: string;
   setSelectedZone: (zone: string) => void;
   cycleChecklistItemStatus: (id: string) => void;
-  submitChecklist: () => void;
+  submitChecklist: () => Promise<void>;
 
   audits: Audit[];
   activeAuditInspection: Audit | null;
@@ -549,7 +549,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeTrainingTopic, setActiveTrainingTopic] = useState<TrainingTopic | null>(null);
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [selectedFarmId, setSelectedFarmId] = useState('gv-pig');
+  const [selectedFarmId, setSelectedFarmId] = useState('');
+  const [farmIdLoadError, setFarmIdLoadError] = useState<string | null>(null);
+
+  // Resolve the default selected farm using the real MongoDB _id.
+  useEffect(() => {
+    let cancelled = false;
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+    fetch(`${apiBase}/farms`)
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.message || 'Could not load farms');
+        return body;
+      })
+      .then((body) => {
+        const farms = Array.isArray(body) ? body : body.data;
+        if (!Array.isArray(farms)) throw new Error('Unexpected farms API response');
+        if (!cancelled) {
+          const validFarm = farms.find((farm: any) => /^[a-f\d]{24}$/i.test(String(farm._id || '')));
+          if (validFarm) {
+            setSelectedFarmId((current) => current || validFarm._id);
+            setFarmIdLoadError(null);
+          } else {
+            setFarmIdLoadError('No farms found in MongoDB. Create a farm first.');
+          }
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setFarmIdLoadError(error instanceof Error ? error.message : 'Could not load farm IDs');
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, []);
   
   const [temperatureUnit, setTemperatureUnit] = useState<'C' | 'F'>('C');
   const [selectedWeatherLocation, setSelectedWeatherLocation] = useState('Green Valley - Sector 1');
@@ -673,13 +707,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  const submitChecklist = () => {
-    confetti({
-      particleCount: 80,
-      spread: 60,
-      origin: { y: 0.7 },
+  const submitChecklist = async () => {
+    if (!selectedFarmId || !/^[a-f\d]{24}$/i.test(selectedFarmId)) {
+      const message = farmIdLoadError || 'A valid database farm has not been selected.';
+      showToast(message);
+      throw new Error(message);
+    }
+
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const payload = {
+      farmId: selectedFarmId,
+      zone: selectedZone,
+      submittedAt: new Date().toISOString(),
+      items: checklist.map((item) => ({
+        itemId: item.id,
+        title: item.title,
+        category: item.category,
+        description: item.description,
+        status: item.status,
+      })),
+    };
+
+    const response = await fetch(`${apiBase}/checklists`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
-    showToast('Daily Biosecurity Checklist logged & synced with HQ!');
+    const body = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = body.message || `Checklist API failed (${response.status})`;
+      showToast(message);
+      throw new Error(message);
+    }
+
+    confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } });
+    showToast('Checklist saved to MongoDB successfully!');
   };
 
   // Audit Actions

@@ -5,6 +5,7 @@ import farmRoutes from "./routes/farmRoutes";
 import visitorRoutes from "./routes/visitorRoutes";
 import checklistRoutes from "./routes/checklistRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
+import authRoutes from "./routes/authRoutes";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -16,6 +17,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/auth", authRoutes);
 app.use("/api/checklists", checklistRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/inventory", inventoryRoutes);

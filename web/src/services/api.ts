@@ -7,10 +7,14 @@ async function request<T>(
     endpoint: string,
     options: RequestInit = {}
 ): Promise<T> {
+    const token = typeof window !== "undefined" ? localStorage.getItem("farmdrishti_token") : null;
+    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
         headers: {
             "Content-Type": "application/json",
+            ...authHeaders,
             ...options.headers,
         },
     });
@@ -77,6 +81,24 @@ export type DashboardSummary = {
     };
 };
 
+export type User = {
+    id: string;
+    _id?: string;
+    name: string;
+    email: string;
+    role: "admin" | "farm_manager" | "inspector" | "veterinarian";
+    farmId?: any;
+    phone?: string;
+    isActive?: boolean;
+};
+
+export type AuthResponse = {
+    success: boolean;
+    message: string;
+    token: string;
+    user: User;
+};
+
 // ─── API client ────────────────────────────────────────────────────────────────
 
 export const api = {
@@ -97,5 +119,48 @@ export const api = {
 
     getDiseaseReports: () => request<any>("/disease-reports"),
 
+    createDiseaseReport: (data: any) =>
+        request<{ success: boolean; data: any }>("/disease-reports", {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
+
     getInventory: () => request<any>("/inventory"),
+
+    createAudit: (data: any) =>
+        request<{ success: boolean; data: any }>("/audits", {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
+
+    updateAudit: (id: string, data: any) =>
+        request<{ success: boolean; data: any }>(`/audits/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify(data),
+        }),
+
+    // Auth methods
+    login: (credentials: { email: string; password: string }) =>
+        request<AuthResponse>("/auth/login", {
+            method: "POST",
+            body: JSON.stringify(credentials),
+        }),
+
+    register: (userData: {
+        name: string;
+        email: string;
+        password: string;
+        role?: string;
+        farmId?: string;
+        phone?: string;
+    }) =>
+        request<AuthResponse>("/auth/register", {
+            method: "POST",
+            body: JSON.stringify(userData),
+        }),
+
+    getCurrentUser: () => request<{ success: boolean; user: User }>("/auth/me"),
+
+    getAllUsers: () =>
+        request<{ success: boolean; count: number; users: User[] }>("/auth/users"),
 };

@@ -35,43 +35,42 @@ export const ChangeDPModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-[#0f1017] rounded-2xl border border-[#33374a] overflow-hidden shadow-2xl">
+      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="p-4 bg-[#181922] border-b border-[#33374a] flex items-center justify-between">
+        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Camera className="w-5 h-5 text-[#c0c1ff]" />
-            <h3 className="text-base font-bold font-sans text-white">Change Profile Picture (DP)</h3>
+            <Camera className="w-4 h-4 text-[var(--lime)]" />
+            <h3 className="text-sm font-bold font-display uppercase tracking-wider text-[var(--text-primary)]">Change Profile Picture (DP)</h3>
           </div>
-          <button onClick={closeModal} className="p-1 text-slate-400 hover:text-white rounded-lg">
-            <X className="w-5 h-5" />
+          <button onClick={closeModal} className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-4 font-sans">
+        <div className="p-4 space-y-3.5 font-sans">
           {/* Active Preview */}
-          <div className="flex items-center gap-4 p-3.5 rounded-xl bg-[#181922] border border-[#33374a]">
+          <div className="flex items-center gap-3.5 p-3 rounded-[3px] bg-[var(--bg-raised)] border border-[var(--border-dim)]">
             <img
               src={customUrl.trim() ? customUrl : selectedUrl}
               alt="DP Preview"
-              className="w-16 h-16 rounded-full object-cover border-2 border-[#4f46e5] shadow-md"
+              className="w-14 h-14 rounded-[2px] object-cover border border-[var(--border)] shadow-sm"
               onError={(e) => {
-                // Fallback on image load error
                 (e.target as HTMLImageElement).src = avatarPresets[0].url;
               }}
             />
             <div>
-              <p className="text-xs font-bold text-white">Active Avatar Preview</p>
-              <p className="text-[11px] text-slate-400">{userProfile.name}</p>
+              <p className="text-xs font-bold font-display uppercase tracking-wide text-[var(--text-primary)]">Active Avatar Preview</p>
+              <p className="text-[11px] font-mono text-[var(--text-secondary)]">{userProfile.name}</p>
             </div>
           </div>
 
           {/* Avatar Presets */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-2">
-              Select Specialist Avatar Preset:
+            <label className="fd-label block mb-2">
+              Select Specialist Preset:
             </label>
-            <div className="grid grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-4 gap-2">
               {avatarPresets.map((preset, idx) => {
                 const isSelected = selectedUrl === preset.url && !customUrl.trim();
                 return (
@@ -82,13 +81,13 @@ export const ChangeDPModal: React.FC = () => {
                       setSelectedUrl(preset.url);
                       setCustomUrl('');
                     }}
-                    className={`relative rounded-xl overflow-hidden border-2 transition-all group ${
-                      isSelected ? 'border-[#4f46e5] scale-105 shadow-lg' : 'border-[#33374a] hover:border-slate-400'
+                    className={`relative rounded-[2px] overflow-hidden border transition-all group ${
+                      isSelected ? 'border-[var(--lime)] scale-105 shadow-md' : 'border-[var(--border-dim)] hover:border-[var(--border)]'
                     }`}
                   >
-                    <img src={preset.url} alt={preset.name} className="w-full h-14 object-cover" />
+                    <img src={preset.url} alt={preset.name} className="w-full h-12 object-cover" />
                     {isSelected && (
-                      <div className="absolute inset-0 bg-[#4f46e5]/40 flex items-center justify-center text-white">
+                      <div className="absolute inset-0 bg-[var(--lime)]/30 flex items-center justify-center text-[#111311]">
                         <Check className="w-4 h-4 stroke-[3]" />
                       </div>
                     )}
@@ -100,33 +99,33 @@ export const ChangeDPModal: React.FC = () => {
 
           {/* Custom URL Input */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
-              <Link className="w-3.5 h-3.5 text-[#c0c1ff]" /> Or Paste Custom Image URL:
+            <label className="fd-label block mb-1 flex items-center gap-1">
+              <Link className="w-3 h-3 text-[var(--lime)]" /> Or Paste Custom Image URL:
             </label>
             <input
               type="text"
-              placeholder="https://example.com/my-photo.jpg"
+              placeholder="https://example.com/specialist-dp.jpg"
               value={customUrl}
               onChange={(e) => setCustomUrl(e.target.value)}
-              className="w-full px-3 py-2 bg-[#181922] border border-[#33374a] rounded-xl text-slate-100 text-xs focus:border-[#4f46e5] outline-none"
+              className="fd-input w-full text-xs font-mono"
             />
           </div>
 
           {/* Actions */}
-          <div className="pt-3 border-t border-[#33374a] flex items-center justify-end gap-2">
+          <div className="pt-2.5 border-t border-[var(--border-dim)] flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={closeModal}
-              className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleApply}
-              className="px-5 py-2 text-xs font-bold bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-xl flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5"
             >
-              <Image className="w-4 h-4" /> Save Profile Picture
+              <Image className="w-3.5 h-3.5" /> Save Profile Picture
             </button>
           </div>
         </div>

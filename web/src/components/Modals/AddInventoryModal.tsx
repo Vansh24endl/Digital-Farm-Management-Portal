@@ -103,24 +103,24 @@ export const AddInventoryModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-[#12131a] rounded-2xl border border-[#34343c] overflow-hidden shadow-2xl">
-        <div className="p-4 bg-[#1b1b22] border-b border-[#34343c] flex items-center justify-between">
+      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl">
+        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <PackagePlus className="w-5 h-5 text-[#c0c1ff]" />
-            <h3 className="text-base font-bold font-serif text-white">Add Stock Item to Inventory</h3>
+            <PackagePlus className="w-4 h-4 text-[var(--lime)]" />
+            <h3 className="text-sm font-bold font-display uppercase tracking-wider text-[var(--text-primary)]">Add Stock Item to Inventory</h3>
           </div>
-          <button type="button" onClick={closeModal} className="p-1 text-slate-400 hover:text-white rounded-lg">
-            <X className="w-5 h-5" />
+          <button type="button" onClick={closeModal} className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 space-y-3 font-sans">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Farm</label>
+            <label className="fd-label block mb-1">Target Farm</label>
             <select
               value={farmId}
               onChange={(e) => setFarmId(e.target.value)}
-              className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+              className="fd-select w-full text-xs font-mono"
               required
               disabled={loadingFarms || farms.length === 0}
             >
@@ -136,39 +136,39 @@ export const AddInventoryModal: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Item Name</label>
+            <label className="fd-label block mb-1">Item Designation</label>
             <input
               type="text"
-              placeholder="e.g. Virkon S Disinfectant"
+              placeholder="e.g. Virkon S Broad-Spectrum Disinfectant"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+              className="fd-input w-full text-xs font-mono"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Category</label>
+              <label className="fd-label block mb-1">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as typeof category)}
-                className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+                className="fd-select w-full text-xs font-mono"
               >
                 <option value="disinfectant">Disinfectant</option>
-                <option value="ppe">PPE</option>
+                <option value="ppe">PPE Equipment</option>
                 <option value="medicine">Medicine / Vaccines</option>
-                <option value="equipment">Equipment</option>
-                <option value="other">Other</option>
+                <option value="equipment">Diagnostic Equipment</option>
+                <option value="other">Other Consumable</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Unit Type</label>
+              <label className="fd-label block mb-1">Unit Type</label>
               <input
                 type="text"
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+                className="fd-input w-full text-xs font-mono"
                 required
               />
             </div>
@@ -176,40 +176,40 @@ export const AddInventoryModal: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Initial Quantity</label>
+              <label className="fd-label block mb-1">Initial Quantity</label>
               <input
                 type="number"
                 min="0"
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+                className="fd-input w-full text-xs font-mono"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Minimum Stock</label>
+              <label className="fd-label block mb-1">Minimum Alert Threshold</label>
               <input
                 type="number"
                 min="0"
                 value={minimumStock}
                 onChange={(e) => setMinimumStock(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+                className="fd-input w-full text-xs font-mono"
                 required
               />
             </div>
           </div>
 
           {error && (
-            <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+            <p className="text-xs font-mono text-[var(--critical)] bg-[var(--critical-bg)] border border-[var(--critical-dim)] rounded-[2px] p-2">
               {error}
             </p>
           )}
 
-          <div className="pt-3 border-t border-[#34343c] flex items-center justify-end gap-2">
+          <div className="pt-2.5 border-t border-[var(--border-dim)] flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={closeModal}
-              className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider"
               disabled={saving}
             >
               Cancel
@@ -217,9 +217,9 @@ export const AddInventoryModal: React.FC = () => {
             <button
               type="submit"
               disabled={saving || loadingFarms || farms.length === 0}
-              className="px-5 py-2 text-xs font-bold bg-[#1a178c] hover:bg-[#1a178c]/80 text-[#c0c1ff] border border-[#c0c1ff]/40 rounded-xl flex items-center gap-1.5 shadow-md disabled:opacity-50"
+              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 disabled:opacity-50"
             >
-              <Plus className="w-4 h-4" /> {saving ? 'Saving...' : 'Add Item'}
+              <Plus className="w-3.5 h-3.5" /> {saving ? 'Saving...' : 'Add Item'}
             </button>
           </div>
         </form>
@@ -236,15 +236,15 @@ export const IncidentLogModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-[#12131a] rounded-2xl border border-[#ffba3f]/60 overflow-hidden shadow-2xl">
-        <div className="p-4 bg-[#ffba3f]/20 border-b border-[#34343c] flex items-center justify-between">
-          <h3 className="text-base font-bold font-serif text-white">Log Perimeter Incident (Zone 2)</h3>
-          <button onClick={closeModal} className="p-1 text-slate-400 hover:text-white rounded-lg">
-            <X className="w-5 h-5" />
+      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--warning-dim)] overflow-hidden shadow-2xl">
+        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
+          <h3 className="text-sm font-bold font-display uppercase tracking-wider text-[var(--text-primary)]">Log Perimeter Incident (Zone 2)</h3>
+          <button onClick={closeModal} className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+            <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="p-5 space-y-4">
-          <p className="text-xs text-slate-300 font-sans">
+        <div className="p-4 space-y-3.5">
+          <p className="text-xs text-[var(--text-secondary)] font-mono">
             Record spatial breaches, failed vehicle washes, or sensor anomalies for Poultry House B - Zone 2.
           </p>
           <textarea
@@ -252,10 +252,10 @@ export const IncidentLogModal: React.FC = () => {
             placeholder="Describe incident, location pin, and corrective action taken..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#ffba3f] outline-none font-sans"
+            className="fd-input w-full text-xs font-mono resize-none"
           />
-          <div className="flex justify-end gap-2 pt-2 border-t border-[#34343c]">
-            <button onClick={closeModal} className="px-4 py-2 text-xs text-slate-400 hover:text-white">
+          <div className="flex justify-end gap-2 pt-2 border-t border-[var(--border-dim)]">
+            <button onClick={closeModal} className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider">
               Cancel
             </button>
             <button
@@ -263,7 +263,7 @@ export const IncidentLogModal: React.FC = () => {
                 showToast('Incident logged to Poultry House B surveillance file!');
                 closeModal();
               }}
-              className="px-5 py-2 text-xs font-bold bg-[#ffba3f] text-black hover:bg-[#ffba3f]/90 rounded-xl shadow-md"
+              className="px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider bg-[var(--warning)] text-[#111311] hover:brightness-110 rounded-[2px] shadow-sm"
             >
               Save Incident Entry
             </button>
@@ -281,36 +281,36 @@ export const PDFExportModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-xl bg-[#12131a] rounded-2xl border border-[#c0c1ff]/50 overflow-hidden shadow-2xl">
-        <div className="p-4 bg-[#1b1b22] border-b border-[#34343c] flex items-center justify-between">
+      <div className="w-full max-w-lg bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl">
+        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FileSpreadsheet className="w-5 h-5 text-[#c0c1ff]" />
-            <h3 className="text-base font-bold font-serif text-white">Export Official Biosecurity Certificate PDF</h3>
+            <FileSpreadsheet className="w-4 h-4 text-[var(--lime)]" />
+            <h3 className="text-sm font-bold font-display uppercase tracking-wider text-[var(--text-primary)]">Export Official Biosecurity Certificate PDF</h3>
           </div>
-          <button onClick={closeModal} className="p-1 text-slate-400 hover:text-white rounded-lg">
-            <X className="w-5 h-5" />
+          <button onClick={closeModal} className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+            <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="p-6 space-y-4 font-sans text-xs text-slate-300">
-          <div className="p-4 rounded-xl bg-[#1f1f26] border border-[#34343c] space-y-2">
-            <div className="flex justify-between font-semibold text-white">
+        <div className="p-5 space-y-3.5 font-sans text-xs text-[var(--text-secondary)]">
+          <div className="fd-raised p-3.5 rounded-[3px] border border-[var(--border-dim)] space-y-2 font-mono text-xs">
+            <div className="flex justify-between font-semibold text-[var(--text-primary)]">
               <span>Report Title:</span> <span>AgroShield Monthly Farm Health Certificate</span>
             </div>
             <div className="flex justify-between">
-              <span>Auditor Authority:</span> <span>Dr. Ananya Reyes (Lead Vet)</span>
+              <span>Auditor Authority:</span> <span className="text-[var(--text-primary)]">Dr. Ananya Reyes (Lead Vet)</span>
             </div>
             <div className="flex justify-between">
-              <span>Overall Score:</span> <span className="font-bold text-[#4CAF50]">82/100 (Optimal Grade A)</span>
+              <span>Overall Score:</span> <span className="font-bold text-[var(--success)]">82/100 (Optimal Grade A)</span>
             </div>
             <div className="flex justify-between">
               <span>Data Scope:</span> <span>Audit Logs, PCR Telemetry, Visitor Pass, Inventory</span>
             </div>
           </div>
-          <p className="text-slate-400">
+          <p className="text-[11px] font-mono text-[var(--text-dim)]">
             This generated PDF includes cryptographic verification signatures and is ready for submission to the State Animal Health Department.
           </p>
-          <div className="flex justify-end gap-3 pt-3 border-t border-[#34343c]">
-            <button onClick={closeModal} className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white">
+          <div className="flex justify-end gap-2 pt-2.5 border-t border-[var(--border-dim)]">
+            <button onClick={closeModal} className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider">
               Cancel
             </button>
             <button
@@ -318,9 +318,9 @@ export const PDFExportModal: React.FC = () => {
                 showToast('AgroShield Biosecurity PDF Report compiled & downloaded!');
                 closeModal();
               }}
-              className="px-5 py-2 text-xs font-bold bg-[#1a178c] text-[#c0c1ff] border border-[#c0c1ff]/40 rounded-xl flex items-center gap-1.5 shadow-md"
+              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5"
             >
-              <Download className="w-4 h-4" /> Download PDF Now
+              <Download className="w-3.5 h-3.5" /> Download PDF Now
             </button>
           </div>
         </div>

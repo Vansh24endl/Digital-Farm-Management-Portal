@@ -8,39 +8,60 @@ const router = Router();
 // CREATE DISEASE REPORT
 router.post("/", async (req, res) => {
   try {
-    const { farmId, animalType, symptoms, description, severity } = req.body;
+    const {
+      farmId,
+      diseaseName,
+      animalType = "poultry",
+      symptoms,
+      description = "",
+      severity = "medium",
+      location = "",
+      speciesAffected = "",
+      coordinates,
+    } = req.body;
 
-    if (
-      !farmId ||
-      !mongoose.isValidObjectId(farmId) ||
-      !["pig", "poultry"].includes(animalType) ||
-      !symptoms?.trim()
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Valid farmId, animalType and symptoms are required",
-      });
-    }
+    let targetFarmId = farmId;
 
-    const farm = await Farm.findById(farmId);
-
-    if (!farm) {
-      return res.status(404).json({
-        success: false,
-        message: "Farm not found",
-      });
+    if (!targetFarmId || !mongoose.isValidObjectId(targetFarmId)) {
+      const existingFarm = await Farm.findOne();
+      if (existingFarm) {
+        targetFarmId = existingFarm._id;
+      } else {
+        const newFarm = await Farm.create({
+          name: "Primary Livestock Facility",
+          farmType: animalType === "pig" ? "pig" : "poultry",
+          location: location || "Sector 1",
+        });
+        targetFarmId = newFarm._id;
+      }
+    } else {
+      const farmExists = await Farm.findById(targetFarmId);
+      if (!farmExists) {
+        const firstFarm = await Farm.findOne();
+        targetFarmId = firstFarm ? firstFarm._id : targetFarmId;
+      }
     }
 
     const report = await DiseaseReport.create({
-      farmId,
-      animalType,
-      symptoms: symptoms.trim(),
-      description,
-      severity,
+      farmId: targetFarmId,
+      diseaseName: diseaseName || "Unspecified Vector Outbreak",
+      animalType: ["pig", "poultry"].includes(animalType) ? animalType : "poultry",
+      symptoms: symptoms?.trim() || "Observed abnormal clinical signs / pathogen vector",
+      description: description?.trim() || "",
+      severity: ["low", "medium", "high"].includes(severity?.toLowerCase())
+        ? severity.toLowerCase()
+        : "medium",
+      location: location?.trim() || "",
+      speciesAffected: speciesAffected?.trim() || "",
+      coordinates: {
+        x: coordinates?.x ?? Math.floor(Math.random() * 60) + 20,
+        y: coordinates?.y ?? Math.floor(Math.random() * 60) + 20,
+      },
     });
 
     return res.status(201).json({
       success: true,
+      message: "Disease case reported successfully",
       data: report,
     });
   } catch (error) {

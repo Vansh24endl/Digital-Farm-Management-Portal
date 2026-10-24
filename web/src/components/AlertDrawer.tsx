@@ -8,36 +8,38 @@ export const AlertDrawer: React.FC = () => {
   if (!isAlertDrawerOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/75 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-[#12131a] h-full flex flex-col border-l border-[#34343c] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-md bg-[var(--bg-panel)] h-full flex flex-col border-l border-[var(--border)] shadow-2xl">
         {/* Drawer Header */}
-        <div className="p-4 bg-[#1b1b22] border-b border-[#34343c] flex items-center justify-between">
+        <div className="p-4 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#ba1a1a]/20 border border-[#ba1a1a]/40 flex items-center justify-center text-[#ffb4ab]">
-              <Bell className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-[2px] bg-[var(--critical-bg)] border border-[var(--critical-dim)] flex items-center justify-center text-[var(--critical)]">
+              <Bell className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold font-serif text-white">Active Bio-Alerts</h2>
-              <p className="text-xs text-slate-400 font-sans">
+              <h2 className="text-sm font-bold font-display uppercase tracking-wider text-[var(--text-primary)]">
+                Active Bio-Alert Feed
+              </h2>
+              <p className="text-xs font-mono text-[var(--text-secondary)]">
                 Real-time Farm Telemetry & Vector Feed
               </p>
             </div>
           </div>
           <button
             onClick={() => setIsAlertDrawerOpen(false)}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-[#292931] transition-all"
+            className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-[2px] hover:bg-[var(--bg-raised)] transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Alerts List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5">
           {alerts.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <Check className="w-10 h-10 mx-auto text-[#4CAF50] mb-2" />
-              <p className="text-sm font-semibold">No active alerts</p>
-              <p className="text-xs">All monitored sectors are operating normally.</p>
+            <div className="text-center py-12 text-[var(--text-secondary)] font-mono">
+              <Check className="w-8 h-8 mx-auto text-[var(--success)] mb-2" />
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">No Active Alerts</p>
+              <p className="text-[11px] text-[var(--text-dim)] mt-1">All monitored biosecurity sectors normal.</p>
             </div>
           ) : (
             alerts.map((alert) => {
@@ -47,49 +49,53 @@ export const AlertDrawer: React.FC = () => {
               return (
                 <div
                   key={alert.id}
-                  className={`p-3.5 rounded-xl border transition-all relative ${
+                  className={`p-3 rounded-[3px] border transition-all relative ${
                     alert.read
-                      ? 'bg-[#1b1b22]/60 border-[#34343c] opacity-75'
+                      ? 'bg-[var(--bg-raised)]/60 border-[var(--border-dim)] opacity-60'
                       : isUrgent
-                      ? 'bg-[#ba1a1a]/15 border-[#ba1a1a]/60 text-slate-100'
+                      ? 'bg-[var(--critical-bg)] border-[var(--critical-dim)] text-[var(--text-primary)]'
                       : isReview
-                      ? 'bg-[#ffba3f]/15 border-[#ffba3f]/60 text-slate-100'
-                      : 'bg-[#1f1f26] border-[#34343c]'
+                      ? 'bg-[var(--warning-bg)] border-[var(--warning-dim)] text-[var(--text-primary)]'
+                      : 'bg-[var(--bg-raised)] border-[var(--border-dim)]'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2.5">
                     <div
-                      className={`p-2 rounded-lg flex-shrink-0 mt-0.5 ${
+                      className={`p-1.5 rounded-[2px] flex-shrink-0 mt-0.5 border ${
                         isUrgent
-                          ? 'bg-[#ba1a1a]/30 text-[#ffb4ab]'
+                          ? 'bg-[var(--critical-bg)] border-[var(--critical-dim)] text-[var(--critical)]'
                           : isReview
-                          ? 'bg-[#ffba3f]/30 text-[#ffba3f]'
-                          : 'bg-[#1a178c]/30 text-[#c0c1ff]'
+                          ? 'bg-[var(--warning-bg)] border-[var(--warning-dim)] text-[var(--warning)]'
+                          : 'bg-[var(--lime-bg)] border-[var(--lime)]/30 text-[var(--lime)]'
                       }`}
                     >
                       {isUrgent ? (
-                        <AlertTriangle className="w-4 h-4" />
+                        <AlertTriangle className="w-3.5 h-3.5" />
                       ) : isReview ? (
-                        <AlertCircle className="w-4 h-4" />
+                        <AlertCircle className="w-3.5 h-3.5" />
                       ) : (
-                        <Info className="w-4 h-4" />
+                        <Info className="w-3.5 h-3.5" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        <span
+                          className={`text-[10px] font-mono font-bold uppercase tracking-wider ${
+                            isUrgent ? 'text-[var(--critical)]' : isReview ? 'text-[var(--warning)]' : 'text-[var(--lime)]'
+                          }`}
+                        >
                           {alert.severity}
                         </span>
-                        <span className="text-[11px] text-slate-400 font-sans">
+                        <span className="text-[10px] font-mono text-[var(--text-dim)]">
                           {alert.timeAgo}
                         </span>
                       </div>
-                      <h4 className="text-sm font-bold text-white mt-0.5 leading-snug">
+                      <h4 className="text-xs font-bold font-display uppercase tracking-wide text-[var(--text-primary)] mt-0.5 leading-snug">
                         {alert.title}
                       </h4>
-                      <p className="text-xs text-slate-300 mt-1 font-sans">{alert.location}</p>
+                      <p className="text-[11px] text-[var(--text-secondary)] font-mono mt-0.5">{alert.location}</p>
 
-                      <div className="flex items-center gap-2 mt-3 pt-2 border-t border-[#34343c]/60">
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--border-dim)]">
                         <button
                           onClick={() => {
                             setIsAlertDrawerOpen(false);
@@ -97,15 +103,15 @@ export const AlertDrawer: React.FC = () => {
                             else if (isReview) navigateTo('farm-map');
                             else navigateTo('audits');
                           }}
-                          className="text-xs font-semibold text-[#c0c1ff] hover:underline"
+                          className="text-xs font-mono font-bold text-[var(--lime)] hover:underline uppercase tracking-wider"
                         >
-                          View Details & Take Action →
+                          View Details →
                         </button>
 
                         {!alert.read && (
                           <button
                             onClick={() => markAlertRead(alert.id)}
-                            className="text-xs text-slate-400 hover:text-slate-200 ml-auto"
+                            className="text-[11px] font-mono text-[var(--text-dim)] hover:text-[var(--text-primary)] ml-auto uppercase"
                           >
                             Mark Read
                           </button>

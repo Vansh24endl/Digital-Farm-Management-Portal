@@ -17,6 +17,7 @@ import { AddVisitorModal } from './components/Modals/AddVisitorModal';
 import { EmergencyCallModal } from './components/Modals/EmergencyCallModal';
 import { SOPReaderModal } from './components/Modals/SOPReaderModal';
 import { AddInventoryModal, IncidentLogModal, PDFExportModal } from './components/Modals/AddInventoryModal';
+import { AuthModal } from './components/Modals/AuthModal';
 
 // Screens
 import { DashboardScreen } from './screens/DashboardScreen';
@@ -106,6 +107,7 @@ const MainContent: React.FC = () => {
       <SOPReaderModal />
       <IncidentLogModal />
       <PDFExportModal />
+      <AuthModal />
 
       {/* Global Toast Notifications */}
       <Toast />

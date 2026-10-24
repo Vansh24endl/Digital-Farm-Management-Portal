@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
+import { api, type User } from '../services/api';
 import type {
   ScreenId,
   AlertItem,
@@ -32,6 +33,16 @@ interface AppContextType {
 
   // Auth & Session
   isAuthenticated: boolean;
+  currentUser: User | null;
+  loginUser: (email: string, password: string) => Promise<boolean>;
+  registerUser: (data: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+    farmId?: string;
+    phone?: string;
+  }) => Promise<boolean>;
   logout: () => void;
   login: () => void;
 
@@ -75,10 +86,10 @@ interface AppContextType {
   openAuditInspector: (audit: Audit) => void;
   toggleAuditItemDone: (auditId: string, itemIndex: number) => void;
   completeAudit: (auditId: string) => void;
-  addAudit: (audit: Omit<Audit, 'id' | 'progress' | 'status' | 'items'>) => void;
+  addAudit: (audit: any) => Promise<void> | void;
 
   diseaseReports: DiseaseReport[];
-  addDiseaseReport: (report: Omit<DiseaseReport, 'id' | 'reportedDate'>) => void;
+  addDiseaseReport: (report: any) => Promise<void> | void;
 
   inventory: InventoryItem[];
   addInventoryItem: (item: Omit<InventoryItem, 'id'>) => void;
@@ -526,7 +537,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Sidebar state (false = expanded, true = collapsed on desktop)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && Boolean(localStorage.getItem('farmdrishti_token'));
+  });
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const [isPrototypeDrawerOpen, setIsPrototypeDrawerOpen] = useState(false);
   const [isAlertDrawerOpen, setIsAlertDrawerOpen] = useState(false);
@@ -612,19 +626,169 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Restore session from token on mount
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('farmdrishti_token') : null;
+    if (token) {
+      api.getCurrentUser()
+        .then((res) => {
+          if (res.success && res.user) {
+            setCurrentUser(res.user);
+            setIsAuthenticated(true);
+            setUserProfile((prev) => ({
+              ...prev,
+              name: res.user.name,
+              email: res.user.email,
+              phone: res.user.phone || prev.phone,
+              title: res.user.role === 'admin' ? 'System Administrator' :
+                     res.user.role === 'veterinarian' ? 'Lead Biosecurity Veterinarian' :
+                     res.user.role === 'inspector' ? 'Certified Field Inspector' :
+                     'Farm Operations Manager',
+            }));
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('farmdrishti_token');
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+        });
+    }
+
+    // Load Disease Reports & Audits from MongoDB
+    const loadDiseaseAndAudits = () => {
+      api.getDiseaseReports()
+        .then((res: any) => {
+          const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+          if (list.length > 0) {
+            const mapped: DiseaseReport[] = list.map((r: any) => ({
+              id: String(r._id || r.id),
+              diseaseName: r.diseaseName || 'Unspecified Vector',
+              riskLevel: r.severity === 'high' ? 'High' : r.severity === 'medium' ? 'Medium' : 'Low',
+              location: r.location || (r.farmId && typeof r.farmId === 'object' ? `${r.farmId.name || 'Farm'}` : 'Sector 1'),
+              reportedDate: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Just Now',
+              speciesAffected: r.speciesAffected || (r.animalType === 'pig' ? 'Swine Herd' : 'Poultry Flock'),
+              status: r.status === 'investigating' ? 'Investigating' : r.status === 'resolved' ? 'Resolved' : 'Active',
+              details: r.description || r.symptoms || '',
+              coordinates: r.coordinates || { x: Math.floor(Math.random() * 60) + 20, y: Math.floor(Math.random() * 60) + 20 },
+            }));
+            setDiseaseReports(mapped);
+          }
+        })
+        .catch(() => {});
+
+      api.getAudits()
+        .then((res: any) => {
+          const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+          if (list.length > 0) {
+            const mapped: Audit[] = list.map((a: any) => ({
+              id: String(a._id || a.id),
+              title: a.title || 'Biosecurity Inspection',
+              sector: a.sector || (a.farmId && typeof a.farmId === 'object' ? `${a.farmId.name || 'Sector 2'}` : 'Sector 2'),
+              dueDate: a.dueDate || 'In 3 days',
+              severity: a.riskLevel === 'high' ? 'urgent' : a.riskLevel === 'low' ? 'routine' : 'attention',
+              progress: typeof a.progress === 'number' ? a.progress : a.status === 'completed' ? 100 : 0,
+              status: a.status === 'in-progress' ? 'in_progress' : a.status === 'completed' ? 'completed' : 'pending',
+              auditor: a.auditor || 'Dr. Ananya Reyes',
+              items: Array.isArray(a.items) && a.items.length > 0 ? a.items : [
+                { text: 'Verify entrance footbath pH & concentration', done: a.status === 'completed' },
+                { text: 'Audit employee shower logs for past 48 hours', done: a.status === 'completed' },
+                { text: 'Check air filtration pressure differentials', done: a.status === 'completed' },
+              ],
+            }));
+            setAudits(mapped);
+          }
+        })
+        .catch(() => {});
+    };
+
+    loadDiseaseAndAudits();
+    window.addEventListener('disease-reports-updated', loadDiseaseAndAudits);
+    window.addEventListener('audits-updated', loadDiseaseAndAudits);
+    return () => {
+      window.removeEventListener('disease-reports-updated', loadDiseaseAndAudits);
+      window.removeEventListener('audits-updated', loadDiseaseAndAudits);
+    };
+  }, []);
+
   const toggleSidebar = () => {
     setIsSidebarCollapsed((prev) => !prev);
   };
 
   const logout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('farmdrishti_token');
+    }
+    setCurrentUser(null);
     setIsAuthenticated(false);
     setIsProfileDropdownOpen(false);
-    showToast('Signed out of AgroShield Surveillance session.');
+    showToast('Signed out of FarmDrishti session.');
   };
 
   const login = () => {
-    setIsAuthenticated(true);
-    showToast('Welcome back, Dr. Ananya Reyes! Bio-vigilance active.');
+    openModal('auth', { mode: 'login' });
+  };
+
+  const loginUser = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const res = await api.login({ email, password });
+      if (res.success && res.token) {
+        localStorage.setItem('farmdrishti_token', res.token);
+        setCurrentUser(res.user);
+        setIsAuthenticated(true);
+        setUserProfile((prev) => ({
+          ...prev,
+          name: res.user.name,
+          email: res.user.email,
+          phone: res.user.phone || prev.phone,
+          title: res.user.role === 'admin' ? 'System Administrator' :
+                 res.user.role === 'veterinarian' ? 'Lead Biosecurity Veterinarian' :
+                 res.user.role === 'inspector' ? 'Certified Field Inspector' :
+                 'Farm Operations Manager',
+        }));
+        showToast(`Welcome back, ${res.user.name}!`);
+        closeModal();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      showToast(err.message || 'Login failed');
+      throw err;
+    }
+  };
+
+  const registerUser = async (data: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+    farmId?: string;
+    phone?: string;
+  }): Promise<boolean> => {
+    try {
+      const res = await api.register(data);
+      if (res.success && res.token) {
+        localStorage.setItem('farmdrishti_token', res.token);
+        setCurrentUser(res.user);
+        setIsAuthenticated(true);
+        setUserProfile((prev) => ({
+          ...prev,
+          name: res.user.name,
+          email: res.user.email,
+          phone: res.user.phone || prev.phone,
+          title: res.user.role === 'admin' ? 'System Administrator' :
+                 res.user.role === 'veterinarian' ? 'Lead Biosecurity Veterinarian' :
+                 res.user.role === 'inspector' ? 'Certified Field Inspector' :
+                 'Farm Operations Manager',
+        }));
+        showToast(`Account created! Welcome, ${res.user.name}!`);
+        closeModal();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      showToast(err.message || 'Registration failed');
+      throw err;
+    }
   };
 
   // Toast Helper
@@ -802,33 +966,101 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     closeModal();
   };
 
-  const addAudit = (newAud: Omit<Audit, 'id' | 'progress' | 'status' | 'items'>) => {
-    const audObj: Audit = {
-      ...newAud,
-      id: `aud-${Date.now()}`,
-      progress: 0,
-      status: 'pending',
-      items: [
-        { text: 'Verify entrance footbath pH & concentration', done: false },
-        { text: 'Audit employee shower logs for past 48 hours', done: false },
-        { text: 'Check air filtration pressure differentials', done: false },
-      ],
-    };
-    setAudits((prev) => [audObj, ...prev]);
-    showToast(`Audit "${newAud.title}" scheduled successfully!`);
-    closeModal();
+  const addAudit = async (newAud: any) => {
+    const defaultItems = [
+      { text: 'Verify entrance footbath pH & concentration', done: false },
+      { text: 'Audit employee shower logs for past 48 hours', done: false },
+      { text: 'Check air filtration pressure differentials', done: false },
+    ];
+
+    try {
+      const payload = {
+        farmId: newAud.farmId || selectedFarmId || undefined,
+        title: newAud.title,
+        findings: newAud.findings || '',
+        riskLevel: newAud.severity === 'urgent' ? 'high' : newAud.severity === 'routine' ? 'low' : 'medium',
+        sector: newAud.sector || 'Sector 2 · Feed Mill',
+        dueDate: newAud.dueDate || 'In 3 days',
+        auditor: newAud.auditor || 'Dr. Ananya Reyes',
+        progress: 0,
+        items: defaultItems,
+      };
+
+      const res = await api.createAudit(payload);
+      const newId = res.data?._id || `aud-${Date.now()}`;
+      const audObj: Audit = {
+        title: newAud.title,
+        sector: newAud.sector || 'Sector 2',
+        dueDate: newAud.dueDate || 'In 3 days',
+        severity: newAud.severity || 'attention',
+        auditor: newAud.auditor || 'Dr. Ananya Reyes',
+        id: String(newId),
+        progress: 0,
+        status: 'pending',
+        items: defaultItems,
+      };
+      setAudits((prev) => [audObj, ...prev]);
+      window.dispatchEvent(new CustomEvent('audits-updated'));
+      showToast(`Audit "${newAud.title}" saved to MongoDB!`);
+      closeModal();
+    } catch (err: any) {
+      console.warn('Backend audit creation failed, saving locally:', err);
+      const audObj: Audit = {
+        title: newAud.title,
+        sector: newAud.sector || 'Sector 2',
+        dueDate: newAud.dueDate || 'In 3 days',
+        severity: newAud.severity || 'attention',
+        auditor: newAud.auditor || 'Dr. Ananya Reyes',
+        id: `aud-${Date.now()}`,
+        progress: 0,
+        status: 'pending',
+        items: defaultItems,
+      };
+      setAudits((prev) => [audObj, ...prev]);
+      window.dispatchEvent(new CustomEvent('audits-updated'));
+      showToast(`Audit "${newAud.title}" scheduled!`);
+      closeModal();
+    }
   };
 
   // Disease Actions
-  const addDiseaseReport = (rep: Omit<DiseaseReport, 'id' | 'reportedDate'>) => {
-    const reportObj: DiseaseReport = {
-      ...rep,
-      id: `dis-${Date.now()}`,
-      reportedDate: 'Just Now',
-    };
-    setDiseaseReports((prev) => [reportObj, ...prev]);
-    showToast(`New case "${rep.diseaseName}" reported to Epidemiological HQ!`);
-    closeModal();
+  const addDiseaseReport = async (rep: any) => {
+    try {
+      const payload = {
+        farmId: rep.farmId || selectedFarmId || undefined,
+        diseaseName: rep.diseaseName,
+        animalType: rep.animalType || (rep.speciesAffected?.toLowerCase().includes('pig') ? 'pig' : 'poultry'),
+        symptoms: rep.details || rep.diseaseName,
+        description: rep.details || '',
+        severity: (rep.riskLevel || 'medium').toLowerCase(),
+        location: rep.location || '',
+        speciesAffected: rep.speciesAffected || '',
+        coordinates: rep.coordinates || { x: Math.floor(Math.random() * 60) + 20, y: Math.floor(Math.random() * 60) + 20 },
+      };
+
+      const res = await api.createDiseaseReport(payload);
+      const newId = res.data?._id || `dis-${Date.now()}`;
+      const reportObj: DiseaseReport = {
+        ...rep,
+        id: String(newId),
+        reportedDate: 'Just Now',
+      };
+      setDiseaseReports((prev) => [reportObj, ...prev]);
+      window.dispatchEvent(new CustomEvent('disease-reports-updated'));
+      showToast(`New case "${rep.diseaseName}" saved to MongoDB!`);
+      closeModal();
+    } catch (err: any) {
+      console.warn('Backend disease report failed, saving locally:', err);
+      const reportObj: DiseaseReport = {
+        ...rep,
+        id: `dis-${Date.now()}`,
+        reportedDate: 'Just Now',
+      };
+      setDiseaseReports((prev) => [reportObj, ...prev]);
+      window.dispatchEvent(new CustomEvent('disease-reports-updated'));
+      showToast(`New case "${rep.diseaseName}" reported!`);
+      closeModal();
+    }
   };
 
   // Inventory Actions
@@ -879,6 +1111,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isProfileDropdownOpen,
         setIsProfileDropdownOpen,
         isAuthenticated,
+        currentUser,
+        loginUser,
+        registerUser,
         logout,
         login,
         isPrototypeDrawerOpen,

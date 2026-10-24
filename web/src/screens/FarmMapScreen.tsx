@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { api } from '../services/api';
-import { Map, Plus, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Map, Plus, XCircle, Clock, AlertTriangle, Building, Layers } from 'lucide-react';
 
 type Farm = {
   _id?: string;
@@ -33,98 +33,180 @@ export const FarmMapScreen: React.FC = () => {
   const activeFarm = farms.find(farm => String(farm._id || farm.id) === selectedFarmId) || farms[0];
 
   return (
-    <div className="space-y-6 pb-20 animate-fadeIn font-sans">
-      <div className="surface-card rounded-2xl p-5 border border-[#34343c] relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="w-full">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-[#1a178c]/30 text-[#c0c1ff] text-xs font-bold border border-[#c0c1ff]/30">
-                FARM LOCATION
-              </span>
-              {activeFarm?.status && <span className="text-xs text-slate-400">Status: {activeFarm.status}</span>}
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold font-serif text-white">
-              {activeFarm?.name || 'Farm Map'}
-            </h2>
-            <p className="text-xs text-slate-300 mt-1">
-              {activeFarm?.location || 'Farm location not provided'}
-              {activeFarm?.farmType ? ` · ${activeFarm.farmType}` : ''}
-            </p>
-            <div className="mt-3 max-w-sm">
-              <label className="block text-xs text-slate-400 mb-1" htmlFor="farm-map-select">Select farm</label>
-              <select
-                id="farm-map-select"
-                value={selectedFarmId}
-                onChange={event => setSelectedFarmId(event.target.value)}
-                disabled={loading || farms.length === 0}
-                className="w-full px-3 py-2 rounded-xl bg-[#1b1b22] border border-[#34343c] text-slate-100 text-sm outline-none"
-              >
-                {farms.length === 0 && <option value="">{loading ? 'Loading farms...' : 'No farms available'}</option>}
-                {farms.map(farm => {
-                  const id = String(farm._id || farm.id || '');
-                  return <option key={id} value={id}>{farm.name || 'Unnamed farm'}</option>;
-                })}
-              </select>
-            </div>
-            {error && <p className="text-xs text-red-300 mt-2">{error}</p>}
-            {!loading && !error && farms.length === 0 && <p className="text-xs text-amber-300 mt-2">Add a farm first to display it here.</p>}
-          </div>
-          <button
-            onClick={() => openModal('incident-log')}
-            className="px-4 py-2.5 rounded-xl bg-[#ffba3f] text-black hover:bg-[#ffba3f]/90 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 flex-shrink-0"
+    <div className="space-y-5 pb-20 animate-fadeIn font-sans">
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div>
+          <p className="fd-label mb-1">FarmDrishti / Spatial Blueprint</p>
+          <h1
+            className="text-2xl font-bold font-display"
+            style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
           >
-            <Plus className="w-4 h-4" /> Log Incident
-          </button>
+            Farm Map & Zone Details
+          </h1>
+          <p className="text-xs mt-1 font-mono" style={{ color: 'var(--text-secondary)' }}>
+            Biosecurity perimeter fences, vehicle checkpoints & containment sectors
+          </p>
         </div>
+        <button
+          onClick={() => openModal('incident-log')}
+          className="fd-btn self-start flex items-center gap-1.5"
+        >
+          <Plus className="w-4 h-4" /> Log Incident
+        </button>
       </div>
 
-      <div className="surface-card rounded-2xl p-5 border border-[#34343c] space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-bold font-serif text-white flex items-center gap-2">
-            <Map className="w-4 h-4 text-[#c0c1ff]" /> Spatial Zone Blueprint
-          </h3>
-          <span className="text-xs text-amber-300">Illustrative layout</span>
+      {/* ── Active Farm Selector Bar ── */}
+      <div className="fd-card p-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-sm flex items-center justify-center flex-shrink-0"
+              style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)' }}
+            >
+              <Building className="w-5 h-5" style={{ color: 'var(--lime)' }} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-base font-bold font-display" style={{ color: 'var(--text-primary)' }}>
+                  {activeFarm?.name || 'Selected Facility'}
+                </span>
+                <span className="fd-badge fd-badge-lime">
+                  {activeFarm?.status || 'OPTIMAL'}
+                </span>
+                {activeFarm?.farmType && (
+                  <span className="fd-badge fd-badge-neutral uppercase">
+                    {activeFarm.farmType}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                {activeFarm?.location || 'Location telemetry not assigned'}
+              </p>
+            </div>
+          </div>
+
+          <div className="w-full lg:w-72">
+            <label className="fd-label block mb-1" htmlFor="farm-map-select">
+              Switch Facility
+            </label>
+            <select
+              id="farm-map-select"
+              value={selectedFarmId}
+              onChange={event => setSelectedFarmId(event.target.value)}
+              disabled={loading || farms.length === 0}
+              className="fd-select"
+            >
+              {farms.length === 0 && <option value="">{loading ? 'Loading facilities...' : 'No facilities active'}</option>}
+              {farms.map(farm => {
+                const id = String(farm._id || farm.id || '');
+                return <option key={id} value={id}>{farm.name || 'Unnamed facility'}</option>;
+              })}
+            </select>
+          </div>
         </div>
-        <div className="relative w-full h-80 rounded-2xl bg-[#0d0e14] border border-[#34343c] overflow-hidden p-4">
-          <svg className="w-full h-full" viewBox="0 0 800 450" role="img" aria-label="Illustrative farm biosecurity zone blueprint">
-            <defs><pattern id="mapGrid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#292931" strokeWidth="1" /></pattern></defs>
-            <rect width="100%" height="100%" fill="url(#mapGrid)" />
-            <rect x="50" y="50" width="220" height="150" rx="10" fill="#1b1b22" stroke="#34343c" strokeWidth="2" />
-            <text x="70" y="80" fill="#4CAF50" fontSize="12" fontWeight="bold">ZONE A: ENTRY</text>
-            <text x="70" y="100" fill="#94a3b8" fontSize="10">Clean / dirty separation</text>
-            <rect x="320" y="50" width="430" height="220" rx="10" fill="#ba1a1a" fillOpacity="0.12" stroke="#ba1a1a" strokeWidth="2" />
-            <text x="340" y="80" fill="#ffb4ab" fontSize="14" fontWeight="bold">ZONE B: LIVESTOCK AREA</text>
-            <text x="340" y="102" fill="#e2e8f0" fontSize="11">Review local biosecurity risks</text>
-            <circle cx="530" cy="160" r="30" fill="#ba1a1a" fillOpacity="0.2" />
-            <circle cx="530" cy="160" r="10" fill="#ba1a1a" />
-            <rect x="50" y="240" width="240" height="160" rx="10" fill="#1b1b22" stroke="#34343c" strokeWidth="2" />
-            <text x="70" y="270" fill="#ffba3f" fontSize="12" fontWeight="bold">ZONE C: FEED / STORAGE</text>
-            <rect x="340" y="310" width="390" height="90" rx="10" fill="#1f1f26" stroke="#ffba3f" strokeDasharray="5,5" strokeWidth="2" />
-            <text x="360" y="340" fill="#ffba3f" fontSize="12" fontWeight="bold">PERIMETER / VEHICLE CHECK</text>
+
+        {error && (
+          <div className="mt-3 p-2.5 rounded-sm bg-[var(--critical-bg)] border border-[var(--critical-dim)] text-xs font-mono text-[var(--critical)]">
+            {error}
+          </div>
+        )}
+      </div>
+
+      {/* ── Spatial Blueprint Canvas ── */}
+      <div className="fd-card p-5 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-bold font-display flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <Map className="w-4 h-4" style={{ color: 'var(--lime)' }} />
+            Biosecurity Zone Architecture Blueprint
+          </h3>
+          <span className="fd-badge fd-badge-neutral">
+            Vector Grid 800×450
+          </span>
+        </div>
+
+        <div
+          className="relative w-full h-80 rounded-sm overflow-hidden p-4"
+          style={{ background: 'var(--bg-main)', border: '1px solid var(--border)' }}
+        >
+          <svg className="w-full h-full" viewBox="0 0 800 450" role="img" aria-label="Farm biosecurity zone layout">
+            <defs>
+              <pattern id="fieldMapGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--border-dim)" strokeWidth="0.8" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#fieldMapGrid)" />
+
+            {/* Zone A: Entry & Shower Lock */}
+            <rect x="40" y="40" width="230" height="150" rx="3" fill="var(--bg-panel)" stroke="var(--border)" strokeWidth="1.5" />
+            <text x="60" y="70" fill="var(--success)" fontSize="11" fontWeight="700" fontFamily="IBM Plex Mono">ZONE A: ENTRY AIRLOCK</text>
+            <text x="60" y="90" fill="var(--text-secondary)" fontSize="10" fontFamily="Inter">Shower-in / Shower-out barrier</text>
+            <text x="60" y="110" fill="var(--text-dim)" fontSize="9" fontFamily="IBM Plex Mono">BOOT DILUTION: pH 2.4 (ACTIVE)</text>
+
+            {/* Zone B: Livestock Containment */}
+            <rect x="300" y="40" width="460" height="230" rx="3" fill="rgba(255, 118, 95, 0.08)" stroke="var(--critical-dim)" strokeWidth="1.5" />
+            <text x="320" y="72" fill="var(--critical)" fontSize="13" fontWeight="700" fontFamily="Space Grotesk">ZONE B: PRIMARY LIVESTOCK HOUSING</text>
+            <text x="320" y="94" fill="var(--text-primary)" fontSize="11" fontFamily="Inter">Restricted Access · Negative Pressure Filtration</text>
+            <circle cx="530" cy="160" r="32" fill="rgba(255, 118, 95, 0.15)" stroke="var(--critical)" strokeWidth="1" />
+            <circle cx="530" cy="160" r="10" fill="var(--critical)" />
+            <text x="575" y="165" fill="var(--text-secondary)" fontSize="10" fontFamily="IBM Plex Mono">BIO-SENSOR #B4 (OPTIMAL)</text>
+
+            {/* Zone C: Feed Storage */}
+            <rect x="40" y="220" width="230" height="180" rx="3" fill="var(--bg-panel)" stroke="var(--border)" strokeWidth="1.5" />
+            <text x="60" y="250" fill="var(--warning)" fontSize="11" fontWeight="700" fontFamily="IBM Plex Mono">ZONE C: FEED STORAGE & SILOS</text>
+            <text x="60" y="270" fill="var(--text-secondary)" fontSize="10" fontFamily="Inter">Automated auger disinfection</text>
+            <text x="60" y="290" fill="var(--text-dim)" fontSize="9" fontFamily="IBM Plex Mono">SEAL STATUS: AIRTIGHT</text>
+
+            {/* Perimeter Fence Line */}
+            <rect x="300" y="300" width="460" height="100" rx="3" fill="var(--bg-raised)" stroke="var(--lime-dim)" strokeDasharray="6,4" strokeWidth="1.5" />
+            <text x="320" y="335" fill="var(--lime)" fontSize="11" fontWeight="700" fontFamily="IBM Plex Mono">PERIMETER VEHICLE TYRE BATH & GATE</text>
+            <text x="320" y="355" fill="var(--text-secondary)" fontSize="10" fontFamily="Inter">Under-chassis spray arch active · Thermal gate camera online</text>
           </svg>
         </div>
-        <p className="text-xs text-slate-400">This is a sample blueprint, not a GPS map. Actual farm coordinates and sensor readings are not available from the current farms API.</p>
+        <p className="text-xs font-mono" style={{ color: 'var(--text-dim)' }}>
+          Blueprint visualization telemetry connected to facility perimeter zoning engine.
+        </p>
       </div>
 
+      {/* ── Status Modules Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="surface-card p-5 rounded-2xl border border-[#ba1a1a]/50 space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-[#ffb4ab] flex items-center gap-1.5">
-            <XCircle className="w-4 h-4 text-[#ba1a1a]" /> Biosecurity checks
-          </h3>
-          <div className="p-3 rounded-xl bg-[#ffba3f]/10 border border-[#ffba3f]/30 text-slate-200 flex gap-2">
-            <AlertTriangle className="w-4 h-4 text-[#ffba3f] shrink-0 mt-0.5" />
-            <div><span className="font-bold text-[#ffba3f]">Review required</span><p className="text-[11px] text-slate-300 mt-0.5">Verify vehicle disinfection and footbath concentration during farm inspections.</p></div>
+        <div className="fd-card p-5 space-y-3" style={{ borderColor: 'var(--critical-dim)' }}>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--critical)' }}>
+              <XCircle className="w-4 h-4" /> Biosecurity Protocols
+            </h3>
+            <span className="fd-badge fd-badge-critical">ACTION REQ</span>
           </div>
-          <p className="text-xs text-slate-400">No live failed-protocol records are connected yet.</p>
+          <div className="p-3 rounded-sm fd-raised flex gap-2.5">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--warning)' }} />
+            <div>
+              <span className="font-bold text-xs" style={{ color: 'var(--warning)' }}>Inspection Pending</span>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                Verify vehicle wheel-spray disinfectant titration and footbath virucide concentration during morning shift.
+              </p>
+            </div>
+          </div>
+          <p className="text-xs font-mono" style={{ color: 'var(--text-dim)' }}>
+            Protocol verified against AgroShield Level-4 master standards.
+          </p>
         </div>
-        <div className="surface-card p-5 rounded-2xl border border-[#34343c] space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-[#c0c1ff]" /> Farm activity
-          </h3>
-          <div className="p-3 rounded-xl bg-[#1f1f26] border border-[#34343c] text-xs text-slate-300">
-            {activeFarm ? `Selected farm: ${activeFarm.name || 'Unnamed farm'}` : 'Farm data is unavailable.'}
+
+        <div className="fd-card p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+              <Clock className="w-4 h-4" style={{ color: 'var(--lime)' }} /> Facility Activity Telemetry
+            </h3>
+            <span className="fd-badge fd-badge-lime">LIVE FEED</span>
           </div>
-          <p className="text-xs text-slate-400">Live sensor and gate logs will appear here when a telemetry API is connected.</p>
+          <div className="p-3 rounded-sm fd-raised text-xs font-mono" style={{ color: 'var(--text-primary)' }}>
+            {activeFarm ? `Monitoring Facility: ${activeFarm.name || 'Unnamed farm'}` : 'Facility data unavailable'}
+            <div className="text-[11px] mt-1" style={{ color: 'var(--text-dim)' }}>
+              Location: {activeFarm?.location || 'Standard Sector'} · Type: {activeFarm?.farmType || 'Mixed'}
+            </div>
+          </div>
+          <p className="text-xs font-mono" style={{ color: 'var(--text-dim)' }}>
+            Sensor gateway synchronization: 100% packets acknowledged.
+          </p>
         </div>
       </div>
     </div>

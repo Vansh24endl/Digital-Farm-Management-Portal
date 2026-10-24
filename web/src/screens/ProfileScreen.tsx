@@ -22,51 +22,55 @@ export const ProfileScreen: React.FC = () => {
   const { userProfile, updateUserProfile, openModal, navigateTo } = useApp();
 
   return (
-    <div className="space-y-6 pb-20 animate-fadeIn font-sans">
+    <div className="space-y-5 pb-20 animate-fadeIn font-sans">
       {/* 1. Header Profile Hero Card */}
-      <div className="surface-card rounded-2xl p-6 relative overflow-hidden border border-[#2d3142]">
+      <div className="fd-card rounded-[3px] p-5 relative overflow-hidden border border-[var(--border)]">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 relative z-10">
           <div className="relative flex-shrink-0 group">
             <img
               src={userProfile.avatar}
               alt={userProfile.name}
-              className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-[#4f46e5] shadow-xl"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-[3px] object-cover border border-[var(--border)] shadow-md"
             />
             <button
               onClick={() => openModal('change-dp')}
-              className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-xs font-bold transition-opacity"
+              className="absolute inset-0 rounded-[2px] bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-[var(--lime)] text-[10px] font-mono font-bold transition-opacity"
               title="Click to Change DP"
             >
-              <Camera className="w-6 h-6 mb-0.5" />
-              <span>Change DP</span>
+              <Camera className="w-5 h-5 mb-0.5" />
+              <span>EDIT DP</span>
             </button>
-            <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-[#4f46e5] text-white text-[10px] font-bold border border-[#c0c1ff]/50">
+            <span className="absolute -bottom-2 -right-2 px-1.5 py-0.5 rounded-[2px] bg-[var(--lime)] text-[#111311] text-[9px] font-mono font-bold uppercase tracking-wider shadow-sm">
               SPECIALIST
             </span>
           </div>
 
           <div className="flex-1 text-center sm:text-left space-y-2">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-[#16a34a]/20 text-[#4CAF50] text-xs font-bold border border-[#16a34a]/40 inline-flex items-center gap-1">
+              <span className="fd-badge fd-badge-success text-xs font-mono inline-flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" /> Senior Biosecurity Specialist
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold font-sans text-white tracking-tight">{userProfile.name}</h2>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">{userProfile.bio}</p>
+            <h2 className="text-xl sm:text-2xl font-bold font-display uppercase tracking-tight text-[var(--text-primary)]">
+              {userProfile.name}
+            </h2>
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans max-w-2xl">
+              {userProfile.bio}
+            </p>
 
             <div className="pt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
               <button
                 onClick={() => openModal('edit-profile')}
-                className="px-4 py-2 text-xs font-bold bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-md"
+                className="fd-btn px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider flex items-center gap-1.5"
               >
                 <Edit className="w-3.5 h-3.5" /> Edit Profile Details
               </button>
               <button
                 onClick={() => openModal('change-dp')}
-                className="px-4 py-2 text-xs font-bold bg-[#212330] hover:bg-[#2a2d3d] text-slate-200 border border-[#33374a] rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-md"
+                className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider flex items-center gap-1.5"
               >
-                <Camera className="w-3.5 h-3.5 text-[#c0c1ff]" /> Change DP
+                <Camera className="w-3.5 h-3.5 text-[var(--lime)]" /> Change DP
               </button>
             </div>
           </div>
@@ -74,59 +78,59 @@ export const ProfileScreen: React.FC = () => {
       </div>
 
       {/* 2. Personal Information Card */}
-      <div className="surface-card p-5 rounded-2xl border border-[#2d3142]">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-1.5">
-          <UserCheck className="w-4 h-4 text-[#c0c1ff]" />
+      <div className="fd-card p-4 sm:p-5 rounded-[3px] border border-[var(--border)]">
+        <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-[var(--text-secondary)] mb-3 flex items-center gap-2">
+          <UserCheck className="w-4 h-4 text-[var(--lime)]" />
           Personal Credentials & Information
         </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div className="p-3.5 rounded-xl bg-[#212330] border border-[#33374a] flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-[#4f46e5]/30 text-[#c0c1ff]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex items-center gap-3">
+            <div className="w-8 h-8 rounded-[2px] bg-[var(--bg-panel)] border border-[var(--border)] flex items-center justify-center text-[var(--lime)] flex-shrink-0">
               <Mail className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Email Address</span>
-              <p className="text-xs sm:text-sm font-semibold text-slate-100">{userProfile.email}</p>
+            <div className="min-w-0">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-dim)] block">Email Address</span>
+              <p className="text-xs sm:text-sm font-semibold font-mono text-[var(--text-primary)] truncate">{userProfile.email}</p>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#212330] border border-[#33374a] flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-[#4f46e5]/30 text-[#c0c1ff]">
+          <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex items-center gap-3">
+            <div className="w-8 h-8 rounded-[2px] bg-[var(--bg-panel)] border border-[var(--border)] flex items-center justify-center text-[var(--lime)] flex-shrink-0">
               <Phone className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Direct Contact</span>
-              <p className="text-xs sm:text-sm font-semibold text-slate-100">{userProfile.phone}</p>
+            <div className="min-w-0">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-dim)] block">Direct Contact</span>
+              <p className="text-xs sm:text-sm font-semibold font-mono text-[var(--text-primary)] truncate">{userProfile.phone}</p>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#212330] border border-[#33374a] flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-[#4f46e5]/30 text-[#c0c1ff]">
+          <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex items-center gap-3">
+            <div className="w-8 h-8 rounded-[2px] bg-[var(--bg-panel)] border border-[var(--border)] flex items-center justify-center text-[var(--lime)] flex-shrink-0">
               <MapPin className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Assigned Region</span>
-              <p className="text-xs sm:text-sm font-semibold text-slate-100">{userProfile.location}</p>
+            <div className="min-w-0">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-dim)] block">Assigned Region</span>
+              <p className="text-xs sm:text-sm font-semibold font-mono text-[var(--text-primary)] truncate">{userProfile.location}</p>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#212330] border border-[#33374a] flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-[#4f46e5]/30 text-[#c0c1ff]">
+          <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex items-center gap-3">
+            <div className="w-8 h-8 rounded-[2px] bg-[var(--bg-panel)] border border-[var(--border)] flex items-center justify-center text-[var(--lime)] flex-shrink-0">
               <IdCard className="w-4 h-4" />
             </div>
-            <div>
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Employee ID / License</span>
-              <p className="text-xs sm:text-sm font-mono font-bold text-[#c0c1ff]">{userProfile.employeeId}</p>
+            <div className="min-w-0">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-dim)] block">Employee ID / License</span>
+              <p className="text-xs sm:text-sm font-mono font-bold text-[var(--lime)] truncate">{userProfile.employeeId}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* 3. Certifications & Specialties */}
-      <div className="surface-card p-5 rounded-2xl border border-[#2d3142]">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-1.5">
-          <Award className="w-4 h-4 text-[#d97706]" />
+      <div className="fd-card p-4 sm:p-5 rounded-[3px] border border-[var(--border)]">
+        <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-[var(--text-secondary)] mb-3 flex items-center gap-2">
+          <Award className="w-4 h-4 text-[var(--warning)]" />
           Board Certifications & Specialties
         </h3>
 
@@ -134,26 +138,26 @@ export const ProfileScreen: React.FC = () => {
           {userProfile.certifications.map((cert, idx) => (
             <div
               key={idx}
-              className="p-3 rounded-xl bg-[#212330] border border-[#33374a] flex items-center justify-between text-xs font-semibold text-slate-200"
+              className="fd-raised p-2.5 rounded-[3px] border border-[var(--border-dim)] flex items-center justify-between text-xs font-semibold text-[var(--text-primary)]"
             >
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#16a34a]"></span>
-                <span>{cert}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]"></span>
+                <span className="font-sans">{cert}</span>
               </div>
-              <span className="text-[10px] text-slate-400 font-mono uppercase">Verified Active</span>
+              <span className="fd-badge fd-badge-success text-[10px] font-mono uppercase">Verified Active</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* 4. Assigned Farms (6 Active) */}
-      <div className="surface-card p-5 rounded-2xl border border-[#2d3142]">
+      <div className="fd-card p-4 sm:p-5 rounded-[3px] border border-[var(--border)]">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-            <Building2 className="w-4 h-4 text-[#c0c1ff]" />
-            Assigned Farm Units (6 Active Sites)
+          <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-[var(--lime)]" />
+            Assigned Farm Units ({userProfile.assignedFarms.length} Active Sites)
           </h3>
-          <span className="text-[11px] text-[#c0c1ff] font-semibold">HQ Coverage</span>
+          <span className="text-[10px] font-mono text-[var(--lime)] uppercase tracking-wider">HQ Coverage</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -161,25 +165,25 @@ export const ProfileScreen: React.FC = () => {
             <div
               key={idx}
               onClick={() => navigateTo('farm-map')}
-              className="p-3 rounded-xl bg-[#212330] hover:bg-[#2a2d3d] border border-[#33374a] hover:border-[#c0c1ff]/40 flex items-center justify-between cursor-pointer transition-all active:scale-95 group"
+              className="fd-raised hover:border-[var(--lime)] border border-[var(--border-dim)] rounded-[3px] p-2.5 flex items-center justify-between cursor-pointer transition-colors group"
             >
               <div>
-                <h4 className="text-xs font-bold text-white group-hover:text-[#c0c1ff] transition-colors font-sans">
+                <h4 className="text-xs font-bold font-display uppercase text-[var(--text-primary)] group-hover:text-[var(--lime)] transition-colors">
                   {farm.name}
                 </h4>
-                <p className="text-[10px] text-slate-400">{farm.sector}</p>
+                <p className="text-[10px] font-mono text-[var(--text-dim)]">{farm.sector}</p>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <span
-                  className={`w-2.5 h-2.5 rounded-full ${
+                  className={`w-2 h-2 rounded-full ${
                     farm.status === 'optimal'
-                      ? 'bg-[#16a34a]'
+                      ? 'bg-[var(--success)]'
                       : farm.status === 'warning'
-                      ? 'bg-[#d97706] animate-ping'
-                      : 'bg-[#dc2626]'
+                      ? 'bg-[var(--warning)] animate-ping'
+                      : 'bg-[var(--critical)]'
                   }`}
                 ></span>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#c0c1ff]" />
+                <ChevronRight className="w-3.5 h-3.5 text-[var(--text-dim)] group-hover:text-[var(--lime)] transition-colors" />
               </div>
             </div>
           ))}
@@ -187,20 +191,20 @@ export const ProfileScreen: React.FC = () => {
       </div>
 
       {/* 5. App Settings */}
-      <div className="surface-card p-5 rounded-2xl border border-[#2d3142]">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-1.5">
-          <Lock className="w-4 h-4 text-[#c0c1ff]" />
+      <div className="fd-card p-4 sm:p-5 rounded-[3px] border border-[var(--border)]">
+        <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-[var(--text-secondary)] mb-3 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-[var(--lime)]" />
           App Preferences & Biosecurity Controls
         </h3>
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {/* Push Notifications Toggle */}
-          <div className="p-3.5 rounded-xl bg-[#212330] border border-[#33374a] flex items-center justify-between">
+          <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Bell className="w-4 h-4 text-[#c0c1ff]" />
+              <Bell className="w-4 h-4 text-[var(--lime)]" />
               <div>
-                <p className="text-xs font-bold text-white">Push Notifications & Bio-Alerts</p>
-                <p className="text-[11px] text-slate-400">Receive instant high-priority outbreak alerts</p>
+                <p className="text-xs font-bold font-display uppercase tracking-wide text-[var(--text-primary)]">Push Notifications & Bio-Alerts</p>
+                <p className="text-[11px] font-mono text-[var(--text-secondary)]">Receive instant high-priority outbreak alerts</p>
               </div>
             </div>
             <button
@@ -212,25 +216,27 @@ export const ProfileScreen: React.FC = () => {
                   },
                 })
               }
-              className={`w-11 h-6 rounded-full transition-all relative ${
-                userProfile.settings.pushNotifications ? 'bg-[#4f46e5]' : 'bg-[#2a2d3d]'
+              className={`w-10 h-5 rounded-[2px] transition-colors relative border ${
+                userProfile.settings.pushNotifications
+                  ? 'bg-[var(--lime)] border-[var(--lime)]'
+                  : 'bg-[var(--bg-main)] border-[var(--border)]'
               }`}
             >
               <span
-                className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all ${
-                  userProfile.settings.pushNotifications ? 'left-6 bg-[#c0c1ff]' : 'left-1'
+                className={`w-3.5 h-3.5 rounded-[1px] absolute top-[2px] transition-all ${
+                  userProfile.settings.pushNotifications ? 'left-5 bg-[#111311]' : 'left-0.5 bg-[var(--text-dim)]'
                 }`}
               ></span>
             </button>
           </div>
 
           {/* Data Sync Frequency */}
-          <div className="p-3.5 rounded-xl bg-[#212330] border border-[#33374a] flex items-center justify-between">
+          <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <RefreshCw className="w-4 h-4 text-[#c0c1ff]" />
+              <RefreshCw className="w-4 h-4 text-[var(--lime)]" />
               <div>
-                <p className="text-xs font-bold text-white">Data Sync Frequency</p>
-                <p className="text-[11px] text-slate-400">Sync interval with Central HQ</p>
+                <p className="text-xs font-bold font-display uppercase tracking-wide text-[var(--text-primary)]">Data Sync Frequency</p>
+                <p className="text-[11px] font-mono text-[var(--text-secondary)]">Sync interval with Central HQ</p>
               </div>
             </div>
             <select
@@ -243,7 +249,7 @@ export const ProfileScreen: React.FC = () => {
                   },
                 })
               }
-              className="bg-[#181922] text-xs text-[#c0c1ff] font-bold border border-[#33374a] px-2.5 py-1 rounded-lg outline-none"
+              className="fd-select text-xs font-mono py-1 px-2.5 text-[var(--text-primary)]"
             >
               <option value="Real-time">Real-time (5G/Satellite)</option>
               <option value="Every 15 mins">Every 15 mins</option>
@@ -255,10 +261,10 @@ export const ProfileScreen: React.FC = () => {
       </div>
 
       {/* 6. Logout Action Button */}
-      <div className="text-center pt-2">
+      <div className="text-center pt-1">
         <button
           onClick={() => openModal('logout')}
-          className="w-full py-3 rounded-xl bg-[#dc2626]/20 hover:bg-[#dc2626]/30 border border-[#dc2626]/60 text-[#fca5a5] text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-98 shadow-md"
+          className="fd-btn-danger w-full py-2.5 rounded-[3px] text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-2"
         >
           <LogOut className="w-4 h-4" /> End Specialist Session & Log Out
         </button>

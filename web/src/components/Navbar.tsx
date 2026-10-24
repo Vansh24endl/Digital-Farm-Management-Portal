@@ -26,6 +26,7 @@ export const Navbar: React.FC = () => {
     activeScreen, navigateTo, goBack, userProfile, alerts,
     setIsPrototypeDrawerOpen, setIsAlertDrawerOpen,
     isProfileDropdownOpen, setIsProfileDropdownOpen, openModal,
+    isAuthenticated, currentUser, logout,
   } = useApp();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -62,87 +63,109 @@ export const Navbar: React.FC = () => {
             </button>
           )}
 
-          {/* Avatar + dropdown */}
-          <div className="relative flex-shrink-0" ref={dropdownRef}>
-            <button
-              onClick={() => setIsProfileDropdownOpen((p) => !p)}
-              className="flex items-center gap-2 py-1 pr-2 rounded-sm transition-colors"
-              style={{ background: 'transparent' }}
-              aria-label="Profile menu"
-            >
-              <div className="relative">
-                <img
-                  src={userProfile.avatar}
-                  alt={userProfile.name}
-                  className="w-8 h-8 rounded-sm object-cover"
-                  style={{ border: '1px solid var(--border)' }}
-                />
-                <span
-                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
-                  style={{ background: 'var(--success)', border: '2px solid var(--bg-panel)' }}
-                />
-              </div>
-              <div className="hidden sm:block text-left">
-                <p className="text-xs font-semibold leading-none" style={{ color: 'var(--text-primary)' }}>
-                  {userProfile.name.split(' ').slice(0, 2).join(' ')}
-                </p>
-              </div>
-              <ChevronDown className="w-3 h-3 hidden sm:block" style={{ color: 'var(--text-dim)' }} />
-            </button>
-
-            {/* Dropdown */}
-            {isProfileDropdownOpen && (
-              <div
-                className="absolute top-11 left-0 w-64 z-50 animate-fadeIn"
-                style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '3px' }}
+          {/* Avatar + dropdown or Sign In */}
+          {isAuthenticated ? (
+            <div className="relative flex-shrink-0" ref={dropdownRef}>
+              <button
+                onClick={() => setIsProfileDropdownOpen((p) => !p)}
+                className="flex items-center gap-2 py-1 pr-2 rounded-sm transition-colors"
+                style={{ background: 'transparent' }}
+                aria-label="Profile menu"
               >
-                <div className="p-3" style={{ borderBottom: '1px solid var(--border)' }}>
-                  <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontFamily: 'Space Grotesk, sans-serif' }}>
-                    {userProfile.name}
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
-                    {userProfile.email}
-                  </p>
-                  <span className="fd-badge fd-badge-success mt-2 inline-flex">
-                    <ShieldCheck className="w-3 h-3" /> Active Specialist
-                  </span>
+                <div className="relative">
+                  <img
+                    src={userProfile.avatar}
+                    alt={userProfile.name}
+                    className="w-8 h-8 rounded-sm object-cover"
+                    style={{ border: '1px solid var(--border)' }}
+                  />
+                  <span
+                    className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
+                    style={{ background: 'var(--success)', border: '2px solid var(--bg-panel)' }}
+                  />
                 </div>
-
-                <div className="p-1.5 space-y-0.5">
-                  {[
-                    { icon: User, label: 'View Full Profile', action: () => navigateTo('profile') },
-                    { icon: Camera, label: 'Change Profile Picture', action: () => openModal('change-dp') },
-                    { icon: Settings, label: 'Edit Profile Settings', action: () => openModal('edit-profile') },
-                  ].map(({ icon: Icon, label, action }) => (
-                    <button
-                      key={label}
-                      onClick={action}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-sm transition-colors text-left"
-                      style={{ color: 'var(--text-primary)' }}
-                      onMouseOver={(e) => (e.currentTarget.style.background = 'var(--bg-raised)')}
-                      onMouseOut={(e) => (e.currentTarget.style.background = '')}
+                <div className="hidden sm:block text-left">
+                  <p className="text-xs font-semibold leading-none" style={{ color: 'var(--text-primary)' }}>
+                    {userProfile.name.split(' ').slice(0, 2).join(' ')}
+                  </p>
+                  {currentUser?.role && (
+                    <span
+                      className="text-[9px] uppercase font-mono tracking-wider font-bold block mt-0.5"
+                      style={{ color: 'var(--lime, #a3e635)' }}
                     >
-                      <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--lime)' }} />
-                      {label}
-                    </button>
-                  ))}
+                      {currentUser.role.replace('_', ' ')}
+                    </span>
+                  )}
+                </div>
+                <ChevronDown className="w-3 h-3 hidden sm:block" style={{ color: 'var(--text-dim)' }} />
+              </button>
 
-                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: '4px', marginTop: '4px' }}>
-                    <button
-                      onClick={() => openModal('logout')}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-sm transition-colors text-left"
-                      style={{ color: 'var(--critical)' }}
-                      onMouseOver={(e) => (e.currentTarget.style.background = 'var(--critical-bg)')}
-                      onMouseOut={(e) => (e.currentTarget.style.background = '')}
-                    >
-                      <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-                      Log Out Session
-                    </button>
+              {/* Dropdown */}
+              {isProfileDropdownOpen && (
+                <div
+                  className="absolute top-11 left-0 w-64 z-50 animate-fadeIn"
+                  style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '3px' }}
+                >
+                  <div className="p-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      {userProfile.name}
+                    </p>
+                    <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                      {userProfile.email}
+                    </p>
+                    <span className="fd-badge fd-badge-success mt-2 inline-flex uppercase">
+                      <ShieldCheck className="w-3 h-3" /> {currentUser?.role?.replace('_', ' ') || 'Active Specialist'}
+                    </span>
+                  </div>
+
+                  <div className="p-1.5 space-y-0.5">
+                    {[
+                      { icon: User, label: 'View Full Profile', action: () => navigateTo('profile') },
+                      { icon: Camera, label: 'Change Profile Picture', action: () => openModal('change-dp') },
+                      { icon: Settings, label: 'Edit Profile Settings', action: () => openModal('edit-profile') },
+                    ].map(({ icon: Icon, label, action }) => (
+                      <button
+                        key={label}
+                        onClick={action}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-sm transition-colors text-left"
+                        style={{ color: 'var(--text-primary)' }}
+                        onMouseOver={(e) => (e.currentTarget.style.background = 'var(--bg-raised)')}
+                        onMouseOut={(e) => (e.currentTarget.style.background = '')}
+                      >
+                        <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--lime)' }} />
+                        {label}
+                      </button>
+                    ))}
+
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '4px', marginTop: '4px' }}>
+                      <button
+                        onClick={logout}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-sm transition-colors text-left"
+                        style={{ color: 'var(--critical)' }}
+                        onMouseOver={(e) => (e.currentTarget.style.background = 'var(--critical-bg)')}
+                        onMouseOut={(e) => (e.currentTarget.style.background = '')}
+                      >
+                        <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
+                        Log Out Session
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => openModal('auth')}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+              style={{
+                background: 'var(--lime, #a3e635)',
+                color: '#111311',
+              }}
+            >
+              <User className="w-3.5 h-3.5" />
+              Sign In
+            </button>
+          )}
 
           {/* Screen title */}
           <div className="min-w-0">

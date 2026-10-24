@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, Save, User, Mail, Phone, MapPin } from 'lucide-react';
-
+import { X, Save, User, Mail, Phone, MapPin, AlertTriangle } from 'lucide-react';
 
 export const EditProfileModal: React.FC = () => {
   const { activeModal, closeModal, userProfile, updateUserProfile } = useApp();
@@ -25,106 +24,106 @@ export const EditProfileModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-lg bg-[#12131a] rounded-2xl border border-[#34343c] overflow-hidden shadow-2xl">
+      <div className="w-full max-w-lg bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="p-4 bg-[#1b1b22] border-b border-[#34343c] flex items-center justify-between">
-          <h3 className="text-base font-bold font-serif text-white flex items-center gap-2">
-            <User className="w-4 h-4 text-[#c0c1ff]" />
+        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
+          <h3 className="text-sm font-bold font-display uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
+            <User className="w-4 h-4 text-[var(--lime)]" />
             Edit Specialist Profile
           </h3>
-          <button onClick={closeModal} className="p-1 text-slate-400 hover:text-white rounded-lg">
-            <X className="w-5 h-5" />
+          <button onClick={closeModal} className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-4 space-y-3 max-h-[80vh] overflow-y-auto font-sans">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name & Credentials</label>
+            <label className="fd-label block mb-1">Full Name & Official Designation</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+              className="fd-input w-full text-xs font-mono"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Professional Designation</label>
+            <label className="fd-label block mb-1">Professional Role / Title</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+              className="fd-input w-full text-xs font-mono"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5 text-[#c0c1ff]" /> Email Address
+              <label className="fd-label block mb-1 flex items-center gap-1">
+                <Mail className="w-3 h-3 text-[var(--lime)]" /> Email Address
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+                className="fd-input w-full text-xs font-mono"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
-                <Phone className="w-3.5 h-3.5 text-[#c0c1ff]" /> Contact Phone
+              <label className="fd-label block mb-1 flex items-center gap-1">
+                <Phone className="w-3 h-3 text-[var(--lime)]" /> Contact Phone
               </label>
               <input
                 type="text"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+                className="fd-input w-full text-xs font-mono"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-[#c0c1ff]" /> Assigned Headquarters / Region
+            <label className="fd-label block mb-1 flex items-center gap-1">
+              <MapPin className="w-3 h-3 text-[var(--lime)]" /> Assigned Headquarters / Region
             </label>
             <input
               type="text"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+              className="fd-input w-full text-xs font-mono"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Executive Bio & Clinical Specialty</label>
+            <label className="fd-label block mb-1">Executive Bio & Clinical Specialty</label>
             <textarea
               rows={3}
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              className="w-full px-3 py-2 bg-[#1b1b22] border border-[#34343c] rounded-xl text-slate-100 text-sm focus:border-[#c0c1ff] outline-none"
+              className="fd-input w-full text-xs font-sans resize-none"
               required
             />
           </div>
 
-          <div className="pt-3 border-t border-[#34343c] flex items-center justify-end gap-2">
+          <div className="pt-2.5 border-t border-[var(--border-dim)] flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={closeModal}
-              className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl bg-[#1b1b22]"
+              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-[#1a178c] hover:bg-[#1a178c]/80 text-[#c0c1ff] border border-[#c0c1ff]/40 rounded-xl flex items-center gap-1.5 transition-all shadow-md"
+              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5"
             >
-              <Save className="w-4 h-4" /> Save Profile
+              <Save className="w-3.5 h-3.5" /> Save Profile
             </button>
           </div>
         </form>
@@ -146,24 +145,26 @@ export const LogoutModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-sm bg-[#12131a] rounded-2xl border border-[#ba1a1a]/60 overflow-hidden shadow-2xl p-5 text-center">
-        <div className="w-12 h-12 rounded-full bg-[#ba1a1a]/20 text-[#ffb4ab] border border-[#ba1a1a] flex items-center justify-center mx-auto mb-3">
-          <X className="w-6 h-6" />
+      <div className="w-full max-w-sm bg-[var(--bg-panel)] rounded-[3px] border border-[var(--critical-dim)] overflow-hidden shadow-2xl p-5 text-center">
+        <div className="w-10 h-10 rounded-full bg-[var(--critical-bg)] text-[var(--critical)] border border-[var(--critical-dim)] flex items-center justify-center mx-auto mb-3">
+          <AlertTriangle className="w-5 h-5" />
         </div>
-        <h3 className="text-lg font-bold font-serif text-white">Confirm Session Termination</h3>
-        <p className="text-xs text-slate-300 mt-2 font-sans">
+        <h3 className="text-base font-bold font-display uppercase tracking-wider text-[var(--text-primary)]">
+          Confirm Session Termination
+        </h3>
+        <p className="text-xs text-[var(--text-secondary)] mt-1.5 font-mono leading-relaxed">
           Are you sure you want to end your lead veterinarian session for Dr. Ananya Reyes? Unsaved biosecurity drafts will be stored locally.
         </p>
-        <div className="mt-5 flex items-center justify-center gap-3">
+        <div className="mt-4 flex items-center justify-center gap-2.5">
           <button
             onClick={closeModal}
-            className="px-4 py-2 text-xs font-semibold text-slate-300 bg-[#1b1b22] hover:bg-[#292931] border border-[#34343c] rounded-xl"
+            className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirmLogout}
-            className="px-5 py-2 text-xs font-bold text-white bg-[#ba1a1a] hover:bg-[#93000a] rounded-xl shadow-lg"
+            className="fd-btn-danger px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider"
           >
             Yes, Log Out
           </button>

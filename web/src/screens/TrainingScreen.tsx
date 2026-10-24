@@ -7,7 +7,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-
 export const TrainingScreen: React.FC = () => {
   const { trainingTopics, openTrainingTopic } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,42 +24,42 @@ export const TrainingScreen: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6 pb-20 animate-fadeIn font-sans">
+    <div className="space-y-5 pb-20 animate-fadeIn font-sans">
       {/* 1. Header Title & Search Input */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold font-serif text-white flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-[#c0c1ff]" />
+          <h2 className="text-xl font-bold font-display uppercase tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-[var(--lime)]" />
             Training, SOPs & Clinical Guidelines
           </h2>
-          <p className="text-xs text-slate-400">
-            Official biosecurity decontamination manuals, footbath protocols, and hygiene standards
+          <p className="text-xs font-mono text-[var(--text-secondary)] mt-0.5">
+            Official biosecurity manuals, decontamination protocols & clinical field guidelines
           </p>
         </div>
 
         {/* Search Topics Input */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <div className="relative w-full sm:w-72">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />
           <input
             type="text"
-            placeholder="Search SOP or hygiene topic..."
+            placeholder="Search SOP or guideline..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#1b1b22] border border-[#34343c] text-slate-100 text-xs focus:border-[#c0c1ff] outline-none"
+            className="fd-input w-full pl-9 pr-3 py-1.5 text-xs font-mono"
           />
         </div>
       </div>
 
       {/* 2. Category Filter Chips */}
-      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#1f1f26] border border-[#34343c] overflow-x-auto">
+      <div className="flex items-center gap-1.5 p-1 rounded-[3px] bg-[var(--bg-panel)] border border-[var(--border)] overflow-x-auto">
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+            className={`px-3 py-1 rounded-[2px] text-xs font-mono font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
               activeCategory === cat
-                ? 'bg-[#1a178c] text-[#c0c1ff] shadow-md'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[var(--lime)] text-[#111311] shadow-sm'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]'
             }`}
           >
             {cat}
@@ -74,38 +73,38 @@ export const TrainingScreen: React.FC = () => {
           <div
             key={topic.id}
             onClick={() => openTrainingTopic(topic)}
-            className="surface-card rounded-2xl overflow-hidden border border-[#34343c] hover:border-[#c0c1ff]/60 cursor-pointer transition-all active:scale-98 group flex flex-col justify-between shadow-lg"
+            className="fd-card fd-card-hover rounded-[3px] overflow-hidden border border-[var(--border)] cursor-pointer transition-all active:scale-[0.99] group flex flex-col justify-between"
           >
             {/* Topic Hero Image */}
-            <div className="relative h-44 w-full overflow-hidden bg-[#1f1f26]">
+            <div className="relative h-44 w-full overflow-hidden bg-[var(--bg-raised)] border-b border-[var(--border-dim)]">
               <img
                 src={topic.image}
                 alt={topic.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1b1b22] via-transparent to-transparent p-3 flex items-between justify-between flex-col">
-                <span className="self-end px-2.5 py-1 rounded-full bg-[#12131a]/80 backdrop-blur-md text-[#c0c1ff] text-[10px] font-bold border border-[#c0c1ff]/30 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-[#c0c1ff]" /> {topic.readTime}
+              <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-panel)] via-transparent to-transparent p-3 flex flex-col justify-between">
+                <span className="self-end px-2 py-0.5 rounded-[2px] bg-[var(--bg-main)]/90 backdrop-blur-md text-[var(--lime)] text-[10px] font-mono font-bold border border-[var(--border)] flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-[var(--lime)]" /> {topic.readTime}
                 </span>
-                <span className="self-start px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-[#1a178c] text-[#c0c1ff]">
+                <span className="self-start px-2 py-0.5 rounded-[2px] text-[10px] font-mono font-bold uppercase tracking-wider bg-[var(--bg-panel)]/90 text-[var(--text-primary)] border border-[var(--border)]">
                   {topic.category}
                 </span>
               </div>
             </div>
 
             {/* Topic Content Details */}
-            <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
+            <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
               <div>
-                <h3 className="text-base font-bold font-serif text-white group-hover:text-[#c0c1ff] transition-colors leading-snug">
+                <h3 className="text-sm font-bold font-display uppercase tracking-wide text-[var(--text-primary)] group-hover:text-[var(--lime)] transition-colors leading-snug">
                   {topic.title}
                 </h3>
-                <p className="text-xs text-slate-300 font-sans mt-1 line-clamp-2">
+                <p className="text-xs text-[var(--text-secondary)] font-sans mt-1 line-clamp-2 leading-relaxed">
                   {topic.summary}
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-[#34343c] flex items-center justify-between text-xs font-bold text-[#c0c1ff]">
-                <span>Read Full Clinical SOP Guidelines</span>
+              <div className="pt-2.5 border-t border-[var(--border-dim)] flex items-center justify-between text-xs font-mono font-bold text-[var(--lime)] uppercase tracking-wider">
+                <span>Access Clinical SOP</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  FileText, Download, ShieldCheck, CheckCircle2, Users, Package, Activity,
+  Download, ShieldCheck, CheckCircle2, Users, Package, Activity,
   ArrowUpRight, RefreshCw,
 } from 'lucide-react';
 
@@ -168,7 +168,7 @@ export const ReportsScreen: React.FC = () => {
                 <span className="font-display text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
                   {loading ? '…' : `${auditScore}%`}
                 </span>
-                <span className="fd-label text-[9px] mt-0.5" style={{ color: 'var(--lime)' }}>
+                <span className="fd-label text-[9px] mt-0.5">
                   AUDIT INDEX
                 </span>
               </div>
@@ -202,7 +202,7 @@ export const ReportsScreen: React.FC = () => {
         <div className="fd-card p-4 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--lime)' }} />
+              <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--text-primary)' }} />
               <h4 className="text-xs font-bold font-mono uppercase" style={{ color: 'var(--text-primary)' }}>Audit Index</h4>
             </div>
             <span className="fd-badge fd-badge-lime">{loading ? '…' : `${auditScore}%`}</span>
@@ -210,7 +210,7 @@ export const ReportsScreen: React.FC = () => {
           <p className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
             {completedAudits} completed / {audits.length} recorded
           </p>
-          <button onClick={() => openModal('pdf-export')} className="text-xs font-mono font-bold flex items-center gap-1 hover:underline pt-1" style={{ color: 'var(--lime)' }}>
+          <button onClick={() => openModal('pdf-export')} className="text-xs font-mono font-bold flex items-center gap-1 hover:underline pt-1" style={{ color: 'var(--text-primary)' }}>
             Export Audits <ArrowUpRight className="w-3 h-3" />
           </button>
         </div>

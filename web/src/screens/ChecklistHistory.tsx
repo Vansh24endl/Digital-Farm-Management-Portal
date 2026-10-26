@@ -88,7 +88,7 @@ export const ChecklistHistory: React.FC<{
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <History className="w-4 h-4" style={{ color: 'var(--lime)' }} />
+            <History className="w-4 h-4" style={{ color: 'var(--text-primary)' }} />
             <h3
               className="text-sm font-bold"
               style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}

@@ -55,7 +55,7 @@ const MetricCard: React.FC<{
   >
     <div className="flex items-center justify-between">
       <span className="fd-label">{label}</span>
-      <span style={{ color: 'var(--lime)', ...accentStyle }}>{icon}</span>
+      <span style={{ color: 'var(--text-primary)', ...accentStyle }}>{icon}</span>
     </div>
     <div>
       <span
@@ -76,7 +76,7 @@ const MetricCard: React.FC<{
 const SectionHeader: React.FC<{ title: string; icon: React.ReactNode; action?: { label: string; onClick: () => void } }> = ({ title, icon, action }) => (
   <div className="flex items-center justify-between mb-3">
     <div className="flex items-center gap-2">
-      <span style={{ color: 'var(--lime)' }}>{icon}</span>
+      <span style={{ color: 'var(--text-primary)' }}>{icon}</span>
       <h3 className="text-sm font-bold uppercase tracking-wider" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
         {title}
       </h3>
@@ -84,10 +84,8 @@ const SectionHeader: React.FC<{ title: string; icon: React.ReactNode; action?: {
     {action && (
       <button
         onClick={action.onClick}
-        className="text-xs font-bold flex items-center gap-1 transition-colors"
-        style={{ color: 'var(--lime)', fontFamily: 'IBM Plex Mono, monospace' }}
-        onMouseOver={(e) => (e.currentTarget.style.color = 'var(--lime-dim)')}
-        onMouseOut={(e) => (e.currentTarget.style.color = 'var(--lime)')}
+        className="text-xs font-bold flex items-center gap-1 transition-colors hover:underline"
+        style={{ color: 'var(--text-primary)', fontFamily: 'IBM Plex Mono, monospace' }}
       >
         {action.label} <ChevronRight className="w-3.5 h-3.5" />
       </button>
@@ -572,7 +570,7 @@ export const DashboardScreen: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: 'Disease Reports', value: stats.totalDiseaseReports, color: 'var(--critical)' },
-              { label: 'Audit Sessions',  value: stats.totalAudits,          color: 'var(--lime)' },
+              { label: 'Audit Sessions',  value: stats.totalAudits,          color: 'var(--text-primary)' },
               { label: 'Checklist Submissions', value: checklistSummary.totalSubmissions, color: 'var(--success)' },
               { label: 'Visitor Records', value: stats.totalVisitors,        color: 'var(--warning)' },
             ].map(({ label, value, color }) => (

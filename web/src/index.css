@@ -1,44 +1,61 @@
-/* ─── FarmDrishti — Retro Biosecurity Field Console ───────────────────────── */
-/* Font imports: Space Grotesk (headings), Inter (body), IBM Plex Mono (code) */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+/* ─── FarmDrishti — Editorial Paper & Ink Field Console ──────────────────── */
+/* Font imports: Space Grotesk (headings), Inter (body), IBM Plex Mono (code/status) */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
 @import "tailwindcss";
 
 /* ─── Design Tokens ─────────────────────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Backgrounds */
-    --bg-main:      #111311;
-    --bg-panel:     #1A1C19;
-    --bg-raised:    #232620;
-    --bg-hover:     #2A2D28;
+    /* Base Paper Palette */
+    --bg-main:      #F8F6F0;   /* Archival warm ivory/cream field paper */
+    --bg-panel:     #FFFFFF;   /* Crisp white paper surface */
+    --bg-raised:    #FCFBF7;   /* Warm tinted sub-card / table header */
+    --bg-hover:     #F3EFE4;   /* Subtle tactile hover state */
 
-    /* Borders */
-    --border:       #484A43;
-    --border-dim:   #333531;
+    /* Ink & Borders */
+    --border:       #1E201D;   /* Solid sharp ink border */
+    --border-dim:   #DCD7C9;   /* Soft ledger divider line */
 
     /* Text */
-    --text-primary:   #F1F0E7;
-    --text-secondary: #A6AA9B;
-    --text-dim:       #6B6E64;
+    --text-primary:   #181A18; /* Deep rich ink charcoal */
+    --text-secondary: #53574F; /* Muted graphite / secondary text */
+    --text-dim:       #80857A; /* Pencil lead / dim metadata */
 
-    /* Accents */
-    --lime:         #D7E86A;
-    --lime-dim:     #B5C447;
-    --lime-subtle:  rgba(215,232,106,0.12);
+    /* Accents & Highlighter */
+    --lime:         #FDE047;   /* Vibrant yellow highlighter accent */
+    --lime-dim:     #EAB308;
+    --lime-subtle:  #FEF3C7;   /* Warm marker highlight wash */
+    --ink-primary:  #181A18;   /* Primary bold ink */
 
-    /* Status colors */
-    --success:      #87D6A2;
-    --success-dim:  #5BB87D;
-    --success-bg:   rgba(135,214,162,0.10);
+    --highlighter:         #FFF176;
+    --highlighter-subtle:  rgba(255, 241, 118, 0.45);
+    --sticky-yellow:       #FEF3C7;
+    --sticky-sage:         #E8F5E9;
+    --sticky-rose:         #FDE8E8;
+    --sticky-blue:         #E0F2FE;
 
-    --warning:      #FFB547;
-    --warning-dim:  #E09A30;
-    --warning-bg:   rgba(255,181,71,0.10);
+    /* Status colors (Muted archival tones with high contrast) */
+    --success:      #1E7E34;
+    --success-dim:  #155D27;
+    --success-bg:   #EAF7EE;
 
-    --critical:     #FF765F;
-    --critical-dim: #E05540;
-    --critical-bg:  rgba(255,118,95,0.10);
+    --warning:      #B45309;
+    --warning-dim:  #92400E;
+    --warning-bg:   #FEF3C7;
+
+    --critical:     #DC2626;
+    --critical-dim: #B91C1C;
+    --critical-bg:  #FEE2E2;
+
+    /* Official Stamp */
+    --stamp-red:    #DC2626;
+    --stamp-bg:     rgba(220, 38, 38, 0.05);
+
+    /* Tactile Shadows */
+    --shadow-ink:       3px 3px 0px #1E201D;
+    --shadow-ink-hover: 4px 4px 0px #1E201D;
+    --shadow-sm:        2px 2px 0px #1E201D;
 
     /* Sidebar widths */
     --sidebar-w:    220px;
@@ -48,12 +65,15 @@
   }
 
   @media (min-width: 1440px) { :root { font-size: 16px; } }
-  @media (min-width: 1920px) { :root { font-size: 17px; } }
+  @media (min-width: 1920px) { :root { font-size: 16.5px; } }
 
   *, *::before, *::after { box-sizing: border-box; }
 
   body {
     background-color: var(--bg-main);
+    /* Subtle Notebook Ruling Lines - Clean & Professional */
+    background-image: linear-gradient(rgba(30, 32, 29, 0.035) 1px, transparent 1px);
+    background-size: 100% 28px;
     color: var(--text-primary);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
@@ -62,106 +82,173 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Focus ring — keyboard only */
+  /* Focus ring — crisp ink outline */
   :focus-visible {
-    outline: 2px solid var(--lime);
+    outline: 2px solid var(--border);
     outline-offset: 2px;
   }
 }
 
 /* ─── Typography classes ─────────────────────────────────────────────────────── */
-
-/* Headings / large display numbers */
 .font-display {
   font-family: 'Space Grotesk', system-ui, sans-serif;
   letter-spacing: -0.025em;
   font-weight: 700;
 }
 
-/* Mono — timestamps, IDs, section identifiers */
 .font-mono {
   font-family: 'IBM Plex Mono', monospace;
 }
 
-/* Body */
 .font-sans {
   font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* ─── Highlighter Effect ─────────────────────────────────────────────────────── */
+.fd-highlight {
+  background: var(--highlighter);
+  padding: 1px 6px;
+  border-radius: 2px;
+  display: inline-block;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  font-weight: 700;
+}
+
+/* ─── Official Stamp Badge ───────────────────────────────────────────────────── */
+.fd-stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border: 2px dashed var(--stamp-red);
+  background: var(--stamp-bg);
+  color: var(--stamp-red);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  transform: rotate(-2deg);
+  box-shadow: 1px 1px 0px rgba(220, 38, 38, 0.3);
+}
+
 /* ─── Panel / Card Surfaces ──────────────────────────────────────────────────── */
 
-/* Base card — no hover effects by default */
+/* Base card — crisp paper with ink border and tactile shadow */
 .fd-card {
   background-color: var(--bg-panel);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-ink);
   border-radius: 3px;
 }
 
-/* Interactive card — gains border highlight on hover */
+/* Interactive card — gains tactile hover offset */
 .fd-card-hover {
   background-color: var(--bg-panel);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-ink);
   border-radius: 3px;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 .fd-card-hover:hover {
-  border-color: var(--lime-dim);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-ink-hover);
   background-color: var(--bg-raised);
 }
 
 /* Raised panel — slightly elevated, used for sub-sections */
 .fd-raised {
   background-color: var(--bg-raised);
-  border: 1px solid var(--border-dim);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  border-radius: 3px;
+}
+
+/* Sticky notes */
+.fd-sticky-yellow {
+  background-color: var(--sticky-yellow);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-ink);
+  border-radius: 3px;
+}
+.fd-sticky-sage {
+  background-color: var(--sticky-sage);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-ink);
+  border-radius: 3px;
+}
+.fd-sticky-rose {
+  background-color: var(--sticky-rose);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-ink);
   border-radius: 3px;
 }
 
 /* ─── Buttons ────────────────────────────────────────────────────────────────── */
 
-/* Primary action — lime fill */
+/* Primary action — deep ink black button with paper text */
 .fd-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   padding: 0.5rem 1.125rem;
-  background-color: var(--lime);
-  color: #111311;
+  background-color: var(--ink-primary);
+  color: #F8F6F0;
   font-family: 'Inter', sans-serif;
   font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.01em;
-  border: 1px solid var(--lime);
+  border: 1.5px solid var(--border);
   border-radius: 3px;
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: background-color 0.15s, opacity 0.15s;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
   white-space: nowrap;
 }
-.fd-btn:hover  { background-color: var(--lime-dim); border-color: var(--lime-dim); }
-.fd-btn:active { opacity: 0.85; }
-.fd-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.fd-btn:hover  {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-ink);
+  background-color: #2D302A;
+}
+.fd-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--border);
+}
+.fd-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; transform: none; }
 
-/* Ghost button — bordered outline */
+/* Ghost button — bordered paper outline with hover highlight */
 .fd-btn-ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   padding: 0.5rem 1.125rem;
-  background-color: transparent;
+  background-color: var(--bg-panel);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   font-size: 0.8125rem;
   font-weight: 600;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 3px;
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
   white-space: nowrap;
 }
-.fd-btn-ghost:hover  { border-color: var(--lime-dim); color: var(--lime); background-color: var(--lime-subtle); }
-.fd-btn-ghost:active { opacity: 0.8; }
-.fd-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+.fd-btn-ghost:hover  {
+  background-color: var(--sticky-yellow);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-ink);
+  color: var(--text-primary);
+}
+.fd-btn-ghost:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--border);
+}
+.fd-btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; transform: none; }
 
 /* Danger ghost */
 .fd-btn-danger {
@@ -170,17 +257,22 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.5rem 1.125rem;
-  background-color: transparent;
+  background-color: var(--bg-panel);
   color: var(--critical);
   font-family: 'Inter', sans-serif;
   font-size: 0.8125rem;
-  font-weight: 600;
-  border: 1px solid var(--critical-dim);
+  font-weight: 700;
+  border: 1.5px solid var(--critical);
   border-radius: 3px;
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
-.fd-btn-danger:hover { background-color: var(--critical-bg); }
+.fd-btn-danger:hover {
+  background-color: var(--critical-bg);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-ink);
+}
 
 /* Icon-only square button */
 .fd-btn-icon {
@@ -188,93 +280,106 @@
   align-items: center;
   justify-content: center;
   padding: 0.4375rem;
-  background-color: var(--bg-raised);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
   border-radius: 3px;
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
-.fd-btn-icon:hover { color: var(--text-primary); border-color: var(--lime-dim); }
+.fd-btn-icon:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-ink);
+  background-color: var(--bg-raised);
+}
 
 /* ─── Status Badges ──────────────────────────────────────────────────────────── */
-
-/* shared badge base */
 .fd-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.125rem 0.5rem;
+  padding: 0.15rem 0.55rem;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: 2px;
-  border: 1px solid;
+  border: 1.5px solid var(--border);
+  box-shadow: 1px 1px 0px var(--border);
   white-space: nowrap;
 }
 
-.fd-badge-success  { background: var(--success-bg);  color: var(--success);  border-color: var(--success-dim); }
-.fd-badge-warning  { background: var(--warning-bg);  color: var(--warning);  border-color: var(--warning-dim); }
-.fd-badge-critical { background: var(--critical-bg); color: var(--critical); border-color: var(--critical-dim); }
-.fd-badge-lime     { background: var(--lime-subtle); color: var(--lime);     border-color: var(--lime-dim); }
-.fd-badge-neutral  { background: var(--bg-raised);   color: var(--text-secondary); border-color: var(--border); }
+.fd-badge-success  { background: var(--success-bg);  color: var(--success);  border-color: var(--border); }
+.fd-badge-warning  { background: var(--warning-bg);  color: var(--warning);  border-color: var(--border); }
+.fd-badge-critical { background: var(--critical-bg); color: var(--critical); border-color: var(--border); }
+.fd-badge-lime     { background: var(--highlighter); color: var(--text-primary); border-color: var(--border); }
+.fd-badge-neutral  { background: var(--bg-raised);   color: var(--text-secondary); border-color: var(--border-dim); }
 
 /* ─── Section labels ─────────────────────────────────────────────────────────── */
 .fd-label {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--text-secondary);
 }
 
-/* ─── Form controls ──────────────────────────────────────────────────────────── */
+/* ─── Form controls ──────────────────────────────────────────────────── */
 .fd-input {
   width: 100%;
-  background-color: var(--bg-raised);
+  background-color: var(--bg-panel);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 3px;
+  box-shadow: var(--shadow-sm);
   padding: 0.5rem 0.75rem;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.fd-input:focus { border-color: var(--lime-dim); }
+.fd-input:focus {
+  border-color: var(--border);
+  box-shadow: var(--shadow-ink);
+}
 .fd-input::placeholder { color: var(--text-dim); }
 
 .fd-select {
   appearance: none;
   width: 100%;
-  background-color: var(--bg-raised);
+  background-color: var(--bg-panel);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   font-size: 0.8125rem;
-  font-weight: 500;
-  border: 1px solid var(--border);
+  font-weight: 600;
+  border: 1.5px solid var(--border);
   border-radius: 3px;
+  box-shadow: var(--shadow-sm);
   padding: 0.5rem 0.75rem;
   outline: none;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.fd-select:focus { border-color: var(--lime-dim); }
+.fd-select:focus {
+  border-color: var(--border);
+  box-shadow: var(--shadow-ink);
+}
 
 /* ─── Progress bar ───────────────────────────────────────────────────────────── */
 .fd-progress-track {
   width: 100%;
-  height: 4px;
-  background-color: var(--border-dim);
-  border-radius: 0;
+  height: 6px;
+  background-color: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 2px;
   overflow: hidden;
 }
 .fd-progress-fill {
   height: 100%;
-  background-color: var(--lime);
+  background-color: var(--border);
   transition: width 0.5s ease;
 }
 .fd-progress-fill-success  { background-color: var(--success); }
@@ -282,13 +387,13 @@
 .fd-progress-fill-critical { background-color: var(--critical); }
 
 /* ─── Divider ────────────────────────────────────────────────────────────────── */
-.fd-divider { border-top: 1px solid var(--border-dim); }
+.fd-divider { border-top: 1.5px dashed var(--border-dim); }
 
 /* ─── Custom Scrollbar ───────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 7px; height: 7px; }
 ::-webkit-scrollbar-track { background: var(--bg-main); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 0; }
-::-webkit-scrollbar-thumb:hover { background: var(--lime-dim); }
+::-webkit-scrollbar-thumb { background: #D0CBBF; border: 1px solid var(--border); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--highlighter); }
 
 /* ─── Animations ─────────────────────────────────────────────────────────────── */
 @keyframes fadeIn {
@@ -299,7 +404,7 @@
 
 @keyframes urgent-pulse {
   0%, 100% { border-color: var(--critical-dim); }
-  50%       { border-color: var(--critical); box-shadow: 0 0 12px 2px var(--critical-bg); }
+  50%       { border-color: var(--critical); box-shadow: 0 0 10px 1px var(--critical-bg); }
 }
 .animate-urgent { animation: urgent-pulse 2s infinite ease-in-out; }
 
@@ -309,14 +414,28 @@
 /* Legacy surface-card — kept so unrewritten screens keep working */
 .surface-card {
   background-color: var(--bg-panel);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-ink);
   border-radius: 3px;
-  transition: border-color 0.15s;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.surface-card:hover { border-color: var(--lime-dim); }
+.surface-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-ink-hover);
+}
 
-.glass-surface { background: var(--bg-panel); border: 1px solid var(--border); }
-.surface-elevated { background-color: var(--bg-raised); border: 1px solid var(--border-dim); }
+.glass-surface {
+  background: var(--bg-panel);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  border-radius: 3px;
+}
+.surface-elevated {
+  background-color: var(--bg-raised);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  border-radius: 3px;
+}
 
-/* Legacy glow — neutralized so they don't visually conflict */
+/* Neutralized glow */
 .glow-lavender, .glow-crimson, .glow-green { box-shadow: none; }

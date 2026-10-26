@@ -233,7 +233,7 @@ export const ProfileScreen: React.FC = () => {
           {/* Data Sync Frequency */}
           <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <RefreshCw className="w-4 h-4 text-[var(--lime)]" />
+              <RefreshCw className="w-4 h-4 text-[var(--text-primary)]" />
               <div>
                 <p className="text-xs font-bold font-display uppercase tracking-wide text-[var(--text-primary)]">Data Sync Frequency</p>
                 <p className="text-[11px] font-mono text-[var(--text-secondary)]">Sync interval with Central HQ</p>

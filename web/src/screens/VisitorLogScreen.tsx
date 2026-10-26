@@ -131,7 +131,7 @@ export const VisitorLogScreen: React.FC = () => {
 
         <div className="fd-card p-4 text-center">
           <span className="fd-label block mb-1">This Week</span>
-          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--lime)' }}>45</p>
+          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>45</p>
           <span className="text-xs" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>Entrants Logged</span>
         </div>
 
@@ -233,7 +233,7 @@ export const VisitorLogScreen: React.FC = () => {
                       </span>
                     </div>
 
-                    <p className="text-xs font-semibold flex items-center gap-1" style={{ color: 'var(--lime)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                    <p className="text-xs font-semibold flex items-center gap-1" style={{ color: 'var(--text-primary)', fontFamily: 'IBM Plex Mono, monospace' }}>
                       <Building className="w-3 h-3" /> {visitor.company} · {visitor.role}
                     </p>
 

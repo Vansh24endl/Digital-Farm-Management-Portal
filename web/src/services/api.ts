@@ -161,6 +161,12 @@ export const api = {
 
     getCurrentUser: () => request<{ success: boolean; user: User }>("/auth/me"),
 
+    updateProfile: (data: { name?: string; phone?: string }) =>
+        request<{ success: boolean; message: string; user: User }>("/auth/profile", {
+            method: "PUT",
+            body: JSON.stringify(data),
+        }),
+
     getAllUsers: () =>
         request<{ success: boolean; count: number; users: User[] }>("/auth/users"),
 };

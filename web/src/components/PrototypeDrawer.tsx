@@ -180,7 +180,7 @@ export const PrototypeDrawer: React.FC = () => {
                       className={`w-full text-left p-2.5 rounded-[3px] border transition-all flex items-start gap-2.5 group cursor-pointer ${
                         isActive
                           ? 'bg-[var(--lime-bg)] border-[var(--lime)] shadow-sm'
-                          : 'bg-[var(--bg-raised)] hover:bg-[#282b24] border-[var(--border-dim)] hover:border-[var(--lime)]'
+                          : 'bg-[var(--bg-raised)] hover:bg-[var(--bg-hover)] border-[var(--border-dim)] hover:border-[var(--lime)]'
                       }`}
                     >
                       <span
@@ -246,7 +246,7 @@ export const PrototypeDrawer: React.FC = () => {
                       className={`w-full text-left p-2.5 rounded-[3px] border transition-all flex items-start gap-2.5 group cursor-pointer ${
                         isActive
                           ? 'bg-[var(--lime-bg)] border-[var(--lime)] shadow-sm'
-                          : 'bg-[var(--bg-raised)] hover:bg-[#282b24] border-[var(--border-dim)] hover:border-[var(--warning)]'
+                          : 'bg-[var(--bg-raised)] hover:bg-[var(--bg-hover)] border-[var(--border-dim)] hover:border-[var(--warning)]'
                       }`}
                     >
                       <span

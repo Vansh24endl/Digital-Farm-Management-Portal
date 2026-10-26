@@ -134,7 +134,7 @@ export const EmergencyScreen: React.FC = () => {
           id="dial-lead-vet-btn"
           onClick={() => startEmergencyCall(emergencyDirectory[0])}
           className="fd-btn flex items-center gap-2 flex-shrink-0 self-start sm:self-auto"
-          style={{ background: 'var(--critical)', borderColor: 'var(--critical)', color: '#111311' }}
+          style={{ background: 'var(--critical)', borderColor: 'var(--critical)', color: '#FFFFFF' }}
         >
           <PhoneCall className="w-4 h-4" /> Dial Lead Vet Now
         </button>
@@ -207,7 +207,7 @@ export const EmergencyScreen: React.FC = () => {
                     {contact.name}
                   </h3>
                   <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{contact.role}</p>
-                  <p className="text-xs font-bold pt-1" style={{ color: 'var(--lime)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                  <p className="text-xs font-bold pt-1" style={{ color: 'var(--text-primary)', fontFamily: 'IBM Plex Mono, monospace' }}>
                     {contact.phone}
                   </p>
                 </div>
@@ -216,7 +216,7 @@ export const EmergencyScreen: React.FC = () => {
               <button
                 onClick={() => startEmergencyCall(contact)}
                 className="fd-btn self-end sm:self-center flex items-center gap-2 flex-shrink-0"
-                style={{ background: 'var(--critical)', borderColor: 'var(--critical)', color: '#111311' }}
+                style={{ background: 'var(--critical)', borderColor: 'var(--critical)', color: '#FFFFFF' }}
               >
                 <Phone className="w-4 h-4 fill-current" /> Call
               </button>

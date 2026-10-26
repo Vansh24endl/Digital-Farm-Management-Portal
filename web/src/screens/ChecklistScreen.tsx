@@ -124,7 +124,7 @@ export const ChecklistScreen: React.FC = () => {
               >
                 {passedItems}/{totalItems}
               </span>
-              <span className="text-sm font-bold" style={{ color: 'var(--lime)', fontFamily: 'IBM Plex Mono, monospace' }}>
+              <span className="text-sm font-bold fd-highlight" style={{ fontFamily: 'IBM Plex Mono, monospace' }}>
                 {passPercentage}% Passed
               </span>
             </div>

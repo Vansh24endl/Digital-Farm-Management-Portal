@@ -64,7 +64,7 @@ interface AppContextType {
 
   // Data Collections
   userProfile: UserProfile;
-  updateUserProfile: (updated: Partial<UserProfile>) => void;
+  updateUserProfile: (updated: Partial<UserProfile>) => Promise<void> | void;
   updateAvatar: (newUrl: string) => void;
   
   farmUnits: FarmUnit[];
@@ -814,8 +814,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Profile Update & Avatar Update
-  const updateUserProfile = (updated: Partial<UserProfile>) => {
+  const updateUserProfile = async (updated: Partial<UserProfile>) => {
     setUserProfile((prev) => ({ ...prev, ...updated }));
+    const token = typeof window !== 'undefined' ? localStorage.getItem('farmdrishti_token') : null;
+    if (token) {
+      try {
+        const payload: { name?: string; phone?: string } = {};
+        if (updated.name) payload.name = updated.name;
+        if (updated.phone) payload.phone = updated.phone;
+        if (Object.keys(payload).length > 0) {
+          const res = await api.updateProfile(payload);
+          if (res.success && res.user) {
+            setCurrentUser(res.user);
+          }
+        }
+      } catch (err: any) {
+        console.warn('Backend profile sync skipped/failed:', err?.message);
+      }
+    }
     showToast('Profile updated successfully!');
   };
 
@@ -935,6 +951,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (activeAuditInspection?.id === auditId) {
             setActiveAuditInspection(updatedAudit);
           }
+
+          // Persist to MongoDB if it's a valid ObjectId
+          if (/^[a-f\d]{24}$/i.test(auditId)) {
+            api.updateAudit(auditId, {
+              items: updatedItems,
+              progress: newProgress,
+              status: newProgress === 100 ? 'completed' : 'in-progress',
+            }).then(() => {
+              window.dispatchEvent(new CustomEvent('audits-updated'));
+            }).catch((err) => console.warn('Could not persist audit progress to MongoDB:', err));
+          }
+
           return updatedAudit;
         }
         return aud;
@@ -947,12 +975,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prev.map((aud) => {
         if (aud.id === auditId) {
           const allDoneItems = aud.items.map((it) => ({ ...it, done: true }));
-          return {
+          const updatedAudit = {
             ...aud,
             items: allDoneItems,
             progress: 100,
-            status: 'completed',
+            status: 'completed' as any,
           };
+
+          // Persist to MongoDB if it's a valid ObjectId
+          if (/^[a-f\d]{24}$/i.test(auditId)) {
+            api.updateAudit(auditId, {
+              items: allDoneItems,
+              progress: 100,
+              status: 'completed',
+            }).then(() => {
+              window.dispatchEvent(new CustomEvent('audits-updated'));
+            }).catch((err) => console.warn('Could not complete audit in MongoDB:', err));
+          }
+
+          return updatedAudit;
         }
         return aud;
       })
@@ -962,7 +1003,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       spread: 90,
       origin: { y: 0.6 },
     });
-    showToast('Audit marked as 100% Completed!');
+    showToast('Audit marked as 100% Completed in MongoDB!');
     closeModal();
   };
 

@@ -8,7 +8,7 @@ const router = Router();
 // REGISTER VISITOR
 router.post("/", async (req, res) => {
   try {
-    const { farmId, name, purpose } = req.body;
+    const { farmId, name, purpose, role, company, phone, temperature, status } = req.body;
 
     if (!farmId || !name?.trim() || !purpose?.trim()) {
       return res.status(400).json({
@@ -37,6 +37,12 @@ router.post("/", async (req, res) => {
       farmId,
       name: name.trim(),
       purpose: purpose.trim(),
+      role: role?.trim() || "Visitor",
+      company: company?.trim() || "Independent",
+      phone: phone?.trim() || "—",
+      temperature: temperature?.trim() || "36.5°C",
+      status: status === "OUT" ? "OUT" : "IN",
+      checkIn: new Date(),
     });
 
     return res.status(201).json({
@@ -100,6 +106,7 @@ router.patch("/:id/checkout", async (req, res) => {
     }
 
     visitor.checkOut = new Date();
+    visitor.status = "OUT";
     await visitor.save();
 
     return res.json({

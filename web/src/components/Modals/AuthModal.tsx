@@ -307,21 +307,21 @@ export const AuthModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => fillDemoCredentials('admin')}
-                className="px-2 py-0.5 rounded-[2px] text-[10px] font-mono bg-[var(--bg-raised)] hover:bg-[#282b24] text-[var(--text-secondary)] border border-[var(--border-dim)]"
+                className="px-2 py-0.5 rounded-[2px] text-[10px] font-mono bg-[var(--bg-raised)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-dim)]"
               >
                 Admin (admin@farmdrishti.org)
               </button>
               <button
                 type="button"
                 onClick={() => fillDemoCredentials('veterinarian')}
-                className="px-2 py-0.5 rounded-[2px] text-[10px] font-mono bg-[var(--bg-raised)] hover:bg-[#282b24] text-[var(--text-secondary)] border border-[var(--border-dim)]"
+                className="px-2 py-0.5 rounded-[2px] text-[10px] font-mono bg-[var(--bg-raised)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-dim)]"
               >
                 Vet (ananya.reyes@biosec.vet)
               </button>
               <button
                 type="button"
                 onClick={() => fillDemoCredentials('farm_manager')}
-                className="px-2 py-0.5 rounded-[2px] text-[10px] font-mono bg-[var(--bg-raised)] hover:bg-[#282b24] text-[var(--text-secondary)] border border-[var(--border-dim)]"
+                className="px-2 py-0.5 rounded-[2px] text-[10px] font-mono bg-[var(--bg-raised)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-dim)]"
               >
                 Manager (manager@greenvalley.farm)
               </button>

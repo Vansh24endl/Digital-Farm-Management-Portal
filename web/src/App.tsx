@@ -72,28 +72,16 @@ const MainContent: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col font-sans" style={{ background: 'var(--bg-main)', color: 'var(--text-primary)' }}>
-      {/* Sticky Top App Bar */}
       <Navbar />
-
-      {/* Main Body Layout: Sidebar + Full Available Content Area */}
       <div className="flex flex-1 w-full">
-        {/* Collapsible Left Sidebar Navigation */}
         <Sidebar />
-
-        {/* Dynamic Center Screen Container with Responsive Padding */}
-        <main className="flex-1 min-w-0 w-full p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+        <main className="flex-1 min-w-0 w-full p-3 sm:p-4 md:p-6 overflow-x-hidden">
           {renderScreen()}
         </main>
-      </div>
-
-      {/* Fixed Bottom 5-Tab Navigation Bar (Mobile / Compact) */}
+      </div> 
       <BottomNav />
-
-      {/* Global Drawers & Modals */}
       <PrototypeDrawer />
       <AlertDrawer />
-      
-      {/* Action Modals */}
       <EditProfileModal />
       <ChangeDPModal />
       <LogoutModal />
@@ -108,8 +96,6 @@ const MainContent: React.FC = () => {
       <IncidentLogModal />
       <PDFExportModal />
       <AuthModal />
-
-      {/* Global Toast Notifications */}
       <Toast />
     </div>
   );

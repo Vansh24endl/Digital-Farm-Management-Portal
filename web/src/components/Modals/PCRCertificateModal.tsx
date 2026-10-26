@@ -13,7 +13,7 @@ export const PCRCertificateModal: React.FC = () => {
         {/* Header */}
         <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Dna className="w-5 h-5 text-[var(--lime)]" />
+            <Dna className="w-5 h-5 text-[var(--text-primary)]" />
             <div>
               <h3 className="text-sm font-bold font-display uppercase tracking-wider text-[var(--text-primary)]">Diagnostic PCR Laboratory Certificate</h3>
               <p className="text-[11px] text-[var(--text-secondary)] font-mono">Official Serology & Molecular Diagnostics Verification</p>
@@ -30,7 +30,7 @@ export const PCRCertificateModal: React.FC = () => {
           <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
             <div>
               <span className="text-[10px] uppercase font-bold text-[var(--text-dim)] block">Certificate ID</span>
-              <p className="text-xs font-bold text-[var(--lime)]">PCR-2026-OCT-09411</p>
+              <p className="text-xs font-bold text-[var(--text-primary)]">PCR-2026-OCT-09411</p>
             </div>
             <div>
               <span className="text-[10px] uppercase font-bold text-[var(--text-dim)] block">Specimen Batch</span>
@@ -92,7 +92,7 @@ export const PCRCertificateModal: React.FC = () => {
           {/* Attestation & Signature */}
           <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Award className="w-7 h-7 text-[var(--lime)]" />
+              <Award className="w-7 h-7 text-[var(--text-primary)]" />
               <div>
                 <p className="text-xs font-bold font-display uppercase tracking-wide text-[var(--text-primary)]">Certified by Dr. Ananya Reyes</p>
                 <p className="text-[11px] font-mono text-[var(--text-secondary)]">Lead Veterinary Pathologist · Central Bio-Lab</p>

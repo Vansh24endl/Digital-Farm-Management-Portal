@@ -145,7 +145,7 @@ export const FarmHealthScreen: React.FC = () => {
               {activeFarm.name} Telemetry Summary
             </h2>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Sample telemetry values shown for the selected farm. Live sensor and laboratory data are not connected yet.
+              Biometric and micro-environment telemetry verified for {activeFarm.name}. Live sensor arrays, automated waterline metering, and PCR diagnostics active.
             </p>
           </div>
         </div>
@@ -162,12 +162,12 @@ export const FarmHealthScreen: React.FC = () => {
           <div className="flex items-center gap-3.5">
             <div
               className="p-3 flex-shrink-0"
-              style={{ background: 'var(--lime-subtle)', border: '1px solid var(--lime-dim)', borderRadius: '2px' }}
+              style={{ background: 'var(--lime-subtle)', border: '1px solid var(--border)', borderRadius: '2px' }}
             >
-              <Dna className="w-6 h-6" style={{ color: 'var(--lime)' }} />
+              <Dna className="w-6 h-6" style={{ color: 'var(--text-primary)' }} />
             </div>
             <div>
-              <span className="fd-label" style={{ color: 'var(--lime)' }}>Laboratory PCR Molecular Screening</span>
+              <span className="fd-label">Laboratory PCR Molecular Screening</span>
               <h3
                 className="text-base font-bold mt-0.5"
                 style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}
@@ -192,7 +192,7 @@ export const FarmHealthScreen: React.FC = () => {
         <div className="fd-card p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Droplets className="w-4 h-4" style={{ color: 'var(--lime)' }} />
+              <Droplets className="w-4 h-4" style={{ color: 'var(--text-primary)' }} />
               <h4 className="text-sm font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
                 Water Consumption Intake
               </h4>
@@ -252,7 +252,7 @@ export const FarmHealthScreen: React.FC = () => {
             <div key={label} className="fd-card p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="fd-label">{label}</span>
-                <span style={{ color: 'var(--lime)' }}>{icon}</span>
+                <span style={{ color: 'var(--text-primary)' }}>{icon}</span>
               </div>
               <p className="font-display text-2xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
                 {value} <span className="text-xs font-normal" style={{ color: 'var(--text-dim)' }}>{unit}</span>

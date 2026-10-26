@@ -34,7 +34,7 @@ export const BottomNav: React.FC = () => {
               onClick={() => navigateTo(tab.id)}
               className="flex flex-col items-center justify-center w-14 py-1.5 rounded-sm transition-colors active:scale-95"
               style={{
-                color: isActive ? 'var(--lime)' : 'var(--text-dim)',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-dim)',
                 background: isActive ? 'var(--lime-subtle)' : 'transparent',
               }}
               aria-label={tab.label}
@@ -52,7 +52,7 @@ export const BottomNav: React.FC = () => {
               {isActive && (
                 <span
                   className="w-4 h-0.5 mt-0.5 rounded-full"
-                  style={{ background: 'var(--lime)' }}
+                  style={{ background: 'var(--border)' }}
                 />
               )}
             </button>

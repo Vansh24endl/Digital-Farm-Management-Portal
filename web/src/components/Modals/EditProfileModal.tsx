@@ -14,12 +14,19 @@ export const EditProfileModal: React.FC = () => {
     bio: userProfile.bio,
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   if (activeModal !== 'edit-profile') return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateUserProfile(formData);
-    closeModal();
+    setIsSubmitting(true);
+    try {
+      await updateUserProfile(formData);
+      closeModal();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -121,9 +128,10 @@ export const EditProfileModal: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5"
+              disabled={isSubmitting}
+              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 disabled:opacity-50"
             >
-              <Save className="w-3.5 h-3.5" /> Save Profile
+              <Save className="w-3.5 h-3.5" /> {isSubmitting ? 'Saving...' : 'Save Profile'}
             </button>
           </div>
         </form>

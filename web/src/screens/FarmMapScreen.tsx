@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { api } from '../services/api';
-import { Map, Plus, XCircle, Clock, AlertTriangle, Building, Layers } from 'lucide-react';
+import { Map, Plus, XCircle, Clock, AlertTriangle, Building } from 'lucide-react';
 
 type Farm = {
   _id?: string;
@@ -64,7 +64,7 @@ export const FarmMapScreen: React.FC = () => {
               className="w-10 h-10 rounded-sm flex items-center justify-center flex-shrink-0"
               style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)' }}
             >
-              <Building className="w-5 h-5" style={{ color: 'var(--lime)' }} />
+              <Building className="w-5 h-5" style={{ color: 'var(--text-primary)' }} />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -117,7 +117,7 @@ export const FarmMapScreen: React.FC = () => {
       <div className="fd-card p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-bold font-display flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <Map className="w-4 h-4" style={{ color: 'var(--lime)' }} />
+            <Map className="w-4 h-4" style={{ color: 'var(--text-primary)' }} />
             Biosecurity Zone Architecture Blueprint
           </h3>
           <span className="fd-badge fd-badge-neutral">
@@ -194,7 +194,7 @@ export const FarmMapScreen: React.FC = () => {
         <div className="fd-card p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-              <Clock className="w-4 h-4" style={{ color: 'var(--lime)' }} /> Facility Activity Telemetry
+              <Clock className="w-4 h-4" style={{ color: 'var(--text-primary)' }} /> Facility Activity Telemetry
             </h3>
             <span className="fd-badge fd-badge-lime">LIVE FEED</span>
           </div>

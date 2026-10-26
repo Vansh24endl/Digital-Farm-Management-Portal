@@ -222,7 +222,7 @@ export const AuditsScreen: React.FC = () => {
                   <h3 className="text-base font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
                     {audit.title}
                   </h3>
-                  <p className="text-xs font-semibold" style={{ color: 'var(--lime)', fontFamily: 'IBM Plex Mono, monospace' }}>{audit.sector}</p>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)', fontFamily: 'IBM Plex Mono, monospace' }}>{audit.sector}</p>
                   <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Auditor: {audit.auditor}</p>
                   {audit.findings && <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{audit.findings}</p>}
 
@@ -237,7 +237,7 @@ export const AuditsScreen: React.FC = () => {
                         className="fd-progress-fill"
                         style={{
                           width: `${audit.progress}%`,
-                          background: isUrgent ? 'var(--critical)' : isAttention ? 'var(--warning)' : 'var(--lime)',
+                          background: isUrgent ? 'var(--critical)' : isAttention ? 'var(--warning)' : 'var(--border)',
                         }}
                       />
                     </div>
@@ -248,7 +248,7 @@ export const AuditsScreen: React.FC = () => {
                   onClick={() => openAuditInspector(audit.raw || audit)}
                   className={`fd-btn self-end sm:self-center flex items-center gap-1.5 ${isUrgent ? '' : 'fd-btn-ghost'}`}
                   style={isUrgent
-                    ? { background: 'var(--critical)', borderColor: 'var(--critical)', color: '#111311' }
+                    ? { background: 'var(--critical)', borderColor: 'var(--critical)', color: '#FFFFFF' }
                     : isAttention
                     ? { borderColor: 'var(--warning-dim)', color: 'var(--warning)' }
                     : {}

@@ -104,8 +104,8 @@ export const Sidebar: React.FC = () => {
                       }`}
                       style={{
                         background: isActive ? 'var(--lime-subtle)' : 'transparent',
-                        color: isActive ? 'var(--lime)' : 'var(--text-secondary)',
-                        borderLeft: isActive ? '2px solid var(--lime)' : '2px solid transparent',
+                        color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        borderLeft: isActive ? '3px solid var(--border)' : '3px solid transparent',
                       }}
                       onMouseOver={(e) => {
                         if (!isActive) e.currentTarget.style.background = 'var(--bg-raised)';
@@ -114,7 +114,7 @@ export const Sidebar: React.FC = () => {
                         if (!isActive) e.currentTarget.style.background = 'transparent';
                       }}
                     >
-                      <span className={`material-symbols-outlined flex-shrink-0 ${isActive ? '' : ''}`} style={{ fontSize: '18px' }}>
+                      <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: isActive ? 'var(--text-primary)' : 'inherit' }}>
                         {item.icon}
                       </span>
                       {!isSidebarCollapsed && (
@@ -123,7 +123,7 @@ export const Sidebar: React.FC = () => {
                             className="text-xs font-semibold truncate"
                             style={{
                               fontFamily: 'Inter, sans-serif',
-                              color: isActive ? 'var(--lime)' : 'var(--text-secondary)',
+                              color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                               fontWeight: isActive ? 700 : 500,
                             }}
                           >

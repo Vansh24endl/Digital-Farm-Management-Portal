@@ -23,9 +23,6 @@ export const SurveillanceScreen: React.FC = () => {
   const riskBadgeClass = (level: string) =>
     level === 'High' ? 'fd-badge-critical' : level === 'Medium' ? 'fd-badge-warning' : 'fd-badge-success';
 
-  const riskDotColor = (level: string) =>
-    level === 'High' ? 'var(--critical)' : level === 'Medium' ? 'var(--warning)' : 'var(--success)';
-
   return (
     <div className="space-y-5 pb-20 animate-fadeIn">
 
@@ -83,7 +80,7 @@ export const SurveillanceScreen: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-bold flex items-center gap-2" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
-              <MapPin className="w-4 h-4" style={{ color: 'var(--lime)' }} />
+              <MapPin className="w-4 h-4" style={{ color: 'var(--text-primary)' }} />
               Epidemiological Risk Map
             </h3>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
@@ -227,7 +224,7 @@ export const SurveillanceScreen: React.FC = () => {
           id="report-case-btn"
           onClick={() => openModal('add-case')}
           className="fd-btn flex items-center gap-1.5 self-start sm:self-auto"
-          style={{ background: 'var(--critical)', borderColor: 'var(--critical)', color: '#111311' }}
+          style={{ background: 'var(--critical)', borderColor: 'var(--critical)', color: '#FFFFFF' }}
         >
           <Plus className="w-4 h-4" /> Report New Case
         </button>
@@ -264,7 +261,7 @@ export const SurveillanceScreen: React.FC = () => {
                   <h4 className="text-base font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
                     {report.diseaseName}
                   </h4>
-                  <p className="text-xs font-semibold" style={{ color: 'var(--lime)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)', fontFamily: 'IBM Plex Mono, monospace' }}>
                     {report.location}
                   </p>
                   <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>

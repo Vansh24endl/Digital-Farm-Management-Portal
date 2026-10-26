@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
 import { useApp } from '../context/AppContext';
 import {
-  Package,
   Search,
   Plus,
   AlertTriangle,
@@ -263,7 +262,7 @@ export const InventoryScreen: React.FC = () => {
           <p className="font-display text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
             {loading ? '…' : inventory.length}
           </p>
-          <span className="text-[11px] font-mono mt-1 block" style={{ color: 'var(--lime)' }}>
+          <span className="text-[11px] font-mono mt-1 block" style={{ color: 'var(--text-secondary)' }}>
             Active Stock SKUs
           </span>
         </div>
@@ -361,7 +360,7 @@ export const InventoryScreen: React.FC = () => {
               className={`px-3 py-1.5 text-xs font-mono font-bold uppercase transition-all whitespace-nowrap rounded-sm ${
                 categoryFilter === cat
                   ? 'bg-[var(--lime)] text-black shadow-sm'
-                  : 'text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-hover)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
               }`}
             >
               {cat}

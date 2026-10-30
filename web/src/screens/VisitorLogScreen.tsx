@@ -63,17 +63,7 @@ export const VisitorLogScreen: React.FC = () => {
     }
 
     try {
-      const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const response = await fetch(`${base}/visitors/${id}/checkout`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const contentType = response.headers.get('content-type') || '';
-      const result = contentType.includes('application/json')
-        ? await response.json()
-        : { message: 'API returned HTML instead of JSON. Check VITE_API_URL and backend route.' };
-
-      if (!response.ok) throw new Error(result.message || 'Could not check out visitor');
+      await api.checkoutVisitor(id);
       await loadVisitors();
       showToast?.('Visitor checked out.');
     } catch (e: any) {

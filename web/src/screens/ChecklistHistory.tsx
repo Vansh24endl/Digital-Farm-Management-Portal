@@ -53,7 +53,20 @@ export const ChecklistHistory: React.FC<{
       setError('');
 
       try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('farmdrishti_token') : null;
+        if (!token) {
+          if (!controller.signal.aborted) {
+            setRecords([]);
+            setLoading(false);
+          }
+          return;
+        }
+
         const response = await fetch(`${API_BASE}/checklists`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
           signal: controller.signal,
         });
 

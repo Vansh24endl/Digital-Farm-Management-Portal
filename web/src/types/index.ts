@@ -13,6 +13,9 @@ export type ScreenId =
   | 'inventory'
   | 'reports';
 
+export type Language = 'en' | 'hi' | 'mr';
+export type Theme = 'light' | 'dark';
+
 export interface AlertItem {
   id: string;
   title: string;
@@ -20,7 +23,12 @@ export interface AlertItem {
   timeAgo: string;
   severity: 'urgent' | 'review' | 'low';
   read: boolean;
+  message?: string;
+  source?: string;
+  rawSeverity?: string;
+  createdAt?: string;
 }
+
 
 export interface Visitor {
   id: string;

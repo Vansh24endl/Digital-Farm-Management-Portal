@@ -4,6 +4,11 @@ export interface IFarm extends Document {
   name: string;
   farmType: "pig" | "poultry" | "mixed";
   location: string;
+  ownerId?: mongoose.Types.ObjectId;
+  coordinates?: {
+    lat: number;
+    lon: number;
+  };
   createdAt: Date;
 }
 
@@ -23,6 +28,14 @@ const farmSchema = new Schema<IFarm>(
       type: String,
       required: true,
       trim: true,
+    },
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    coordinates: {
+      lat: { type: Number },
+      lon: { type: Number },
     },
   },
   { timestamps: true }

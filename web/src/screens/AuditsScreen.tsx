@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { api } from '../services/api';
 import {
   ClipboardCheck, Plus, Clock, ChevronRight, TrendingUp, CheckCircle2,
   RefreshCw, AlertTriangle, AlertCircle,
 } from 'lucide-react';
-
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
 
 type AuditRecord = {
   id: string;
@@ -46,16 +45,6 @@ function normalizeAudit(a: any): AuditRecord {
   };
 }
 
-async function readJson(response: Response) {
-  const type = response.headers.get('content-type') || '';
-  if (!type.includes('application/json')) {
-    throw new Error(`API returned a non-JSON response (${response.status}). Check VITE_API_URL and backend route.`);
-  }
-  const data = await response.json();
-  if (!response.ok || data.success === false) throw new Error(data.message || 'Audit request failed');
-  return data;
-}
-
 export const AuditsScreen: React.FC = () => {
   const { openModal, openAuditInspector } = useApp();
   const [audits, setAudits] = useState<AuditRecord[]>([]);
@@ -65,12 +54,20 @@ export const AuditsScreen: React.FC = () => {
   const loadAudits = useCallback(async () => {
     setLoading(true);
     setError('');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('farmdrishti_token') : null;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
-      const response = await fetch(`${API_BASE_URL}/audits`);
-      const result = await readJson(response);
-      setAudits((Array.isArray(result.data) ? result.data : []).map(normalizeAudit));
+      const result = await api.getAudits();
+      const list = Array.isArray(result) ? result : Array.isArray(result?.data) ? result.data : [];
+      setAudits(list.map(normalizeAudit));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load audits');
+      const msg = e instanceof Error ? e.message : 'Could not load audits';
+      if (!msg.includes('token') && !msg.includes('Access denied')) {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

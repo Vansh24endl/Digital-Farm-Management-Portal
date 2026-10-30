@@ -3,7 +3,15 @@ import { useApp } from '../context/AppContext';
 import { X, Bell, AlertTriangle, AlertCircle, Info, Check } from 'lucide-react';
 
 export const AlertDrawer: React.FC = () => {
-  const { isAlertDrawerOpen, setIsAlertDrawerOpen, alerts, markAlertRead, navigateTo } = useApp();
+  const {
+    isAlertDrawerOpen,
+    setIsAlertDrawerOpen,
+    alerts,
+    unreadAlertCount,
+    markAlertRead,
+    markAllAlertsRead,
+    navigateTo,
+  } = useApp();
 
   if (!isAlertDrawerOpen) return null;
 
@@ -17,20 +25,38 @@ export const AlertDrawer: React.FC = () => {
               <Bell className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold font-display uppercase tracking-wider text-[var(--text-primary)]">
-                Active Bio-Alert Feed
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold font-display uppercase tracking-wider text-[var(--text-primary)]">
+                  Active Bio-Alert Feed
+                </h2>
+                {unreadAlertCount > 0 && (
+                  <span className="px-1.5 py-0.2 text-[10px] font-mono font-bold rounded-full bg-[var(--critical-bg)] border border-[var(--critical-dim)] text-[var(--critical)]">
+                    {unreadAlertCount}
+                  </span>
+                )}
+              </div>
               <p className="text-xs font-mono text-[var(--text-secondary)]">
                 Real-time Farm Telemetry & Vector Feed
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setIsAlertDrawerOpen(false)}
-            className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-[2px] hover:bg-[var(--bg-raised)] transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            {unreadAlertCount > 0 && (
+              <button
+                onClick={() => void markAllAlertsRead()}
+                className="text-[11px] font-mono text-[var(--lime)] hover:underline uppercase tracking-wider px-2 py-1"
+                title="Mark all as read"
+              >
+                Read All
+              </button>
+            )}
+            <button
+              onClick={() => setIsAlertDrawerOpen(false)}
+              className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-[2px] hover:bg-[var(--bg-raised)] transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Alerts List */}
@@ -93,7 +119,12 @@ export const AlertDrawer: React.FC = () => {
                       <h4 className="text-xs font-bold font-display uppercase tracking-wide text-[var(--text-primary)] mt-0.5 leading-snug">
                         {alert.title}
                       </h4>
-                      <p className="text-[11px] text-[var(--text-secondary)] font-mono mt-0.5">{alert.location}</p>
+                      {alert.message && (
+                        <p className="text-[11px] text-[var(--text-secondary)] mt-1 leading-relaxed">
+                          {alert.message}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-[var(--text-dim)] font-mono mt-1">{alert.location}</p>
 
                       <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--border-dim)]">
                         <button

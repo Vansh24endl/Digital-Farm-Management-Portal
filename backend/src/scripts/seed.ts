@@ -8,8 +8,11 @@ import DiseaseReport from "../models/DiseaseReport";
 import Inventory from "../models/Inventory";
 import Visitor from "../models/Visitor";
 import ChecklistSubmission from "../models/ChecklistSubmission";
+import Alert from "../models/Alert";
 
-dotenv.config();
+import path from "path";
+
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const seedData = async () => {
   try {
@@ -95,6 +98,10 @@ const seedData = async () => {
         });
         await user.save();
         console.log(`  ✅ Created User: ${userData.name} (${userData.role})`);
+      } else if (userData.farmId && String(existing.farmId) !== String(userData.farmId)) {
+        existing.farmId = userData.farmId;
+        await existing.save();
+        console.log(`  🔄 Restored Farm Link for: ${userData.name}`);
       }
     }
 
@@ -391,6 +398,58 @@ const seedData = async () => {
       console.log(`  ✅ Created ${submissions.length} Checklist Submissions in MongoDB`);
     } else {
       console.log(`  ℹ️  Checklists already exist (${checklistCount} records)`);
+    }
+
+    // ─── 8. SEED ALERTS ───────────────────────────────────────────────────────
+    const alertCount = await Alert.countDocuments();
+    if (alertCount === 0) {
+      const alerts = [
+        {
+          farmId: greenValley._id,
+          title: "Temperature Spike in Farrowing House 3",
+          message: "Telemetry sensor reported ambient heat spike of +4.2°C exceeding biosecurity threshold.",
+          type: "system",
+          severity: "high",
+          source: "telemetry_sensors",
+          isRead: false,
+          metadata: { location: "Sector 4 · Farrowing House 3" },
+        },
+        {
+          farmId: sunrisePoultry._id,
+          title: "Unauthorized Vehicle Near Perimeter Gate B",
+          message: "Bio-barrier access camera detected unverified vehicle approaching clean zone perimeter.",
+          type: "outbreak_warning",
+          severity: "medium",
+          source: "perimeter_surveillance",
+          isRead: false,
+          metadata: { location: "Zone 2 · Perimeter Access" },
+        },
+        {
+          farmId: greenValley._id,
+          title: "Routine Sanitation Audit Pending",
+          message: "Weekly virucide spray and trench sanitation audit due for verification.",
+          type: "system",
+          severity: "low",
+          source: "biosecurity_audit",
+          isRead: false,
+          metadata: { location: "Sector 2 · Feed Mill" },
+        },
+        {
+          farmId: sunrisePoultry._id,
+          title: "Newcastle Disease Vector Warning",
+          message: "Active viral pathogen alert in neighboring Sector B. Respiratory rales reported in commercial flock.",
+          type: "disease_severity",
+          severity: "critical",
+          source: "disease_surveillance",
+          isRead: false,
+          metadata: { location: "Zone 2 · Poultry House B" },
+        },
+      ];
+
+      await Alert.insertMany(alerts);
+      console.log(`  ✅ Created ${alerts.length} Alerts in MongoDB`);
+    } else {
+      console.log(`  ℹ️  Alerts already exist (${alertCount} records)`);
     }
 
     console.log("🎉 Complete database population successful!");

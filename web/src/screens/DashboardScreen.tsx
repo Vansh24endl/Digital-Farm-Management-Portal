@@ -12,15 +12,20 @@ type Audit = { _id?: string; id?: string; title?: string; status?: string; dueDa
 type DiseaseReport = { _id?: string; id?: string; symptoms?: string; severity?: string; status?: string; animalType?: string; createdAt?: string; farmId?: any; description?: string };
 
 async function fetchCollection<T>(endpoint: string): Promise<T[]> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('farmdrishti_token') : null;
   const base = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
-  const response = await fetch(`${base}${endpoint}`);
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+  const response = await fetch(`${base}${endpoint}`, { headers });
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
     throw new Error(`Non-JSON response from ${endpoint} (${response.status}). Check backend route and VITE_API_URL.`);
   }
   const result = await response.json();
   if (!response.ok || result.success === false) throw new Error(result.message || `Failed to load ${endpoint}`);
-  return Array.isArray(result.data) ? result.data : [];
+  return Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
 }
 
 type Stats = {
@@ -94,7 +99,16 @@ const SectionHeader: React.FC<{ title: string; icon: React.ReactNode; action?: {
 );
 
 export const DashboardScreen: React.FC = () => {
-  const { navigateTo, userProfile } = useApp();
+  const {
+    navigateTo,
+    userProfile,
+    alerts,
+    setIsAlertDrawerOpen,
+    isAuthenticated,
+    loginUser,
+    openModal,
+    t,
+  } = useApp();
   const [stats, setStats] = useState<Stats>(emptyStats);
   const [checklistSummary, setChecklistSummary] = useState(emptyChecklist);
   const [recentChecklistActivity, setRecentChecklistActivity] = useState<RecentChecklistActivity[]>([]);
@@ -103,10 +117,30 @@ export const DashboardScreen: React.FC = () => {
   const [diseaseReports, setDiseaseReports] = useState<DiseaseReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState('');
+  const [loggingIn, setLoggingIn] = useState(false);
+
+  const handleQuickLogin = async (email: string, pass: string) => {
+    try {
+      setLoggingIn(true);
+      await loginUser(email, pass);
+    } catch (err: any) {
+      setApiError(err?.message || 'Login failed');
+    } finally {
+      setLoggingIn(false);
+    }
+  };
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
     setApiError('');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('farmdrishti_token') : null;
+    if (!token) {
+      // Unauthenticated preview mode: do not trigger 401 errors
+      setLoading(false);
+      setApiError('');
+      return;
+    }
+
     try {
       const [summaryResponse, farmData, auditData, diseaseData] = await Promise.all([
         api.getDashboardSummary(),
@@ -137,7 +171,13 @@ export const DashboardScreen: React.FC = () => {
       setChecklistSummary(base.checklistSummary ?? emptyChecklist);
       setRecentChecklistActivity(base.recentChecklistActivity ?? []);
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Unable to connect to the backend.');
+      const msg = error instanceof Error ? error.message : 'Unable to connect to the backend.';
+      if (msg.includes('token') || msg.includes('Access denied') || msg.includes('401')) {
+        if (typeof window !== 'undefined') localStorage.removeItem('farmdrishti_token');
+        setApiError('');
+      } else {
+        setApiError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -152,7 +192,7 @@ export const DashboardScreen: React.FC = () => {
     ];
     events.forEach((e) => window.addEventListener(e, onUpdate));
     return () => events.forEach((e) => window.removeEventListener(e, onUpdate));
-  }, [loadDashboard]);
+  }, [loadDashboard, isAuthenticated]);
 
   const urgentReports = diseaseReports.filter((r) => {
     const severity = String(r.severity || '').toLowerCase();
@@ -160,22 +200,33 @@ export const DashboardScreen: React.FC = () => {
   });
   const activeReports = diseaseReports.filter((r) => r.status !== 'resolved');
   const pendingAudits = audits.filter((a) => a.status !== 'completed');
-  const recentAlerts = [
-    ...activeReports.map((r) => ({
-      id: String(r._id || r.id), title: r.symptoms || 'Disease report',
-      detail: `${r.farmId && typeof r.farmId === 'object' ? r.farmId.name || 'Farm' : 'Farm'} · ${r.animalType || 'Animal type not recorded'}`,
-      severity: String(r.severity || 'unknown').toLowerCase(),
-      time: r.createdAt ? new Date(r.createdAt).toLocaleString() : 'Date not recorded',
-      kind: 'disease' as const,
-    })),
-    ...pendingAudits.map((a) => ({
-      id: String(a._id || a.id), title: a.title || 'Pending audit',
-      detail: 'Audit requires completion',
-      severity: String(a.riskLevel || 'routine').toLowerCase(),
-      time: a.createdAt ? new Date(a.createdAt).toLocaleString() : 'Date not recorded',
-      kind: 'audit' as const,
-    })),
-  ].slice(0, 5);
+  const recentAlerts = alerts && alerts.length > 0
+    ? alerts.slice(0, 5).map((a) => ({
+        id: a.id,
+        title: a.title,
+        detail: a.message || a.location,
+        severity: a.severity,
+        time: a.timeAgo,
+        kind: 'alert' as const,
+      }))
+    : [
+        ...activeReports.map((r) => ({
+          id: String(r._id || r.id),
+          title: r.symptoms || 'Disease report',
+          detail: `${r.farmId && typeof r.farmId === 'object' ? r.farmId.name || 'Farm' : 'Farm'} · ${r.animalType || 'Animal type not recorded'}`,
+          severity: String(r.severity || 'unknown').toLowerCase(),
+          time: r.createdAt ? new Date(r.createdAt).toLocaleString() : 'Date not recorded',
+          kind: 'disease' as const,
+        })),
+        ...pendingAudits.map((a) => ({
+          id: String(a._id || a.id),
+          title: a.title || 'Pending audit',
+          detail: 'Audit requires completion',
+          severity: String(a.riskLevel || 'routine').toLowerCase(),
+          time: a.createdAt ? new Date(a.createdAt).toLocaleString() : 'Date not recorded',
+          kind: 'audit' as const,
+        })),
+      ].slice(0, 5);
 
   const urgentCount = urgentReports.length;
   const auditScore = stats.totalAudits ? Math.round(((stats.totalAudits - stats.pendingAudits) / stats.totalAudits) * 100) : 0;
@@ -187,18 +238,18 @@ export const DashboardScreen: React.FC = () => {
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <p className="fd-label mb-1">FarmDrishti / Dashboard</p>
+          <p className="fd-label mb-1">FarmDrishti / {t('nav.dashboard')}</p>
           <h1
             className="text-2xl sm:text-3xl font-bold leading-tight"
             style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
           >
-            Biosecurity Field Console
+            {t('dashboard.fieldConsole')}
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
-            Operator: <strong style={{ color: 'var(--text-primary)' }}>{userProfile?.name || 'Farm Manager'}</strong>
+            {t('dashboard.operator')}: <strong style={{ color: 'var(--text-primary)' }}>{userProfile?.name || 'Farm Manager'}</strong>
             {' · '}
             <span>
-              {stats.activeDiseaseReports} active alerts · {stats.pendingAudits} audits pending
+              {stats.activeDiseaseReports} {t('dashboard.alertsActive')} · {stats.pendingAudits} {t('dashboard.auditsPending')}
             </span>
           </p>
         </div>
@@ -207,9 +258,75 @@ export const DashboardScreen: React.FC = () => {
           onClick={() => void loadDashboard()}
           className="fd-btn-ghost self-start flex items-center gap-1.5"
         >
-          <RefreshCw className="w-3.5 h-3.5" /> Refresh
+          <RefreshCw className="w-3.5 h-3.5" /> {t('common.refresh')}
         </button>
       </div>
+
+      {/* ── Guest Mode / Sign In Prompt ── */}
+      {!isAuthenticated && (
+        <div
+          className="fd-card p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fadeIn"
+          style={{
+            borderColor: 'var(--lime, #a3e635)',
+            background: 'rgba(163, 230, 53, 0.05)',
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(163, 230, 53, 0.15)', color: 'var(--lime, #a3e635)' }}
+            >
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {t('dashboard.lockedTitle')}
+                </h4>
+                <span className="fd-badge fd-badge-lime text-[10px]">{t('common.guestMode')}</span>
+              </div>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+                {t('dashboard.lockedDesc')}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => openModal('auth')}
+              disabled={loggingIn}
+              className="px-3.5 py-1.5 rounded text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+              style={{ background: 'var(--lime, #a3e635)', color: '#111311' }}
+            >
+              {t('common.signIn')}
+            </button>
+            <button
+              onClick={() => void handleQuickLogin('admin@farmdrishti.org', 'Admin@1234')}
+              disabled={loggingIn}
+              className="fd-btn-ghost text-xs px-2.5 py-1.5 border border-dashed border-[var(--border)]"
+              title="Quick login as System Admin"
+            >
+              {t('dashboard.demoAdmin')}
+            </button>
+            <button
+              onClick={() => void handleQuickLogin('manager@greenvalley.farm', 'Manager@123')}
+              disabled={loggingIn}
+              className="fd-btn-ghost text-xs px-2.5 py-1.5 border border-dashed border-[var(--border)]"
+              title="Quick login as Farm Manager"
+            >
+              {t('dashboard.demoManager')}
+            </button>
+            <button
+              onClick={() => void handleQuickLogin('ananya.reyes@biosec.vet', 'VetSecret@123')}
+              disabled={loggingIn}
+              className="fd-btn-ghost text-xs px-2.5 py-1.5 border border-dashed border-[var(--border)]"
+              title="Quick login as Veterinarian"
+            >
+              {t('dashboard.demoVet')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── API Error Banner ── */}
       {apiError && (
@@ -313,7 +430,7 @@ export const DashboardScreen: React.FC = () => {
       {/* ── Metric Cards Grid ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <MetricCard
-          label="Active Farms"
+          label={t('dashboard.totalFarms')}
           value={stats.totalFarms}
           sub="Registered units"
           loading={loading}
@@ -321,7 +438,7 @@ export const DashboardScreen: React.FC = () => {
           onClick={() => navigateTo('profile')}
         />
         <MetricCard
-          label="Open Alerts"
+          label={t('dashboard.diseaseCases')}
           value={stats.activeDiseaseReports}
           sub={`${urgentCount} urgent`}
           subColor={urgentCount > 0 ? 'var(--critical)' : 'var(--text-secondary)'}
@@ -331,18 +448,18 @@ export const DashboardScreen: React.FC = () => {
           accentStyle={{ color: urgentCount > 0 ? 'var(--critical)' : 'var(--lime)' }}
         />
         <MetricCard
-          label="Total Audits"
+          label={t('dashboard.totalAudits')}
           value={stats.totalAudits}
-          sub={`${stats.pendingAudits} pending`}
+          sub={`${stats.pendingAudits} ${t('dashboard.auditsPending')}`}
           subColor={stats.pendingAudits > 0 ? 'var(--warning)' : 'var(--text-secondary)'}
           loading={loading}
           icon={<ClipboardList className="w-4 h-4" />}
           onClick={() => navigateTo('audits')}
         />
         <MetricCard
-          label="Inventory Items"
+          label={t('dashboard.inventoryItems')}
           value={stats.totalInventoryItems}
-          sub={`${stats.lowStockItems} low stock`}
+          sub={`${stats.lowStockItems} ${t('dashboard.lowStock')}`}
           subColor={stats.lowStockItems > 0 ? 'var(--warning)' : 'var(--text-secondary)'}
           loading={loading}
           icon={<Activity className="w-4 h-4" />}
@@ -495,7 +612,13 @@ export const DashboardScreen: React.FC = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => navigateTo(alert.kind === 'disease' ? 'reports' : 'audits')}
+                      onClick={() => {
+                        if (alert.kind === 'alert') {
+                          setIsAlertDrawerOpen(true);
+                        } else {
+                          navigateTo(alert.kind === 'disease' ? 'reports' : 'audits');
+                        }
+                      }}
                       className="fd-btn-ghost text-xs w-full justify-center"
                     >
                       Review <ChevronRight className="w-3.5 h-3.5" />

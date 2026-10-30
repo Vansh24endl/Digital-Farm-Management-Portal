@@ -1,17 +1,24 @@
 
-import { Router } from "express";
+import { Router, Response } from "express";
 import Farm from "../models/Farm";
 import Visitor from "../models/Visitor";
 import Audit from "../models/Audit";
 import DiseaseReport from "../models/DiseaseReport";
 import Inventory from "../models/Inventory";
 import ChecklistSubmission from "../models/ChecklistSubmission";
+import { protect, AuthRequest } from "../middleware/authMiddleware";
 
 const router = Router();
 
-// ─── Existing stats endpoint (preserved for backwards compatibility) ───────────
-router.get("/stats", async (_req, res) => {
+// Protect all dashboard routes
+router.use(protect);
+
+// ─── Stats endpoint (preserved for backwards compatibility) ───────────────────
+router.get("/stats", async (req: AuthRequest, res: Response) => {
   try {
+    const isFarmManager = Boolean(req.user?.role === "farm_manager" && req.user.farmId);
+    const farmFilter: Record<string, any> = isFarmManager ? { farmId: req.user!.farmId } : {};
+
     const [
       totalFarms,
       totalVisitors,
@@ -22,20 +29,23 @@ router.get("/stats", async (_req, res) => {
       totalInventoryItems,
       lowStockItems,
     ] = await Promise.all([
-      Farm.countDocuments(),
-      Visitor.countDocuments(),
-      Audit.countDocuments(),
+      isFarmManager ? Farm.countDocuments({ _id: req.user!.farmId } as any) : Farm.countDocuments(),
+      Visitor.countDocuments(farmFilter as any),
+      Audit.countDocuments(farmFilter as any),
       Audit.countDocuments({
+        ...farmFilter,
         status: { $in: ["pending", "in-progress"] },
-      }),
-      DiseaseReport.countDocuments(),
+      } as any),
+      DiseaseReport.countDocuments(farmFilter as any),
       DiseaseReport.countDocuments({
+        ...farmFilter,
         status: { $in: ["reported", "investigating"] },
-      }),
-      Inventory.countDocuments(),
+      } as any),
+      Inventory.countDocuments(farmFilter as any),
       Inventory.countDocuments({
+        ...farmFilter,
         $expr: { $lte: ["$quantity", "$minimumStock"] },
-      }),
+      } as any),
     ]);
 
     return res.json({
@@ -62,14 +72,13 @@ router.get("/stats", async (_req, res) => {
 });
 
 // ─── Comprehensive dashboard summary (includes checklist metrics) ─────────────
-// GET /api/dashboard/summary
-//
-// Compliance definition: (total passed items across all submissions) /
-//   (total items across all submissions) × 100.
-// Returns 0 when no submissions exist (avoids division by zero).
-router.get("/summary", async (_req, res) => {
+router.get("/summary", async (req: AuthRequest, res: Response) => {
   try {
-    // Run all DB queries concurrently for efficiency.
+    const isFarmManager = Boolean(req.user?.role === "farm_manager" && req.user.farmId);
+    const farmFilter: Record<string, any> = isFarmManager ? { farmId: req.user!.farmId } : {};
+
+    const checklistMatchStage = isFarmManager ? [{ $match: farmFilter }] : [];
+
     const [
       totalFarms,
       totalVisitors,
@@ -82,22 +91,23 @@ router.get("/summary", async (_req, res) => {
       checklistAgg,
       recentSubmissions,
     ] = await Promise.all([
-      Farm.countDocuments(),
-      Visitor.countDocuments(),
-      Audit.countDocuments(),
-      Audit.countDocuments({ status: { $in: ["pending", "in-progress"] } }),
-      DiseaseReport.countDocuments(),
+      isFarmManager ? Farm.countDocuments({ _id: req.user!.farmId } as any) : Farm.countDocuments(),
+      Visitor.countDocuments(farmFilter as any),
+      Audit.countDocuments(farmFilter as any),
+      Audit.countDocuments({ ...farmFilter, status: { $in: ["pending", "in-progress"] } } as any),
+      DiseaseReport.countDocuments(farmFilter as any),
       DiseaseReport.countDocuments({
+        ...farmFilter,
         status: { $in: ["reported", "investigating"] },
-      }),
-      Inventory.countDocuments(),
+      } as any),
+      Inventory.countDocuments(farmFilter as any),
       Inventory.countDocuments({
+        ...farmFilter,
         $expr: { $lte: ["$quantity", "$minimumStock"] },
-      }),
+      } as any),
 
-      // Aggregate totals from the summary sub-document stored on each submission.
-      // This avoids unwinding the items array and is O(submissions) not O(items).
       ChecklistSubmission.aggregate([
+        ...checklistMatchStage,
         {
           $group: {
             _id: null,
@@ -110,15 +120,13 @@ router.get("/summary", async (_req, res) => {
         },
       ]),
 
-      // Fetch the 5 most recent submissions with farm name for activity feed.
-      ChecklistSubmission.find()
+      ChecklistSubmission.find(farmFilter as any)
         .populate("farmId", "name")
         .sort({ submittedAt: -1 })
         .limit(5)
         .select("farmId zone submittedAt summary"),
     ]);
 
-    // Extract aggregation result (empty when no submissions exist).
     const cl = checklistAgg[0] ?? {
       totalSubmissions: 0,
       totalItems: 0,
@@ -132,7 +140,6 @@ router.get("/summary", async (_req, res) => {
         ? Math.round((cl.totalPassed / cl.totalItems) * 100)
         : 0;
 
-    // Shape recent activity feed.
     const recentActivity = recentSubmissions.map((sub: any) => ({
       _id: String(sub._id),
       farmName:

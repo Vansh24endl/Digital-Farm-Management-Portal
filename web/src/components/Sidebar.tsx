@@ -41,7 +41,7 @@ const badgeStyle: Record<string, React.CSSProperties> = {
 };
 
 export const Sidebar: React.FC = () => {
-  const { activeScreen, navigateTo, isSidebarCollapsed, toggleSidebar } = useApp();
+  const { activeScreen, navigateTo, isSidebarCollapsed, toggleSidebar, t } = useApp();
 
   return (
     <aside
@@ -94,11 +94,15 @@ export const Sidebar: React.FC = () => {
               <div className="space-y-0.5 px-2">
                 {items.map((item) => {
                   const isActive = activeScreen === item.id;
+                  const navKey = item.id === 'farm-map' ? 'farmMap' : item.id;
+                  const translated = t(`nav.${navKey}`);
+                  const labelText = translated !== `nav.${navKey}` ? translated : item.label;
+
                   return (
                     <button
                       key={item.id}
                       onClick={() => navigateTo(item.id)}
-                      title={isSidebarCollapsed ? item.label : undefined}
+                      title={isSidebarCollapsed ? labelText : undefined}
                       className={`w-full flex items-center gap-2.5 py-2 rounded-sm transition-colors text-left ${
                         isSidebarCollapsed ? 'justify-center px-2' : 'px-2.5'
                       }`}
@@ -127,7 +131,7 @@ export const Sidebar: React.FC = () => {
                               fontWeight: isActive ? 700 : 500,
                             }}
                           >
-                            {item.label}
+                            {labelText}
                           </span>
                           {item.badge && (
                             <span style={badgeStyle[item.badgeKind || 'lime']}>

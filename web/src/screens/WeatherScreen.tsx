@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { api } from '../services/api';
 import {
   CloudSun,
   Droplets,
@@ -37,6 +38,7 @@ export const WeatherScreen: React.FC = () => {
     toggleTemperatureUnit,
     selectedWeatherLocation,
     setSelectedWeatherLocation,
+    t,
   } = useApp();
 
   const locations = Object.keys(LOCATION_COORDS);
@@ -66,14 +68,56 @@ export const WeatherScreen: React.FC = () => {
     { day: 'Fri', condition: 'Sunny & Clear', highC: 30, lowC: 21, icon: Sun },
   ]);
 
+  const [weatherProvider, setWeatherProvider] = useState<string>('Live Station');
+
   const fetchWeather = async (locName: string) => {
     const coords = LOCATION_COORDS[locName] || LOCATION_COORDS['Green Valley - Sector 1 (Swine)'];
     setIsLoading(true);
     try {
+      // 1. Try our backend Weather API route (uses WeatherAPI.com with the configured key)
+      const res = await api.getWeather({
+        lat: coords.lat,
+        lon: coords.lon,
+        q: locName.split('(')[0]?.trim() || locName,
+        days: 5,
+      });
+
+      if (res?.success && res.current) {
+        setCurrentTempC(res.current.tempC);
+        setApparentTempC(res.current.apparentTempC);
+        setHumidity(res.current.humidity);
+        setWindSpeed(res.current.windSpeedKmh);
+        setPressure(res.current.pressureHpa);
+        setConditionText(res.current.condition);
+        setWeatherProvider(res.provider === 'weatherapi' ? 'WeatherAPI.com' : 'Open-Meteo');
+        setIsLive(true);
+
+        if (Array.isArray(res.forecast) && res.forecast.length > 0) {
+          const mappedForecast = res.forecast.map((f: any) => {
+            const lowerCond = (f.condition || '').toLowerCase();
+            let icon = Sun;
+            if (lowerCond.includes('cloud') || lowerCond.includes('overcast')) icon = CloudSun;
+            else if (lowerCond.includes('rain') || lowerCond.includes('shower') || lowerCond.includes('drizzle')) icon = CloudRain;
+            else if (lowerCond.includes('thunder') || lowerCond.includes('storm')) icon = CloudRain;
+
+            return {
+              day: f.day || 'Day',
+              condition: f.condition || 'Clear',
+              highC: f.highC,
+              lowC: f.lowC,
+              icon,
+            };
+          });
+          setForecast(mappedForecast);
+        }
+        return;
+      }
+
+      // 2. Fallback to Open-Meteo direct call if backend is unavailable
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Weather API error');
-      const data = await res.json();
+      const fallbackRes = await fetch(url);
+      if (!fallbackRes.ok) throw new Error('Weather fallback error');
+      const data = await fallbackRes.json();
 
       if (data.current) {
         setCurrentTempC(Math.round(data.current.temperature_2m));
@@ -83,6 +127,7 @@ export const WeatherScreen: React.FC = () => {
         setPressure(Math.round(data.current.surface_pressure));
         const parsed = parseWeatherCode(data.current.weather_code);
         setConditionText(parsed.condition);
+        setWeatherProvider('Open-Meteo');
         setIsLive(true);
       }
 
@@ -131,14 +176,14 @@ export const WeatherScreen: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <p className="fd-label">FarmDrishti / Weather</p>
+            <p className="fd-label">FarmDrishti / {t('nav.weather')}</p>
             {isLive ? (
               <span className="fd-badge fd-badge-success text-[10px] inline-flex items-center gap-1 font-mono">
-                <Radio className="w-2.5 h-2.5 animate-pulse text-[var(--accent-red)]" /> Live Met Satellite
+                <Radio className="w-2.5 h-2.5 animate-pulse text-[var(--accent-red)]" /> {weatherProvider}
               </span>
             ) : (
               <span className="fd-badge text-[10px] inline-flex items-center gap-1 font-mono">
-                Cached Model
+                {t('weather.stationCached')}
               </span>
             )}
           </div>
@@ -146,16 +191,16 @@ export const WeatherScreen: React.FC = () => {
             className="text-2xl font-bold"
             style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
           >
-            Micro-Climate Telemetry
+            {t('weather.title')}
           </h1>
           <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
-            Barometric pressure, humidity & ventilation heat stress index
+            {t('weather.subtitle')}
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start flex-wrap">
           <div className="flex flex-col gap-1">
-            <label className="fd-label" htmlFor="weather-location">Location</label>
+            <label className="fd-label" htmlFor="weather-location">{t('weather.location')}</label>
             <select
               id="weather-location"
               value={selectedWeatherLocation}

@@ -5,9 +5,9 @@ import {
   MapPin,
   Plus,
   ChevronRight,
-  Crosshair,
   X,
 } from 'lucide-react';
+import { RealFarmMap } from '../components/RealFarmMap';
 
 
 export const SurveillanceScreen: React.FC = () => {
@@ -102,101 +102,48 @@ export const SurveillanceScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Map Canvas */}
-        <div
-          className="relative w-full h-72 overflow-hidden"
-          style={{ background: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '2px' }}
-        >
-          {/* Grid overlay */}
-          <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="fdGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--border)" strokeWidth="0.5" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#fdGrid)" />
-          </svg>
+        {/* ── Real Satellite & Geographic Disease Surveillance Map ── */}
+        <RealFarmMap
+          diseaseReports={filteredReports.map((r: any) => ({
+            id: r.id || r._id,
+            diseaseName: r.diseaseName,
+            symptoms: r.symptoms || r.description,
+            riskLevel: r.riskLevel,
+            severity: r.severity || r.riskLevel,
+            location: r.location || (r.farmId && typeof r.farmId === 'object' ? r.farmId.name : 'Farm Vector Zone'),
+          }))}
+          height="380px"
+          mode="surveillance"
+        />
 
-          {/* Sector labels */}
-          <div className="absolute inset-0 p-5 flex flex-col justify-between pointer-events-none opacity-50">
-            <div className="flex justify-between">
-              <span className="fd-label" style={{ border: '1px solid var(--border)', padding: '2px 6px', borderRadius: '2px' }}>SECTOR 1 · SWINE</span>
-              <span className="fd-label" style={{ border: '1px solid var(--warning-dim)', padding: '2px 6px', borderRadius: '2px', color: 'var(--warning)' }}>ZONE 2 · POULTRY</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="fd-label" style={{ border: '1px solid var(--success-dim)', padding: '2px 6px', borderRadius: '2px', color: 'var(--success)' }}>SECTOR 3 · BREEDER</span>
-              <span className="fd-label" style={{ border: '1px solid var(--critical-dim)', padding: '2px 6px', borderRadius: '2px', color: 'var(--critical)' }}>SECTOR 4 · FARROWING</span>
-            </div>
-          </div>
-
-          {/* Heatmap blobs */}
-          <div className="absolute top-1/3 right-1/4 w-32 h-32 rounded-full blur-2xl" style={{ background: 'rgba(255,118,95,0.2)', animation: 'urgent-pulse 2s infinite' }} />
-          <div className="absolute top-1/2 left-1/3 w-24 h-24 rounded-full blur-xl" style={{ background: 'rgba(255,181,71,0.15)' }} />
-          <div className="absolute bottom-1/4 left-1/5 w-20 h-20 rounded-full blur-xl" style={{ background: 'rgba(135,214,162,0.15)' }} />
-
-          {/* Hotspot Pings */}
-          {diseaseReports.map((rep) => {
-            const isHigh = rep.riskLevel === 'High';
-            const isMed = rep.riskLevel === 'Medium';
-            const dotColor = isHigh ? 'var(--critical)' : isMed ? 'var(--warning)' : 'var(--success)';
-
-            return (
-              <div
-                key={rep.id}
-                onClick={() => setSelectedHotspot(rep)}
-                className="absolute cursor-pointer transform -translate-x-1/2 -translate-y-1/2 group/pin z-20"
-                style={{ left: `${rep.coordinates.x}%`, top: `${rep.coordinates.y}%` }}
-                title={`${rep.diseaseName} — Click for info`}
-              >
-                <span
-                  className="absolute inset-0 rounded-full animate-ping"
-                  style={{ background: dotColor, opacity: 0.5 }}
-                />
-                <div
-                  className="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-transform group-hover/pin:scale-125"
-                  style={{ background: dotColor, borderColor: 'var(--bg-panel)' }}
-                >
-                  <Crosshair className="w-3 h-3" style={{ color: '#111311' }} />
-                </div>
-                <div
-                  className="absolute top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2 py-0.5 whitespace-nowrap shadow-lg opacity-0 group-hover/pin:opacity-100 transition-opacity"
-                  style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', borderRadius: '2px', color: 'var(--text-primary)', fontFamily: 'IBM Plex Mono, monospace' }}
-                >
-                  {rep.diseaseName}
-                </div>
+        {/* Selected Hotspot Panel */}
+        {selectedHotspot && (
+          <div
+            className="p-3.5 flex items-center justify-between gap-3 animate-fadeIn"
+            style={{ background: 'var(--bg-raised)', border: '1.5px solid var(--border)', borderRadius: '3px' }}
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
+                  {selectedHotspot.diseaseName}
+                </span>
+                <span className={`fd-badge ${riskBadgeClass(selectedHotspot.riskLevel)}`}>
+                  {selectedHotspot.riskLevel} Risk
+                </span>
               </div>
-            );
-          })}
-
-          {/* Selected Hotspot Panel */}
-          {selectedHotspot && (
-            <div
-              className="absolute bottom-3 left-3 right-3 p-3.5 z-30 flex items-center justify-between gap-3"
-              style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', borderRadius: '2px' }}
+              <p className="text-xs" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                {selectedHotspot.location}
+              </p>
+            </div>
+            <button
+              onClick={() => setSelectedHotspot(null)}
+              className="fd-btn-icon"
+              aria-label="Close details"
             >
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
-                    {selectedHotspot.diseaseName}
-                  </span>
-                  <span className={`fd-badge ${riskBadgeClass(selectedHotspot.riskLevel)}`}>
-                    {selectedHotspot.riskLevel} Risk
-                  </span>
-                </div>
-                <p className="text-xs" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
-                  {selectedHotspot.location}
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedHotspot(null)}
-                className="fd-btn-icon flex-shrink-0"
-                aria-label="Close"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-        </div>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Filter Tabs + Add Case ── */}

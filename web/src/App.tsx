@@ -18,6 +18,7 @@ import { EmergencyCallModal } from './components/Modals/EmergencyCallModal';
 import { SOPReaderModal } from './components/Modals/SOPReaderModal';
 import { AddInventoryModal, IncidentLogModal, PDFExportModal } from './components/Modals/AddInventoryModal';
 import { AuthModal } from './components/Modals/AuthModal';
+import { RegisterFarmModal } from './components/Modals/RegisterFarmModal';
 
 // Screens
 import { DashboardScreen } from './screens/DashboardScreen';
@@ -96,6 +97,7 @@ const MainContent: React.FC = () => {
       <IncidentLogModal />
       <PDFExportModal />
       <AuthModal />
+      <RegisterFarmModal />
       <Toast />
     </div>
   );

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 import { X, UserPlus, Plus } from 'lucide-react';
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const AddVisitorModal: React.FC = () => {
   const { activeModal, closeModal, showToast } = useApp();
@@ -19,10 +18,11 @@ export const AddVisitorModal: React.FC = () => {
 
   useEffect(() => {
     if (activeModal !== 'add-visitor') return;
-    fetch(`${API}/farms`)
-      .then(async (res) => {
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.message || 'Could not load farms');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('farmdrishti_token') : null;
+    if (!token) return;
+
+    api.getFarms()
+      .then((result: any) => {
         const list = Array.isArray(result) ? result : result.data || [];
         setFarms(list);
         if (list.length) setFarmId(String(list[0]._id || list[0].id));
@@ -41,23 +41,17 @@ export const AddVisitorModal: React.FC = () => {
     }
     setSaving(true);
     try {
-      const response = await fetch(`${API}/visitors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          farmId,
-          name: name.trim(),
-          role: role.trim(),
-          company: company.trim(),
-          phone: phone.trim(),
-          purpose: purpose.trim(),
-          status: 'IN',
-          entryTime: new Date().toISOString(),
-          temperature: temperature.trim(),
-        }),
+      await api.createVisitor({
+        farmId,
+        name: name.trim(),
+        role: role.trim(),
+        company: company.trim(),
+        phone: phone.trim(),
+        purpose: purpose.trim(),
+        status: 'IN',
+        entryTime: new Date().toISOString(),
+        temperature: temperature.trim(),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || 'Could not save visitor');
       window.dispatchEvent(new Event('visitors-updated'));
       showToast?.('Visitor registered successfully.');
       closeModal();

@@ -17,7 +17,7 @@ const tabs: TabItem[] = [
 ];
 
 export const BottomNav: React.FC = () => {
-  const { activeScreen, navigateTo } = useApp();
+  const { activeScreen, navigateTo, t } = useApp();
 
   return (
     <nav
@@ -27,6 +27,10 @@ export const BottomNav: React.FC = () => {
       <div className="max-w-md mx-auto flex items-center justify-around">
         {tabs.map((tab) => {
           const isActive = activeScreen === tab.id;
+          const navKey = tab.id === 'farm-map' ? 'farmMap' : tab.id;
+          const translated = t(`nav.${navKey}`);
+          const labelText = translated !== `nav.${navKey}` ? translated : tab.label;
+
           return (
             <button
               key={tab.id}
@@ -37,7 +41,7 @@ export const BottomNav: React.FC = () => {
                 color: isActive ? 'var(--text-primary)' : 'var(--text-dim)',
                 background: isActive ? 'var(--lime-subtle)' : 'transparent',
               }}
-              aria-label={tab.label}
+              aria-label={labelText}
               aria-current={isActive ? 'page' : undefined}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
@@ -47,7 +51,7 @@ export const BottomNav: React.FC = () => {
                 className="text-[10px] font-bold tracking-tight mt-0.5"
                 style={{ fontFamily: 'IBM Plex Mono, monospace', letterSpacing: '0.02em' }}
               >
-                {tab.label}
+                {labelText}
               </span>
               {isActive && (
                 <span

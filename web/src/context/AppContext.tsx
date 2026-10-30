@@ -13,7 +13,10 @@ import type {
   EmergencyContact,
   TrainingTopic,
   FarmUnit,
+  Language,
+  Theme,
 } from '../types';
+import { getTranslation } from '../utils/translations';
 
 interface AppContextType {
   // Navigation
@@ -69,7 +72,10 @@ interface AppContextType {
   
   farmUnits: FarmUnit[];
   alerts: AlertItem[];
-  markAlertRead: (id: string) => void;
+  unreadAlertCount: number;
+  markAlertRead: (id: string) => Promise<void> | void;
+  markAllAlertsRead: () => Promise<void> | void;
+  refreshAlerts: () => Promise<void> | void;
 
   visitors: Visitor[];
   toggleVisitorStatus: (id: string) => void;
@@ -111,6 +117,14 @@ interface AppContextType {
   toggleTemperatureUnit: () => void;
   selectedWeatherLocation: string;
   setSelectedWeatherLocation: (loc: string) => void;
+
+  // Theme & Localization
+  theme: Theme;
+  toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (path: string) => string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -569,15 +583,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Resolve the default selected farm using the real MongoDB _id.
   useEffect(() => {
     let cancelled = false;
-    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const token = typeof window !== 'undefined' ? localStorage.getItem('farmdrishti_token') : null;
+    if (!token) return;
 
-    fetch(`${apiBase}/farms`)
-      .then(async (response) => {
-        const body = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(body.message || 'Could not load farms');
-        return body;
-      })
-      .then((body) => {
+    api.getFarms()
+      .then((body: any) => {
         const farms = Array.isArray(body) ? body : body.data;
         if (!Array.isArray(farms)) throw new Error('Unexpected farms API response');
         if (!cancelled) {
@@ -597,10 +607,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
 
     return () => { cancelled = true; };
-  }, []);
+  }, [isAuthenticated]);
   
   const [temperatureUnit, setTemperatureUnit] = useState<'C' | 'F'>('C');
   const [selectedWeatherLocation, setSelectedWeatherLocation] = useState('Green Valley - Sector 1');
+
+  // Theme state
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('farmdrishti_theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+    }
+    return 'light';
+  });
+
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('farmdrishti_theme', newTheme);
+      document.documentElement.classList.toggle('dark', newTheme === 'dark');
+      document.documentElement.setAttribute('data-theme', newTheme);
+    }
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  }, [theme]);
+
+  // Language state
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('farmdrishti_language');
+      if (saved === 'en' || saved === 'hi' || saved === 'mr') return saved;
+    }
+    return 'en';
+  });
+
+  const setLanguage = (newLang: Language) => {
+    setLanguageState(newLang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('farmdrishti_language', newLang);
+    }
+  };
+
+  const t = (path: string) => getTranslation(language, path);
 
   // Emergency Call State
   const [activeCallContact, setActiveCallContact] = useState<EmergencyContact | null>(null);
@@ -701,12 +761,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .catch(() => {});
     };
 
+    // Load Live Alerts from MongoDB
+    const loadLiveAlerts = () => {
+      api.getAlerts({ limit: 50 })
+        .then((res: any) => {
+          if (res?.success && Array.isArray(res?.data) && res.data.length > 0) {
+            const formatTimeAgo = (dateStr?: string) => {
+              if (!dateStr) return 'Just now';
+              const date = new Date(dateStr);
+              if (isNaN(date.getTime())) return 'Just now';
+              const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+              if (diffSec < 60) return `${Math.max(1, diffSec)}s ago`;
+              if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+              if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+              return `${Math.floor(diffSec / 86400)}d ago`;
+            };
+
+            const mapped: AlertItem[] = res.data.map((a: any) => ({
+              id: String(a._id || a.id),
+              title: a.title,
+              location: a.metadata?.location || (a.farmId?.name || (typeof a.farmId === 'object' && a.farmId?.name) || 'Main Production Hub'),
+              timeAgo: formatTimeAgo(a.createdAt),
+              severity: a.severity === 'critical' || a.severity === 'high' ? 'urgent' : a.severity === 'medium' ? 'review' : 'low',
+              read: Boolean(a.isRead),
+              message: a.message,
+              source: a.source,
+              rawSeverity: a.severity,
+              createdAt: a.createdAt,
+            }));
+            setAlerts(mapped);
+          }
+        })
+        .catch(() => {});
+    };
+
     loadDiseaseAndAudits();
-    window.addEventListener('disease-reports-updated', loadDiseaseAndAudits);
-    window.addEventListener('audits-updated', loadDiseaseAndAudits);
+    loadLiveAlerts();
+
+    const onDataUpdated = () => {
+      loadDiseaseAndAudits();
+      loadLiveAlerts();
+    };
+
+    window.addEventListener('disease-reports-updated', onDataUpdated);
+    window.addEventListener('audits-updated', onDataUpdated);
+    window.addEventListener('inventory-updated', onDataUpdated);
+    window.addEventListener('checklist-submitted', onDataUpdated);
+    window.addEventListener('alerts-updated', loadLiveAlerts);
+
     return () => {
-      window.removeEventListener('disease-reports-updated', loadDiseaseAndAudits);
-      window.removeEventListener('audits-updated', loadDiseaseAndAudits);
+      window.removeEventListener('disease-reports-updated', onDataUpdated);
+      window.removeEventListener('audits-updated', onDataUpdated);
+      window.removeEventListener('inventory-updated', onDataUpdated);
+      window.removeEventListener('checklist-submitted', onDataUpdated);
+      window.removeEventListener('alerts-updated', loadLiveAlerts);
     };
   }, []);
 
@@ -842,9 +950,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Alert Actions
-  const markAlertRead = (id: string) => {
+  const markAlertRead = async (id: string) => {
     setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, read: true } : a)));
+    try {
+      await api.markAlertRead(id);
+      window.dispatchEvent(new CustomEvent('alerts-updated'));
+    } catch (err: any) {
+      console.warn('Backend markAlertRead warning:', err?.message);
+    }
   };
+
+  const markAllAlertsRead = async () => {
+    setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
+    try {
+      await api.markAllAlertsRead();
+      showToast('All alerts marked as read.');
+      window.dispatchEvent(new CustomEvent('alerts-updated'));
+    } catch (err: any) {
+      console.warn('Backend markAllAlertsRead warning:', err?.message);
+    }
+  };
+
+  const refreshAlerts = async () => {
+    try {
+      const res = await api.getAlerts({ limit: 50 });
+      if (res?.success && Array.isArray(res?.data)) {
+        const formatTimeAgo = (dateStr?: string) => {
+          if (!dateStr) return 'Just now';
+          const date = new Date(dateStr);
+          if (isNaN(date.getTime())) return 'Just now';
+          const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+          if (diffSec < 60) return `${Math.max(1, diffSec)}s ago`;
+          if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+          if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+          return `${Math.floor(diffSec / 86400)}d ago`;
+        };
+
+        const mapped: AlertItem[] = res.data.map((a: any) => ({
+          id: String(a._id || a.id),
+          title: a.title,
+          location: a.metadata?.location || (a.farmId?.name || (typeof a.farmId === 'object' && a.farmId?.name) || 'Main Production Hub'),
+          timeAgo: formatTimeAgo(a.createdAt),
+          severity: a.severity === 'critical' || a.severity === 'high' ? 'urgent' : a.severity === 'medium' ? 'review' : 'low',
+          read: Boolean(a.isRead),
+          message: a.message,
+          source: a.source,
+          rawSeverity: a.severity,
+          createdAt: a.createdAt,
+        }));
+        setAlerts(mapped);
+      }
+    } catch (err: any) {
+      console.warn('Backend refreshAlerts warning:', err?.message);
+    }
+  };
+
+  const unreadAlertCount = alerts.filter((a) => !a.read).length;
 
   // Visitor Actions
   const toggleVisitorStatus = (id: string) => {
@@ -908,9 +1069,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })),
     };
 
+    const token = typeof window !== 'undefined' ? localStorage.getItem('farmdrishti_token') : null;
     const response = await fetch(`${apiBase}/checklists`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(payload),
     });
     const body = await response.json().catch(() => ({}));
@@ -1174,7 +1339,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateAvatar,
         farmUnits,
         alerts,
+        unreadAlertCount,
         markAlertRead,
+        markAllAlertsRead,
+        refreshAlerts,
         visitors,
         toggleVisitorStatus,
         addVisitor,
@@ -1204,6 +1372,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleTemperatureUnit,
         selectedWeatherLocation,
         setSelectedWeatherLocation,
+        theme,
+        toggleTheme,
+        setTheme,
+        language,
+        setLanguage,
+        t,
       }}
     >
       {children}

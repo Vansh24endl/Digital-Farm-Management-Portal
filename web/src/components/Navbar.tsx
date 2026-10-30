@@ -1,8 +1,9 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import type { ScreenId } from '../types';
 import {
   ChevronLeft, Bell, Layers, User, Camera, Settings, LogOut, ChevronDown, ShieldCheck,
+  Sun, Moon, Globe,
 } from 'lucide-react';
 
 const screenTitles: Record<ScreenId, { title: string; subtitle: string }> = {
@@ -27,17 +28,34 @@ export const Navbar: React.FC = () => {
     setIsPrototypeDrawerOpen, setIsAlertDrawerOpen,
     isProfileDropdownOpen, setIsProfileDropdownOpen, openModal,
     isAuthenticated, currentUser, logout,
+    theme, toggleTheme, language, setLanguage, t,
   } = useApp();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const langDropdownRef = useRef<HTMLDivElement>(null);
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const unreadCount = alerts.filter((a) => !a.read).length;
-  const info = screenTitles[activeScreen] || screenTitles.dashboard;
+
+  const getTitleInfo = () => {
+    const fallback = screenTitles[activeScreen] || screenTitles.dashboard;
+    const key = activeScreen === 'farm-map' ? 'farmMap' : activeScreen;
+    const translatedTitle = t(`nav.${key}`);
+    const translatedSub = t(`nav.${key}Sub`);
+    return {
+      title: translatedTitle !== `nav.${key}` ? translatedTitle : fallback.title,
+      subtitle: translatedSub !== `nav.${key}Sub` ? translatedSub : fallback.subtitle,
+    };
+  };
+  const info = getTitleInfo();
   const isHome = activeScreen === 'dashboard';
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsProfileDropdownOpen(false);
+      }
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
+        setIsLangDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -184,15 +202,80 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Right: screens + alerts ── */}
+        {/* ── Right: Language + Theme + screens + alerts ── */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Language Selector Dropdown */}
+          <div className="relative" ref={langDropdownRef}>
+            <button
+              onClick={() => setIsLangDropdownOpen((p) => !p)}
+              className="fd-btn-ghost py-1 px-2.5 flex items-center gap-1.5 text-xs font-semibold"
+              title={t('common.selectLanguage')}
+              aria-label="Change language"
+            >
+              <Globe className="w-3.5 h-3.5" style={{ color: 'var(--lime-dim, #eab308)' }} />
+              <span className="text-[11px] font-mono font-bold tracking-wider">
+                {language === 'en' ? 'EN' : language === 'hi' ? 'हिंदी' : 'मराठी'}
+              </span>
+              <ChevronDown className="w-3 h-3 text-[var(--text-dim)]" />
+            </button>
+
+            {isLangDropdownOpen && (
+              <div
+                className="absolute top-10 right-0 w-36 z-50 p-1 rounded shadow-lg animate-fadeIn"
+                style={{
+                  background: 'var(--bg-panel)',
+                  border: '1.5px solid var(--border)',
+                  boxShadow: 'var(--shadow-ink)',
+                }}
+              >
+                {[
+                  { code: 'en' as const, label: 'English', sub: 'EN' },
+                  { code: 'hi' as const, label: 'हिंदी', sub: 'HI' },
+                  { code: 'mr' as const, label: 'मराठी', sub: 'MR' },
+                ].map(({ code, label, sub }) => (
+                  <button
+                    key={code}
+                    onClick={() => {
+                      setLanguage(code);
+                      setIsLangDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded transition-colors text-left ${
+                      language === code ? 'font-bold' : ''
+                    }`}
+                    style={{
+                      background: language === code ? 'var(--lime-subtle)' : 'transparent',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    <span>{label}</span>
+                    <span className="text-[10px] font-mono opacity-70">{sub}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="fd-btn-icon"
+            title={theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
+            aria-label="Toggle Light/Dark Theme"
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-[var(--lime)] transition-transform hover:rotate-45" />
+            ) : (
+              <Moon className="w-4 h-4 text-[var(--text-primary)] transition-transform hover:-rotate-12" />
+            )}
+          </button>
+
           <button
             onClick={() => setIsPrototypeDrawerOpen(true)}
             className="fd-btn-ghost flex items-center gap-1.5"
             title="Switch screens"
           >
             <Layers className="w-3.5 h-3.5" />
-            <span className="hidden md:inline text-xs">Screens</span>
+            <span className="hidden md:inline text-xs">{t('common.screens')}</span>
             <span
               className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm"
               style={{ background: 'var(--lime)', color: '#111311' }}

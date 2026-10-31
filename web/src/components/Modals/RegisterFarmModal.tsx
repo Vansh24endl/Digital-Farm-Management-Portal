@@ -50,9 +50,9 @@ export const RegisterFarmModal: React.FC<RegisterFarmModalProps> = ({ onFarmCrea
         return;
       }
 
-      // Default center: India (Maharashtra/Central)
-      const defaultLat = coordinates ? coordinates.lat : 18.5204;
-      const defaultLon = coordinates ? coordinates.lon : 73.8567;
+      // Default center: Indore, Madhya Pradesh
+      const defaultLat = coordinates ? coordinates.lat : 22.7196;
+      const defaultLon = coordinates ? coordinates.lon : 75.8577;
 
       const map = L.map(miniMapContainerRef.current, {
         center: [defaultLat, defaultLon],
@@ -174,7 +174,14 @@ export const RegisterFarmModal: React.FC<RegisterFarmModalProps> = ({ onFarmCrea
       },
       (err) => {
         setIsDetectingGPS(false);
-        setError(`GPS error: ${err.message}. You can still click on the map or type location.`);
+        const isDenied = err.code === 1;
+        if (isDenied) {
+          setError('Location access was denied. Defaulting to project hub: Indore, Madhya Pradesh. You can also click on the map or type coordinates manually.');
+        } else {
+          setError(`GPS warning: ${err.message}. Defaulting to Indore, Madhya Pradesh.`);
+        }
+        setCoordinates({ lat: 22.7196, lon: 75.8577 });
+        setLocationText('Indore, Madhya Pradesh');
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -351,11 +358,12 @@ export const RegisterFarmModal: React.FC<RegisterFarmModalProps> = ({ onFarmCrea
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[11px] font-mono text-[var(--text-secondary)]">Quick Select:</span>
               {[
-                { name: 'Pune, Maharashtra', lat: 18.5204, lon: 73.8567 },
-                { name: 'Baramati, MH', lat: 18.1517, lon: 74.5772 },
-                { name: 'Nashik, MH', lat: 19.9975, lon: 73.7898 },
-                { name: 'Karnal, Haryana', lat: 29.6857, lon: 76.9905 },
-                { name: 'Hyderabad, TS', lat: 17.3850, lon: 78.4867 },
+                { name: 'Indore, MP', lat: 22.7196, lon: 75.8577 },
+                { name: 'Sanwer, Indore', lat: 22.7845, lon: 75.8398 },
+                { name: 'Rau, Indore', lat: 22.6412, lon: 75.8115 },
+                { name: 'Dewas Road, Indore', lat: 22.8211, lon: 75.9324 },
+                { name: 'Mhow, Indore', lat: 22.5539, lon: 75.7622 },
+                { name: 'Bhopal, MP', lat: 23.2599, lon: 77.4126 },
               ].map((hub) => (
                 <button
                   type="button"

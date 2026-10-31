@@ -8,7 +8,8 @@ import {
 
 const screenTitles: Record<ScreenId, { title: string; subtitle: string }> = {
   dashboard:   { title: 'AgroShield Surveillance', subtitle: 'Biosecurity & Commercial Farm Health' },
-  profile:     { title: 'User Profile', subtitle: 'Veterinary Specialist & Account Settings' },
+  profile:     { title: 'User Account Profile', subtitle: 'Personal Information & Account Security' },
+  'vet-profile': { title: 'Veterinary Professional Practice', subtitle: 'Clinical Licensing, Registration & Credentials' },
   surveillance:{ title: 'Disease Surveillance', subtitle: 'Real-time Vector & Outbreak Tracking' },
   health:      { title: 'Farm Health Overview', subtitle: 'Telemetry, Water, Temp & PCR Diagnostic' },
   audits:      { title: 'Audits & Compliance', subtitle: 'Inspection Checklists & Protocols' },

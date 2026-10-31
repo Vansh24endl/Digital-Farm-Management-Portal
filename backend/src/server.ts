@@ -1,6 +1,10 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config();
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import farmRoutes from "./routes/farmRoutes";
@@ -12,6 +16,10 @@ import visitorRoutes from "./routes/visitorRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
 import alertRoutes from "./routes/alertRoutes";
 import weatherRoutes from "./routes/weatherRoutes";
+import dailyLogRoutes from "./routes/dailyLogRoutes";
+import vetProfileRoutes from "./routes/vetProfileRoutes";
+import userRoutes from "./routes/userRoutes";
+import adminRoutes from "./routes/adminRoutes";
 
 dotenv.config();
 
@@ -40,6 +48,10 @@ app.use("/api/inventory", inventoryRoutes);
 app.use("/api/visitors", visitorRoutes);
 app.use("/api/alerts", alertRoutes);
 app.use("/api/weather", weatherRoutes);
+app.use("/api/daily-logs", dailyLogRoutes);
+app.use("/api/veterinarians", vetProfileRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Centralized error-handling middleware
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -53,13 +65,17 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 
 const PORT = Number(process.env.PORT) || 5000;
 
-connectDB()
-  .then(() => {
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`FarmDrishti API running on port ${PORT}`);
+if (process.env.NODE_ENV !== "test") {
+  connectDB()
+    .then(() => {
+      app.listen(PORT, "0.0.0.0", () => {
+        console.log(`FarmDrishti API running on port ${PORT}`);
+      });
+    })
+    .catch((error: unknown) => {
+      console.error("Database connection failed:", error);
+      process.exit(1);
     });
-  })
-  .catch((error: unknown) => {
-    console.error("Database connection failed:", error);
-    process.exit(1);
-  });
+}
+
+export { app };

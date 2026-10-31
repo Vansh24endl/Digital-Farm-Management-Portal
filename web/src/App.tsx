@@ -9,6 +9,7 @@ import { Toast } from './components/Toast';
 
 // Modals
 import { EditProfileModal, LogoutModal } from './components/Modals/EditProfileModal';
+import { ChangePasswordModal } from './components/Modals/ChangePasswordModal';
 import { ChangeDPModal } from './components/Modals/ChangeDPModal';
 import { PCRCertificateModal } from './components/Modals/PCRCertificateModal';
 import { AddCaseModal } from './components/Modals/AddCaseModal';
@@ -19,10 +20,12 @@ import { SOPReaderModal } from './components/Modals/SOPReaderModal';
 import { AddInventoryModal, IncidentLogModal, PDFExportModal } from './components/Modals/AddInventoryModal';
 import { AuthModal } from './components/Modals/AuthModal';
 import { RegisterFarmModal } from './components/Modals/RegisterFarmModal';
+import { ManualLogModal } from './components/Modals/ManualLogModal';
 
 // Screens
 import { DashboardScreen } from './screens/DashboardScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
+import { VetProfileScreen } from './screens/VetProfileScreen';
 import { SurveillanceScreen } from './screens/SurveillanceScreen';
 import { FarmHealthScreen } from './screens/FarmHealthScreen';
 import { AuditsScreen } from './screens/AuditsScreen';
@@ -44,6 +47,8 @@ const MainContent: React.FC = () => {
         return <DashboardScreen />;
       case 'profile':
         return <ProfileScreen />;
+      case 'vet-profile':
+        return <VetProfileScreen />;
       case 'surveillance':
         return <SurveillanceScreen />;
       case 'health':
@@ -84,6 +89,7 @@ const MainContent: React.FC = () => {
       <PrototypeDrawer />
       <AlertDrawer />
       <EditProfileModal />
+      <ChangePasswordModal />
       <ChangeDPModal />
       <LogoutModal />
       <PCRCertificateModal />
@@ -98,6 +104,7 @@ const MainContent: React.FC = () => {
       <PDFExportModal />
       <AuthModal />
       <RegisterFarmModal />
+      <ManualLogModal />
       <Toast />
     </div>
   );

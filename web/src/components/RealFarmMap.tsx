@@ -41,22 +41,25 @@ interface RealFarmMapProps {
   mode?: 'farm' | 'surveillance';
 }
 
-// Known coordinates for agricultural hubs and fallback geocoding
+// Known coordinates for agricultural hubs and fallback geocoding (Indore, MP primary)
 const KNOWN_COORDS: Record<string, [number, number]> = {
-  // Indian Poultry & Swine hubs
-  pune: [18.5204, 73.8567],
-  baramati: [18.1517, 74.5772],
+  // Indore & Madhya Pradesh Agricultural Belt (Intended Project Hub)
+  indore: [22.7196, 75.8577],
+  sanwer: [22.9772, 75.8288],
+  mhow: [22.5539, 75.7622],
+  dewas: [22.9676, 76.0534],
+  ujjain: [23.1765, 75.7885],
+  dhar: [22.5985, 75.3023],
+  bhopal: [23.2599, 77.4126],
+  rau: [22.6412, 75.8115],
+  // Other Indian hubs
   delhi: [28.6139, 77.2090],
   bangalore: [12.9716, 77.5946],
-  mumbai: [19.0760, 72.8777],
-  chandigarh: [30.7333, 76.7794],
   hyderabad: [17.3850, 78.4867],
+  pune: [18.5204, 73.8567],
+  baramati: [18.1517, 74.5772],
   nashik: [19.9975, 73.7898],
-  // International demo hubs (Iowa poultry/swine belt)
-  'des moines': [41.5868, -93.6250],
-  ames: [42.0308, -93.6319],
-  'cedar rapids': [41.9779, -91.6656],
-  iowa: [41.8780, -93.0977],
+  chandigarh: [30.7333, 76.7794],
 };
 
 function resolveCoordinates(farmOrName?: FarmLocation | string, location?: string, index: number = 0): [number, number] {
@@ -90,9 +93,9 @@ function resolveCoordinates(farmOrName?: FarmLocation | string, location?: strin
     }
   }
 
-  // 3. Sensible agro-cluster default (Pune / Maharashtra agro cluster)
-  const baseLat = 18.5204;
-  const baseLon = 73.8567;
+  // 3. Project Default Agro-Cluster: Indore, Madhya Pradesh, India
+  const baseLat = 22.7196;
+  const baseLon = 75.8577;
   const offsetLat = (index * 0.022) % 0.12 - 0.06;
   const offsetLon = (index * 0.031) % 0.14 - 0.07;
   return [baseLat + offsetLat, baseLon + offsetLon];
@@ -119,10 +122,10 @@ export const RealFarmMap: React.FC<RealFarmMapProps> = ({
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
-    // Default center on first farm or central agro hub
+    // Default center on first farm or Indore, MP agro hub
     const initialCoords: [number, number] = farms.length > 0
-      ? resolveCoordinates(farms[0]?.name, farms[0]?.location, 0)
-      : [18.5204, 73.8567];
+      ? resolveCoordinates(farms[0], farms[0]?.location, 0)
+      : [22.7196, 75.8577];
 
     const map = L.map(mapContainerRef.current, {
       center: initialCoords,

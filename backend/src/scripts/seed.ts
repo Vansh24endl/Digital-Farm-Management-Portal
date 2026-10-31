@@ -9,6 +9,7 @@ import Inventory from "../models/Inventory";
 import Visitor from "../models/Visitor";
 import ChecklistSubmission from "../models/ChecklistSubmission";
 import Alert from "../models/Alert";
+import DailyLog from "../models/DailyLog";
 
 import path from "path";
 
@@ -19,15 +20,20 @@ const seedData = async () => {
     console.log("🌱 Connecting to MongoDB for comprehensive seeding...");
     await connectDB();
 
-    // ─── 1. SEED FARMS ────────────────────────────────────────────────────────
+    // ─── 1. SEED FARMS (Indore, Madhya Pradesh Project Location) ─────────────
     let greenValley = await Farm.findOne({ name: "Green Valley Swine Complex" });
     if (!greenValley) {
       greenValley = await Farm.create({
         name: "Green Valley Swine Complex",
         farmType: "pig",
-        location: "Sector 4, Des Moines, IA",
+        location: "Rau Agro Sector, Indore, Madhya Pradesh",
+        coordinates: { lat: 22.6412, lon: 75.8115 },
       });
-      console.log("  ✅ Created Farm: Green Valley Swine Complex");
+      console.log("  ✅ Created Farm: Green Valley Swine Complex (Indore, MP)");
+    } else {
+      greenValley.location = "Rau Agro Sector, Indore, Madhya Pradesh";
+      greenValley.coordinates = { lat: 22.6412, lon: 75.8115 };
+      await greenValley.save();
     }
 
     let sunrisePoultry = await Farm.findOne({ name: "Sunrise Poultry House" });
@@ -35,9 +41,14 @@ const seedData = async () => {
       sunrisePoultry = await Farm.create({
         name: "Sunrise Poultry House",
         farmType: "poultry",
-        location: "Zone 2, Ames, IA",
+        location: "Sanwer Road, Indore, Madhya Pradesh",
+        coordinates: { lat: 22.7845, lon: 75.8398 },
       });
-      console.log("  ✅ Created Farm: Sunrise Poultry House");
+      console.log("  ✅ Created Farm: Sunrise Poultry House (Indore, MP)");
+    } else {
+      sunrisePoultry.location = "Sanwer Road, Indore, Madhya Pradesh";
+      sunrisePoultry.coordinates = { lat: 22.7845, lon: 75.8398 };
+      await sunrisePoultry.save();
     }
 
     let oakRidge = await Farm.findOne({ name: "Oak Ridge Breeding Nucleus" });
@@ -45,9 +56,14 @@ const seedData = async () => {
       oakRidge = await Farm.create({
         name: "Oak Ridge Breeding Nucleus",
         farmType: "mixed",
-        location: "Hub A, Cedar Rapids, IA",
+        location: "Bicholi Mardana, Indore, Madhya Pradesh",
+        coordinates: { lat: 22.7196, lon: 75.8977 },
       });
-      console.log("  ✅ Created Farm: Oak Ridge Breeding Nucleus");
+      console.log("  ✅ Created Farm: Oak Ridge Breeding Nucleus (Indore, MP)");
+    } else {
+      oakRidge.location = "Bicholi Mardana, Indore, Madhya Pradesh";
+      oakRidge.coordinates = { lat: 22.7196, lon: 75.8977 };
+      await oakRidge.save();
     }
 
     // ─── 2. SEED USERS ────────────────────────────────────────────────────────
@@ -450,6 +466,69 @@ const seedData = async () => {
       console.log(`  ✅ Created ${alerts.length} Alerts in MongoDB`);
     } else {
       console.log(`  ℹ️  Alerts already exist (${alertCount} records)`);
+    }
+
+    // ─── 9. SEED MANUAL DAILY LOGS (Non-IoT Field Observations) ───────────
+    const dailyLogCount = await DailyLog.countDocuments();
+    if (dailyLogCount === 0) {
+      const managerUser = await User.findOne({ email: "manager@greenvalley.farm" });
+      if (managerUser) {
+        const sampleLogs = [
+          {
+            farmId: greenValley._id,
+            recordedBy: managerUser._id,
+            logDate: new Date(Date.now() - 86400000 * 2), // 2 days ago
+            dataSource: "Manual Farmer Observation (Non-IoT)",
+            temperature: 24.0,
+            humidity: 58,
+            animalCount: 2500,
+            mortalityCount: 1,
+            waterConsumptionLiters: 410,
+            feedConsumptionKg: 300,
+            cleaningDisinfectionDone: true,
+            disinfectantUsed: "Virkon-S 1% Trench Sprayer",
+            healthObservations: "Good herd activity, feed intake normal across farrowing barn.",
+            symptomsObserved: "None",
+          },
+          {
+            farmId: greenValley._id,
+            recordedBy: managerUser._id,
+            logDate: new Date(Date.now() - 86400000), // Yesterday
+            dataSource: "Manual Farmer Observation (Non-IoT)",
+            temperature: 25.2,
+            humidity: 62,
+            animalCount: 2499,
+            mortalityCount: 0,
+            waterConsumptionLiters: 430,
+            feedConsumptionKg: 315,
+            cleaningDisinfectionDone: true,
+            disinfectantUsed: "Bleach Footbath & High-Pressure Wash",
+            healthObservations: "All animals active, temperature within optimal thermal band.",
+            symptomsObserved: "None",
+          },
+          {
+            farmId: greenValley._id,
+            recordedBy: managerUser._id,
+            logDate: new Date(), // Today
+            dataSource: "Manual Farmer Observation (Non-IoT)",
+            temperature: 24.8,
+            humidity: 60,
+            animalCount: 2499,
+            mortalityCount: 0,
+            waterConsumptionLiters: 425,
+            feedConsumptionKg: 310,
+            cleaningDisinfectionDone: true,
+            disinfectantUsed: "Virkon-S 1% Barrier Dip",
+            healthObservations: "Clear respiration, vigorous appetite, biosecurity airlock active.",
+            symptomsObserved: "None",
+          },
+        ];
+
+        await DailyLog.insertMany(sampleLogs);
+        console.log(`  ✅ Created ${sampleLogs.length} Manual Daily Logs in MongoDB (Non-IoT)`);
+      }
+    } else {
+      console.log(`  ℹ️  Daily Logs already exist (${dailyLogCount} records)`);
     }
 
     console.log("🎉 Complete database population successful!");

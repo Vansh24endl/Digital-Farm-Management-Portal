@@ -25,6 +25,7 @@ const navItems: SidebarItem[] = [
   { id: 'training',    label: 'Training & SOPs',        icon: 'menu_book',           category: 'quick' },
   { id: 'inventory',   label: 'Chemical & PPE Stock',   icon: 'inventory_2',         category: 'quick' },
   { id: 'reports',     label: 'Reports & Analytics',    icon: 'analytics',           category: 'companion' },
+  { id: 'vet-profile', label: 'Veterinary Profile',     icon: 'medical_services',    category: 'core', badge: 'VET', badgeKind: 'lime' },
   { id: 'profile',     label: 'Profile & Settings',     icon: 'settings',            category: 'core' },
 ];
 
@@ -40,8 +41,17 @@ const badgeStyle: Record<string, React.CSSProperties> = {
   lime:     { background: 'var(--lime-subtle)', color: 'var(--lime)',     border: '1px solid var(--lime-dim)',     fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', borderRadius: '2px', padding: '1px 5px' },
 };
 
+const ROLE_ALLOWED_SCREENS: Record<string, ScreenId[]> = {
+  admin: ['dashboard', 'farm-map', 'surveillance', 'health', 'audits', 'checklist', 'visitors', 'weather', 'emergency', 'training', 'inventory', 'reports', 'profile', 'vet-profile'],
+  farm_manager: ['dashboard', 'farm-map', 'health', 'checklist', 'visitors', 'inventory', 'weather', 'training', 'emergency', 'profile'],
+  veterinarian: ['dashboard', 'vet-profile', 'surveillance', 'health', 'weather', 'emergency', 'training', 'reports', 'farm-map', 'profile'],
+  inspector: ['dashboard', 'audits', 'reports', 'checklist', 'farm-map', 'weather', 'training', 'profile'],
+};
+
 export const Sidebar: React.FC = () => {
-  const { activeScreen, navigateTo, isSidebarCollapsed, toggleSidebar, t } = useApp();
+  const { activeScreen, navigateTo, isSidebarCollapsed, toggleSidebar, t, currentUser, isAuthenticated } = useApp();
+  const userRole = (currentUser?.role || 'farm_manager').toLowerCase();
+  const allowedScreens = isAuthenticated && ROLE_ALLOWED_SCREENS[userRole] ? ROLE_ALLOWED_SCREENS[userRole] : null;
 
   return (
     <aside
@@ -56,14 +66,21 @@ export const Sidebar: React.FC = () => {
         style={{ borderBottom: '1px solid var(--border)' }}
       >
         {!isSidebarCollapsed && (
-          <div className="flex items-center gap-2 min-w-0">
-            <ShieldCheck className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--lime)' }} />
-            <span
-              className="text-xs font-bold uppercase tracking-widest truncate"
-              style={{ fontFamily: 'IBM Plex Mono, monospace', color: 'var(--text-secondary)' }}
-            >
-              FarmDrishti
-            </span>
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--lime)' }} />
+              <span
+                className="text-xs font-bold uppercase tracking-widest truncate"
+                style={{ fontFamily: 'IBM Plex Mono, monospace', color: 'var(--text-secondary)' }}
+              >
+                FarmDrishti
+              </span>
+            </div>
+            {isAuthenticated && currentUser?.role && (
+              <span className="text-[10px] font-mono text-[var(--lime)] uppercase mt-0.5 font-bold tracking-wider">
+                {currentUser.role.replace('_', ' ')}
+              </span>
+            )}
           </div>
         )}
         <button
@@ -82,7 +99,8 @@ export const Sidebar: React.FC = () => {
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-2">
         {categoryGroups.map(({ key, label }, gi) => {
-          const items = navItems.filter((item) => item.category === key);
+          const items = navItems.filter((item) => item.category === key && (!allowedScreens || allowedScreens.includes(item.id)));
+          if (items.length === 0) return null;
           return (
             <div key={key} className={gi > 0 ? 'mt-3' : ''}>
               {/* Group label */}

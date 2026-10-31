@@ -610,7 +610,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [isAuthenticated]);
   
   const [temperatureUnit, setTemperatureUnit] = useState<'C' | 'F'>('C');
-  const [selectedWeatherLocation, setSelectedWeatherLocation] = useState('Green Valley - Sector 1');
+  const [selectedWeatherLocation, setSelectedWeatherLocation] = useState('Indore, Madhya Pradesh');
 
   // Theme state
   const [theme, setThemeState] = useState<Theme>(() => {
@@ -699,6 +699,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               ...prev,
               name: res.user.name,
               email: res.user.email,
+              role: res.user.role,
               phone: res.user.phone || prev.phone,
               title: res.user.role === 'admin' ? 'System Administrator' :
                      res.user.role === 'veterinarian' ? 'Lead Biosecurity Veterinarian' :
@@ -847,6 +848,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...prev,
           name: res.user.name,
           email: res.user.email,
+          role: res.user.role,
           phone: res.user.phone || prev.phone,
           title: res.user.role === 'admin' ? 'System Administrator' :
                  res.user.role === 'veterinarian' ? 'Lead Biosecurity Veterinarian' :
@@ -882,6 +884,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...prev,
           name: res.user.name,
           email: res.user.email,
+          role: res.user.role,
           phone: res.user.phone || prev.phone,
           title: res.user.role === 'admin' ? 'System Administrator' :
                  res.user.role === 'veterinarian' ? 'Lead Biosecurity Veterinarian' :
@@ -943,8 +946,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Profile updated successfully!');
   };
 
-  const updateAvatar = (newUrl: string) => {
+  const updateAvatar = async (newUrl: string) => {
     setUserProfile((prev) => ({ ...prev, avatar: newUrl }));
+    if (typeof window !== 'undefined' && localStorage.getItem('farmdrishti_token')) {
+      try {
+        await api.updateUserProfile({ profilePhoto: newUrl });
+      } catch (err: any) {
+        console.warn('Backend avatar sync failed:', err?.message);
+      }
+    }
     showToast('Profile picture (DP) updated!');
     closeModal();
   };

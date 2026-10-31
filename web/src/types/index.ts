@@ -1,6 +1,7 @@
 export type ScreenId =
   | 'dashboard'
   | 'profile'
+  | 'vet-profile'
   | 'surveillance'
   | 'health'
   | 'audits'
@@ -85,8 +86,31 @@ export interface InventoryItem {
   lastRestocked: string;
 }
 
+export interface VeterinarianProfile {
+  _id?: string;
+  userId: string | any;
+  fullName: string;
+  profilePhoto?: string;
+  registrationNumber: string;
+  qualification: string;
+  specialization?: string;
+  yearsOfExperience?: number;
+  contactNumber?: string;
+  email?: string;
+  clinicName?: string;
+  clinicAddress?: string;
+  serviceLocation?: string;
+  bio?: string;
+  verificationStatus: 'pending' | 'verified' | 'rejected';
+  certificates?: string[];
+  rejectionReason?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface UserProfile {
   name: string;
+  role?: string;
   title: string;
   bio: string;
   email: string;

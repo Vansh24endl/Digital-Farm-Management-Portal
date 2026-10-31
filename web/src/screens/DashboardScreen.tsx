@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import {
   ShieldCheck, AlertTriangle, Building2, ClipboardList, Activity,
   ArrowUpRight, TrendingUp, ChevronRight, AlertCircle, Info, Clock,
-  RefreshCw, CheckCircle2,
+  RefreshCw, CheckCircle2, ClipboardPen,
 } from 'lucide-react';
 
 type Farm = { _id?: string; id?: string; name?: string; farmType?: string; location?: string };
@@ -102,6 +102,7 @@ export const DashboardScreen: React.FC = () => {
   const {
     navigateTo,
     userProfile,
+    currentUser,
     alerts,
     setIsAlertDrawerOpen,
     isAuthenticated,
@@ -232,34 +233,104 @@ export const DashboardScreen: React.FC = () => {
   const auditScore = stats.totalAudits ? Math.round(((stats.totalAudits - stats.pendingAudits) / stats.totalAudits) * 100) : 0;
   const compliancePct = checklistSummary.compliancePercentage;
 
+  const activeRole = (currentUser?.role || userProfile?.role || 'farm_manager').toLowerCase();
+  const activeName = currentUser?.name || userProfile?.name || 'Farm Operator';
+
+  const roleTitleMap: Record<string, string> = {
+    admin: 'System Administrator Command Console',
+    veterinarian: 'Veterinary Surveillance & Clinical Console',
+    inspector: 'Biosecurity Compliance & Regulatory Inspection Console',
+    farm_manager: 'Farm Operations & Manual Field Console',
+  };
+
+  const roleBadgeMap: Record<string, { label: string; badgeClass: string }> = {
+    admin: { label: 'SYSTEM ADMINISTRATOR', badgeClass: 'fd-badge-lime' },
+    veterinarian: { label: 'LEAD VETERINARIAN', badgeClass: 'fd-badge-critical' },
+    inspector: { label: 'CERTIFIED INSPECTOR', badgeClass: 'fd-badge-warning' },
+    farm_manager: { label: 'FARM MANAGER / FARMER', badgeClass: 'fd-badge-lime' },
+  };
+
+  const activeBadge = roleBadgeMap[activeRole] || roleBadgeMap.farm_manager;
+
   return (
-    <div className="w-full space-y-6 pb-20 animate-fadeIn">
+    <div className="w-full space-y-6 pb-20 animate-fadeIn font-sans">
 
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <p className="fd-label mb-1">FarmDrishti / {t('nav.dashboard')}</p>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <p className="fd-label">FarmDrishti / {t('nav.dashboard')}</p>
+            {isAuthenticated && (
+              <span className={`fd-badge ${activeBadge.badgeClass} font-mono text-[10px]`}>
+                {activeBadge.label}
+              </span>
+            )}
+          </div>
           <h1
-            className="text-2xl sm:text-3xl font-bold leading-tight"
-            style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
+            className="text-2xl sm:text-3xl font-bold leading-tight font-display"
+            style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}
           >
-            {t('dashboard.fieldConsole')}
+            {roleTitleMap[activeRole] || t('dashboard.fieldConsole')}
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)', fontFamily: 'IBM Plex Mono, monospace' }}>
-            {t('dashboard.operator')}: <strong style={{ color: 'var(--text-primary)' }}>{userProfile?.name || 'Farm Manager'}</strong>
+            {t('dashboard.operator')}: <strong style={{ color: 'var(--text-primary)' }}>{activeName}</strong>
             {' · '}
             <span>
               {stats.activeDiseaseReports} {t('dashboard.alertsActive')} · {stats.pendingAudits} {t('dashboard.auditsPending')}
             </span>
           </p>
         </div>
-        <button
-          id="dashboard-refresh"
-          onClick={() => void loadDashboard()}
-          className="fd-btn-ghost self-start flex items-center gap-1.5"
-        >
-          <RefreshCw className="w-3.5 h-3.5" /> {t('common.refresh')}
-        </button>
+        <div className="flex items-center gap-2 self-start flex-wrap">
+          <button
+            id="dashboard-refresh"
+            onClick={() => void loadDashboard()}
+            className="fd-btn-ghost flex items-center gap-1.5 text-xs font-mono"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> {t('common.refresh')}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Active Role Switcher Bar (Quick 1-Click for Demo/Viva) ── */}
+      <div
+        className="fd-card p-3 flex flex-wrap items-center justify-between gap-2.5 text-xs font-mono"
+        style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)' }}
+      >
+        <span className="text-[var(--text-secondary)] font-bold flex items-center gap-1">
+          <span>Active Role:</span>
+          <span className="text-[var(--lime)] uppercase">{activeRole.replace('_', ' ')}</span>
+        </span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] text-[var(--text-dim)] mr-1">1-Click Role Switch:</span>
+          <button
+            onClick={() => void handleQuickLogin('admin@farmdrishti.org', 'Admin@1234')}
+            disabled={loggingIn}
+            className={`px-2 py-1 rounded-sm border transition-all ${activeRole === 'admin' ? 'bg-[var(--lime)] text-black font-bold' : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-white'}`}
+          >
+            Admin
+          </button>
+          <button
+            onClick={() => void handleQuickLogin('manager@greenvalley.farm', 'Manager@123')}
+            disabled={loggingIn}
+            className={`px-2 py-1 rounded-sm border transition-all ${activeRole === 'farm_manager' ? 'bg-[var(--lime)] text-black font-bold' : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-white'}`}
+          >
+            Farm Manager
+          </button>
+          <button
+            onClick={() => void handleQuickLogin('ananya.reyes@biosec.vet', 'VetSecret@123')}
+            disabled={loggingIn}
+            className={`px-2 py-1 rounded-sm border transition-all ${activeRole === 'veterinarian' ? 'bg-[var(--lime)] text-black font-bold' : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-white'}`}
+          >
+            Veterinarian
+          </button>
+          <button
+            onClick={() => void handleQuickLogin('inspector@agroshield.gov', 'Inspector@123')}
+            disabled={loggingIn}
+            className={`px-2 py-1 rounded-sm border transition-all ${activeRole === 'inspector' ? 'bg-[var(--lime)] text-black font-bold' : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-white'}`}
+          >
+            Inspector
+          </button>
+        </div>
       </div>
 
       {/* ── Guest Mode / Sign In Prompt ── */}
@@ -390,38 +461,99 @@ export const DashboardScreen: React.FC = () => {
             </span>
           </button>
 
-          {/* Text + actions */}
+          {/* Text + actions tailored to active role */}
           <div className="flex-1 space-y-4 text-center lg:text-left">
             <div>
-              <span
-                className="fd-badge fd-badge-lime inline-flex mb-2"
-              >
-                <Activity className="w-3 h-3" /> Live Monitoring
+              <span className="fd-badge fd-badge-lime inline-flex mb-2">
+                <Activity className="w-3 h-3" /> Live Operations
               </span>
               <h2
-                className="text-xl sm:text-2xl font-bold leading-tight"
-                style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}
+                className="text-xl sm:text-2xl font-bold leading-tight font-display"
+                style={{ color: 'var(--text-primary)' }}
               >
-                Biosecurity Defense Surveillance
+                {activeRole === 'veterinarian'
+                  ? 'Veterinary Outbreak & Clinical Surveillance'
+                  : activeRole === 'inspector'
+                  ? 'Biosecurity Compliance & Regulatory Inspection'
+                  : activeRole === 'farm_manager'
+                  ? 'Farm Operations & Manual Observation Console'
+                  : 'System Administration & Multi-Facility Command'}
               </h2>
               <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                {stats.activeDiseaseReports > 0
-                  ? `${stats.activeDiseaseReports} active disease reports require attention.`
-                  : 'No active disease reports. All systems operational.'
-                }
-                {' '}{stats.pendingAudits > 0 ? `${stats.pendingAudits} audits pending review.` : ''}
+                {activeRole === 'veterinarian'
+                  ? 'Pathogen vector surveillance, laboratory swab screening & clinical case assessments.'
+                  : activeRole === 'inspector'
+                  ? 'Regulatory facility audits, pass/fail grading & corrective action compliance monitoring.'
+                  : activeRole === 'farm_manager'
+                  ? 'Physical thermometer readings, water meter logs, visitor disinfection & daily checklists (100% Non-IoT).'
+                  : 'Real-time biosecurity telemetry across all registered facilities, audits, and user access control.'}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-              <button onClick={() => navigateTo('health')} className="fd-btn flex items-center gap-1.5">
-                Farm Health <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
-              <button onClick={() => navigateTo('surveillance')} className="fd-btn-ghost flex items-center gap-1.5">
-                Surveillance Map
-              </button>
-              <button onClick={() => navigateTo('checklist')} className="fd-btn-ghost flex items-center gap-1.5">
-                Run Checklist
-              </button>
+              {activeRole === 'farm_manager' && (
+                <>
+                  <button onClick={() => openModal('manual-log')} className="fd-btn flex items-center gap-1.5" style={{ background: 'var(--lime)', color: '#111311', borderColor: 'var(--lime)' }}>
+                    <ClipboardPen className="w-3.5 h-3.5" /> + Record Daily Log
+                  </button>
+                  <button onClick={() => navigateTo('checklist')} className="fd-btn-ghost flex items-center gap-1.5">
+                    Run Checklist
+                  </button>
+                  <button onClick={() => openModal('add-visitor')} className="fd-btn-ghost flex items-center gap-1.5">
+                    Log Visitor
+                  </button>
+                  <button onClick={() => navigateTo('farm-map')} className="fd-btn-ghost flex items-center gap-1.5">
+                    Farm Map
+                  </button>
+                </>
+              )}
+              {activeRole === 'veterinarian' && (
+                <>
+                  <button onClick={() => navigateTo('surveillance')} className="fd-btn flex items-center gap-1.5" style={{ background: 'var(--critical)', borderColor: 'var(--critical)', color: '#fff' }}>
+                    Surveillance Map <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => openModal('add-case')} className="fd-btn-ghost flex items-center gap-1.5">
+                    Report Outbreak Case
+                  </button>
+                  <button onClick={() => openModal('pcr-certificate')} className="fd-btn-ghost flex items-center gap-1.5">
+                    PCR Diagnostic
+                  </button>
+                  <button onClick={() => navigateTo('emergency')} className="fd-btn-ghost flex items-center gap-1.5">
+                    Emergency Vet
+                  </button>
+                </>
+              )}
+              {activeRole === 'inspector' && (
+                <>
+                  <button onClick={() => openModal('add-audit')} className="fd-btn flex items-center gap-1.5" style={{ background: 'var(--warning)', borderColor: 'var(--warning)', color: '#111311' }}>
+                    + Conduct Audit <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => navigateTo('audits')} className="fd-btn-ghost flex items-center gap-1.5">
+                    Audits & Compliance
+                  </button>
+                  <button onClick={() => navigateTo('checklist')} className="fd-btn-ghost flex items-center gap-1.5">
+                    Review Checklists
+                  </button>
+                  <button onClick={() => navigateTo('reports')} className="fd-btn-ghost flex items-center gap-1.5">
+                    Export Reports
+                  </button>
+                </>
+              )}
+              {activeRole === 'admin' && (
+                <>
+                  <button onClick={() => openModal('register-farm')} className="fd-btn flex items-center gap-1.5" style={{ background: 'var(--lime)', color: '#111311', borderColor: 'var(--lime)' }}>
+                    + Register Facility
+                  </button>
+                  <button onClick={() => navigateTo('audits')} className="fd-btn-ghost flex items-center gap-1.5">
+                    All Audits
+                  </button>
+                  <button onClick={() => navigateTo('surveillance')} className="fd-btn-ghost flex items-center gap-1.5">
+                    Surveillance Stream
+                  </button>
+                  <button onClick={() => setIsAlertDrawerOpen(true)} className="fd-btn-ghost flex items-center gap-1.5">
+                    Alert Hub
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

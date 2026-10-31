@@ -24,7 +24,7 @@ router.get("/", async (req: Request, res: Response) => {
       q = `${lat},${lon}`;
     }
     if (!q) {
-      q = "Delhi, India";
+      q = "Indore, Madhya Pradesh, India";
     }
 
     const days = Math.min(Math.max(Number(req.query.days) || 5, 1), 7);
@@ -58,6 +58,7 @@ router.get("/", async (req: Request, res: Response) => {
               humidity: Math.round(data.current?.humidity ?? 60),
               windSpeedKmh: Math.round(data.current?.wind_kph ?? 10),
               pressureHpa: Math.round(data.current?.pressure_mb ?? 1013),
+              rainfallMm: Number(data.current?.precip_mm ?? 0),
               condition: data.current?.condition?.text || "Clear",
               conditionIcon: data.current?.condition?.icon?.startsWith("//")
                 ? `https:${data.current.condition.icon}`
@@ -97,9 +98,9 @@ router.get("/", async (req: Request, res: Response) => {
       }
     }
 
-    // 2. Open-Meteo fallback if coordinates are available or default fallback
-    const targetLat = lat ? Number(lat) : 28.6139;
-    const targetLon = lon ? Number(lon) : 77.209;
+    // 2. Open-Meteo fallback if coordinates are available or default fallback (Indore, MP)
+    const targetLat = lat ? Number(lat) : 22.7196;
+    const targetLon = lon ? Number(lon) : 75.8577;
 
     try {
       const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${targetLat}&longitude=${targetLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;

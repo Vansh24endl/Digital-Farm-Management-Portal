@@ -172,6 +172,21 @@ export const api = {
 
     getCurrentUser: () => request<{ success: boolean; user: User }>("/auth/me"),
 
+    getUserProfile: () =>
+        request<{ success: boolean; data: any }>("/users/profile"),
+
+    updateUserProfile: (data: { name?: string; phone?: string; profilePhoto?: string }) =>
+        request<{ success: boolean; message: string; data: any }>("/users/profile", {
+            method: "PUT",
+            body: JSON.stringify(data),
+        }),
+
+    changePassword: (data: { currentPassword: string; newPassword: string }) =>
+        request<{ success: boolean; message: string }>("/users/change-password", {
+            method: "PUT",
+            body: JSON.stringify(data),
+        }),
+
     updateProfile: (data: { name?: string; phone?: string }) =>
         request<{ success: boolean; message: string; user: User }>("/auth/profile", {
             method: "PUT",
@@ -295,5 +310,76 @@ export const api = {
         request<{ success: boolean; message?: string; data?: any }>("/checklists", {
             method: "POST",
             body: JSON.stringify(data),
+        }),
+
+    // ─── Manual Farmer Daily Observations (Non-IoT) ─────────────────────────
+    getDailyLogs: (farmId?: string, limit: number = 30) => {
+        const query = farmId ? `?farmId=${encodeURIComponent(farmId)}&limit=${limit}` : `?limit=${limit}`;
+        return request<{ success: boolean; count: number; data: any[] }>(`/daily-logs${query}`);
+    },
+
+    getLatestDailyLog: (farmId?: string) => {
+        const query = farmId ? `?farmId=${encodeURIComponent(farmId)}` : "";
+        return request<{ success: boolean; data: any }>(`/daily-logs/latest${query}`);
+    },
+
+    createDailyLog: (data: any) =>
+        request<{ success: boolean; message: string; data: any }>("/daily-logs", {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
+
+    // ─── Veterinarian Professional Profile ─────────────────────────────────
+    getVetProfile: () =>
+        request<{ success: boolean; data: any }>("/veterinarians/profile"),
+
+    createVetProfile: (data: {
+        fullName: string;
+        registrationNumber: string;
+        qualification: string;
+        specialization?: string;
+        yearsOfExperience?: number;
+        contactNumber?: string;
+        email?: string;
+        clinicName?: string;
+        clinicAddress?: string;
+        serviceLocation?: string;
+        bio?: string;
+        profilePhoto?: string;
+        certificates?: string[];
+    }) =>
+        request<{ success: boolean; message: string; data: any }>("/veterinarians/profile", {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
+
+    updateVetProfile: (data: Partial<{
+        fullName: string;
+        registrationNumber: string;
+        qualification: string;
+        specialization: string;
+        yearsOfExperience: number;
+        contactNumber: string;
+        email: string;
+        clinicName: string;
+        clinicAddress: string;
+        serviceLocation: string;
+        bio: string;
+        profilePhoto: string;
+        certificates: string[];
+    }>) =>
+        request<{ success: boolean; message: string; data: any }>("/veterinarians/profile", {
+            method: "PUT",
+            body: JSON.stringify(data),
+        }),
+
+    // ─── Admin Vet Verification ─────────────────────────────────────────────
+    getPendingVets: () =>
+        request<{ success: boolean; count: number; data: any[] }>("/veterinarians/admin/pending"),
+
+    verifyVet: (id: string, body: { status: "verified" | "rejected"; reason?: string }) =>
+        request<{ success: boolean; message: string; data: any }>(`/veterinarians/admin/${id}/verify`, {
+            method: "PUT",
+            body: JSON.stringify(body),
         }),
 };

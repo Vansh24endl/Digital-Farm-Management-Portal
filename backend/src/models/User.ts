@@ -10,6 +10,7 @@ export interface IUser extends Document {
   role: UserRole;
   farmId?: mongoose.Types.ObjectId | null;
   phone?: string;
+  profilePhoto?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -51,6 +52,11 @@ const userSchema = new Schema<IUser>(
       default: null,
     },
     phone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    profilePhoto: {
       type: String,
       trim: true,
       default: "",

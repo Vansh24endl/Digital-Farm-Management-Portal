@@ -36,6 +36,7 @@ interface AppContextType {
 
   // Auth & Session
   isAuthenticated: boolean;
+  isAuthChecking: boolean;
   currentUser: User | null;
   loginUser: (email: string, password: string) => Promise<boolean>;
   registerUser: (data: {
@@ -554,6 +555,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return typeof window !== 'undefined' && Boolean(localStorage.getItem('farmdrishti_token'));
   });
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && Boolean(localStorage.getItem('farmdrishti_token'));
+  });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const [isPrototypeDrawerOpen, setIsPrototypeDrawerOpen] = useState(false);
@@ -706,14 +710,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                      res.user.role === 'inspector' ? 'Certified Field Inspector' :
                      'Farm Operations Manager',
             }));
+          } else {
+            localStorage.removeItem('farmdrishti_token');
+            setCurrentUser(null);
+            setIsAuthenticated(false);
           }
         })
         .catch(() => {
           localStorage.removeItem('farmdrishti_token');
           setCurrentUser(null);
           setIsAuthenticated(false);
+        })
+        .finally(() => {
+          setIsAuthChecking(false);
         });
+    } else {
+      setIsAuthChecking(false);
     }
+
+    const handleSessionExpired = () => {
+      localStorage.removeItem('farmdrishti_token');
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      showToast('Your session has expired. Please log in again.');
+    };
+    window.addEventListener('farmdrishti-session-expired', handleSessionExpired);
 
     // Load Disease Reports & Audits from MongoDB
     const loadDiseaseAndAudits = () => {
@@ -816,8 +837,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       window.removeEventListener('inventory-updated', onDataUpdated);
       window.removeEventListener('checklist-submitted', onDataUpdated);
       window.removeEventListener('alerts-updated', loadLiveAlerts);
+      window.removeEventListener('farmdrishti-session-expired', handleSessionExpired);
     };
   }, []);
+
+  const getRoleDefaultScreen = (role?: string): ScreenId => {
+    switch (role) {
+      case 'admin':
+        return 'reports';
+      case 'veterinarian':
+        return 'vet-profile';
+      case 'inspector':
+        return 'audits';
+      case 'farm_manager':
+      default:
+        return 'dashboard';
+    }
+  };
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed((prev) => !prev);
@@ -830,6 +866,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser(null);
     setIsAuthenticated(false);
     setIsProfileDropdownOpen(false);
+    setActiveScreen('dashboard');
     showToast('Signed out of FarmDrishti session.');
   };
 
@@ -855,6 +892,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                  res.user.role === 'inspector' ? 'Certified Field Inspector' :
                  'Farm Operations Manager',
         }));
+        setActiveScreen(getRoleDefaultScreen(res.user.role));
         showToast(`Welcome back, ${res.user.name}!`);
         closeModal();
         return true;
@@ -891,6 +929,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                  res.user.role === 'inspector' ? 'Certified Field Inspector' :
                  'Farm Operations Manager',
         }));
+        setActiveScreen(getRoleDefaultScreen(res.user.role));
         showToast(`Account created! Welcome, ${res.user.name}!`);
         closeModal();
         return true;
@@ -1327,6 +1366,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isProfileDropdownOpen,
         setIsProfileDropdownOpen,
         isAuthenticated,
+        isAuthChecking,
         currentUser,
         loginUser,
         registerUser,

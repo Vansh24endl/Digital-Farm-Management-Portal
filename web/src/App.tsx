@@ -23,6 +23,7 @@ import { RegisterFarmModal } from './components/Modals/RegisterFarmModal';
 import { ManualLogModal } from './components/Modals/ManualLogModal';
 
 // Screens
+import { LoginScreen } from './screens/LoginScreen';
 import { DashboardScreen } from './screens/DashboardScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { VetProfileScreen } from './screens/VetProfileScreen';
@@ -39,7 +40,34 @@ import { InventoryScreen } from './screens/InventoryScreen';
 import { ReportsScreen } from './screens/ReportsScreen';
 
 const MainContent: React.FC = () => {
-  const { activeScreen } = useApp();
+  const { activeScreen, isAuthenticated, isAuthChecking } = useApp();
+
+  // Show clean spinner while validating existing JWT session on initial load
+  if (isAuthChecking) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center font-mono"
+        style={{ background: 'var(--bg-main)', color: 'var(--text-primary)' }}
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-[var(--lime)] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs uppercase tracking-wider text-[var(--text-secondary)]">
+            Validating FarmDrishti Session...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Prevent unauthorized dashboard access: Unauthenticated users are presented the Login Screen
+  if (!isAuthenticated) {
+    return (
+      <>
+        <LoginScreen />
+        <Toast />
+      </>
+    );
+  }
 
   const renderScreen = () => {
     switch (activeScreen) {
@@ -77,14 +105,17 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ background: 'var(--bg-main)', color: 'var(--text-primary)' }}>
+    <div
+      className="min-h-screen flex flex-col font-sans"
+      style={{ background: 'var(--bg-main)', color: 'var(--text-primary)' }}
+    >
       <Navbar />
       <div className="flex flex-1 w-full">
         <Sidebar />
         <main className="flex-1 min-w-0 w-full p-3 sm:p-4 md:p-6 overflow-x-hidden">
           {renderScreen()}
         </main>
-      </div> 
+      </div>
       <BottomNav />
       <PrototypeDrawer />
       <AlertDrawer />

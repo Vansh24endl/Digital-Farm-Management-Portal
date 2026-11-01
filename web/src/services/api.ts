@@ -29,6 +29,12 @@ async function request<T>(
     const result = await response.json();
 
     if (!response.ok) {
+        if (response.status === 401 && token) {
+            localStorage.removeItem("farmdrishti_token");
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("farmdrishti-session-expired"));
+            }
+        }
         throw new Error(result.message || "API request failed");
     }
 
@@ -382,4 +388,116 @@ export const api = {
             method: "PUT",
             body: JSON.stringify(body),
         }),
+
+    // ─── Admin Reports & Analytics ──────────────────────────────────────────
+    getAdminAnalyticsOverview: (params?: { timeRange?: string; startDate?: string; endDate?: string }) => {
+        const cleanParams: Record<string, string> = {};
+        if (params) {
+            Object.entries(params).forEach(([k, v]) => {
+                if (v) cleanParams[k] = String(v);
+            });
+        }
+        const q = new URLSearchParams(cleanParams).toString();
+        return request<{ success: boolean; data: any }>(`/admin/analytics/overview${q ? `?${q}` : ""}`);
+    },
+
+    getAdminAnalyticsUsers: (params?: { timeRange?: string; startDate?: string; endDate?: string }) => {
+        const cleanParams: Record<string, string> = {};
+        if (params) {
+            Object.entries(params).forEach(([k, v]) => {
+                if (v) cleanParams[k] = String(v);
+            });
+        }
+        const q = new URLSearchParams(cleanParams).toString();
+        return request<{ success: boolean; data: any }>(`/admin/analytics/users${q ? `?${q}` : ""}`);
+    },
+
+    getAdminAnalyticsFarms: (params?: { timeRange?: string; startDate?: string; endDate?: string }) => {
+        const cleanParams: Record<string, string> = {};
+        if (params) {
+            Object.entries(params).forEach(([k, v]) => {
+                if (v) cleanParams[k] = String(v);
+            });
+        }
+        const q = new URLSearchParams(cleanParams).toString();
+        return request<{ success: boolean; data: any }>(`/admin/analytics/farms${q ? `?${q}` : ""}`);
+    },
+
+    getAdminAnalyticsAudits: (params?: { timeRange?: string; startDate?: string; endDate?: string }) => {
+        const cleanParams: Record<string, string> = {};
+        if (params) {
+            Object.entries(params).forEach(([k, v]) => {
+                if (v) cleanParams[k] = String(v);
+            });
+        }
+        const q = new URLSearchParams(cleanParams).toString();
+        return request<{ success: boolean; data: any }>(`/admin/analytics/audits${q ? `?${q}` : ""}`);
+    },
+
+    getAdminAnalyticsCompliance: (params?: { timeRange?: string; startDate?: string; endDate?: string }) => {
+        const cleanParams: Record<string, string> = {};
+        if (params) {
+            Object.entries(params).forEach(([k, v]) => {
+                if (v) cleanParams[k] = String(v);
+            });
+        }
+        const q = new URLSearchParams(cleanParams).toString();
+        return request<{ success: boolean; data: any }>(`/admin/analytics/compliance${q ? `?${q}` : ""}`);
+    },
+
+    getAdminReports: (params?: {
+        timeRange?: string;
+        startDate?: string;
+        endDate?: string;
+        farmId?: string;
+        role?: string;
+        status?: string;
+        type?: string;
+        search?: string;
+        page?: number;
+        limit?: number;
+    }) => {
+        const cleanParams: Record<string, string> = {};
+        if (params) {
+            Object.entries(params).forEach(([k, v]) => {
+                if (v !== undefined && v !== null && v !== "") {
+                    cleanParams[k] = String(v);
+                }
+            });
+        }
+        const q = new URLSearchParams(cleanParams).toString();
+        return request<{
+            success: boolean;
+            data: any[];
+            pagination: { total: number; page: number; limit: number; totalPages: number };
+        }>(`/admin/reports${q ? `?${q}` : ""}`);
+    },
+
+    downloadAdminReportsCsv: async (params?: Record<string, any>) => {
+        const cleanParams: Record<string, string> = {};
+        if (params) {
+            Object.entries(params).forEach(([k, v]) => {
+                if (v !== undefined && v !== null && v !== "") {
+                    cleanParams[k] = String(v);
+                }
+            });
+        }
+        const q = new URLSearchParams(cleanParams).toString();
+        const token = typeof window !== "undefined" ? localStorage.getItem("farmdrishti_token") : null;
+        const response = await fetch(`${API_BASE_URL}/admin/reports/export${q ? `?${q}` : ""}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!response.ok) {
+            throw new Error(`Export failed (${response.status})`);
+        }
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.setAttribute("download", `farmdrishti-compliance-report-${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+    },
 };

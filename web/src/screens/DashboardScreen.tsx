@@ -106,7 +106,6 @@ export const DashboardScreen: React.FC = () => {
     alerts,
     setIsAlertDrawerOpen,
     isAuthenticated,
-    loginUser,
     openModal,
     t,
   } = useApp();
@@ -118,18 +117,6 @@ export const DashboardScreen: React.FC = () => {
   const [diseaseReports, setDiseaseReports] = useState<DiseaseReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState('');
-  const [loggingIn, setLoggingIn] = useState(false);
-
-  const handleQuickLogin = async (email: string, pass: string) => {
-    try {
-      setLoggingIn(true);
-      await loginUser(email, pass);
-    } catch (err: any) {
-      setApiError(err?.message || 'Login failed');
-    } finally {
-      setLoggingIn(false);
-    }
-  };
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -291,48 +278,6 @@ export const DashboardScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Active Role Switcher Bar (Quick 1-Click for Demo/Viva) ── */}
-      <div
-        className="fd-card p-3 flex flex-wrap items-center justify-between gap-2.5 text-xs font-mono"
-        style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)' }}
-      >
-        <span className="text-[var(--text-secondary)] font-bold flex items-center gap-1">
-          <span>Active Role:</span>
-          <span className="text-[var(--lime)] uppercase">{activeRole.replace('_', ' ')}</span>
-        </span>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] text-[var(--text-dim)] mr-1">1-Click Role Switch:</span>
-          <button
-            onClick={() => void handleQuickLogin('admin@farmdrishti.org', 'Admin@1234')}
-            disabled={loggingIn}
-            className={`px-2 py-1 rounded-sm border transition-all ${activeRole === 'admin' ? 'bg-[var(--lime)] text-black font-bold' : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-white'}`}
-          >
-            Admin
-          </button>
-          <button
-            onClick={() => void handleQuickLogin('manager@greenvalley.farm', 'Manager@123')}
-            disabled={loggingIn}
-            className={`px-2 py-1 rounded-sm border transition-all ${activeRole === 'farm_manager' ? 'bg-[var(--lime)] text-black font-bold' : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-white'}`}
-          >
-            Farm Manager
-          </button>
-          <button
-            onClick={() => void handleQuickLogin('ananya.reyes@biosec.vet', 'VetSecret@123')}
-            disabled={loggingIn}
-            className={`px-2 py-1 rounded-sm border transition-all ${activeRole === 'veterinarian' ? 'bg-[var(--lime)] text-black font-bold' : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-white'}`}
-          >
-            Veterinarian
-          </button>
-          <button
-            onClick={() => void handleQuickLogin('inspector@agroshield.gov', 'Inspector@123')}
-            disabled={loggingIn}
-            className={`px-2 py-1 rounded-sm border transition-all ${activeRole === 'inspector' ? 'bg-[var(--lime)] text-black font-bold' : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-white'}`}
-          >
-            Inspector
-          </button>
-        </div>
-      </div>
-
       {/* ── Guest Mode / Sign In Prompt ── */}
       {!isAuthenticated && (
         <div
@@ -365,35 +310,10 @@ export const DashboardScreen: React.FC = () => {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => openModal('auth')}
-              disabled={loggingIn}
-              className="px-3.5 py-1.5 rounded text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+              className="px-4 py-2 rounded text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 uppercase font-display"
               style={{ background: 'var(--lime, #a3e635)', color: '#111311' }}
             >
               {t('common.signIn')}
-            </button>
-            <button
-              onClick={() => void handleQuickLogin('admin@farmdrishti.org', 'Admin@1234')}
-              disabled={loggingIn}
-              className="fd-btn-ghost text-xs px-2.5 py-1.5 border border-dashed border-[var(--border)]"
-              title="Quick login as System Admin"
-            >
-              {t('dashboard.demoAdmin')}
-            </button>
-            <button
-              onClick={() => void handleQuickLogin('manager@greenvalley.farm', 'Manager@123')}
-              disabled={loggingIn}
-              className="fd-btn-ghost text-xs px-2.5 py-1.5 border border-dashed border-[var(--border)]"
-              title="Quick login as Farm Manager"
-            >
-              {t('dashboard.demoManager')}
-            </button>
-            <button
-              onClick={() => void handleQuickLogin('ananya.reyes@biosec.vet', 'VetSecret@123')}
-              disabled={loggingIn}
-              className="fd-btn-ghost text-xs px-2.5 py-1.5 border border-dashed border-[var(--border)]"
-              title="Quick login as Veterinarian"
-            >
-              {t('dashboard.demoVet')}
             </button>
           </div>
         </div>

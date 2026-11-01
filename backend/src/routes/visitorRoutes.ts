@@ -7,6 +7,8 @@ import {
   authorize,
   AuthRequest,
   canAccessFarm,
+  canAccessFarmAsync,
+  getAuthorizedFarmIds,
 } from "../middleware/authMiddleware";
 
 const router = Router();
@@ -47,7 +49,8 @@ router.post(
       }
 
       // Farm-level IDOR check
-      if (!canAccessFarm(req.user!, farmId)) {
+      const hasAccess = await canAccessFarmAsync(req.user!, farmId);
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: "Forbidden: You do not have permission to register visitors for this farm.",
@@ -92,11 +95,20 @@ router.post(
 // @access Private (Authenticated users, scoped by farm)
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
+    const authorizedFarmIds = await getAuthorizedFarmIds(req.user!);
+
+    // If non-admin user has 0 authorized farms, return empty list immediately
+    if (authorizedFarmIds !== null && authorizedFarmIds.length === 0) {
+      return res.json({
+        success: true,
+        count: 0,
+        data: [],
+      });
+    }
+
     const filter: Record<string, unknown> = {};
 
-    if (req.user?.role === "farm_manager" && req.user.farmId) {
-      filter.farmId = req.user.farmId;
-    } else if (req.query.farmId) {
+    if (req.query.farmId) {
       if (!mongoose.isValidObjectId(req.query.farmId)) {
         return res.status(400).json({
           success: false,
@@ -104,7 +116,8 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         });
       }
 
-      if (!canAccessFarm(req.user!, String(req.query.farmId))) {
+      const hasAccess = await canAccessFarmAsync(req.user!, String(req.query.farmId));
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: "Forbidden: You do not have permission to view visitors for this farm.",
@@ -112,6 +125,8 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       }
 
       filter.farmId = req.query.farmId;
+    } else if (authorizedFarmIds !== null) {
+      filter.farmId = { $in: authorizedFarmIds };
     }
 
     const visitors = await Visitor.find(filter)
@@ -155,7 +170,8 @@ router.patch(
         });
       }
 
-      if (!canAccessFarm(req.user!, visitor.farmId)) {
+      const hasAccess = await canAccessFarmAsync(req.user!, visitor.farmId);
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: "Forbidden: You do not have permission to check out visitors for this farm.",

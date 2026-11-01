@@ -180,6 +180,105 @@ router.put(
 );
 
 /**
+ * GET /api/veterinarians/directory
+ * Public/authenticated directory of verified veterinarians.
+ * Supports search, specialization, and location filtering.
+ */
+router.get(
+  "/directory",
+  protect,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { search, specialization, location } = req.query;
+      const query: Record<string, any> = { verificationStatus: "verified" };
+
+      if (typeof specialization === "string" && specialization.trim() && specialization.toLowerCase() !== "all") {
+        query.specialization = { $regex: specialization.trim(), $options: "i" };
+      }
+
+      if (typeof location === "string" && location.trim() && location.toLowerCase() !== "all") {
+        query.$or = [
+          { serviceLocation: { $regex: location.trim(), $options: "i" } },
+          { clinicAddress: { $regex: location.trim(), $options: "i" } },
+        ];
+      }
+
+      if (typeof search === "string" && search.trim()) {
+        const searchRegex = { $regex: search.trim(), $options: "i" };
+        const searchConditions = [
+          { fullName: searchRegex },
+          { clinicName: searchRegex },
+          { specialization: searchRegex },
+          { serviceLocation: searchRegex },
+          { qualification: searchRegex },
+        ];
+        if (query.$or) {
+          query.$and = [{ $or: query.$or }, { $or: searchConditions }];
+          delete query.$or;
+        } else {
+          query.$or = searchConditions;
+        }
+      }
+
+      const verifiedVets = await VeterinarianProfile.find(query as any)
+        .select("-certificates -rejectionReason")
+        .populate("userId", "name email profilePhoto")
+        .sort({ yearsOfExperience: -1, createdAt: -1 });
+
+      return res.json({
+        success: true,
+        count: verifiedVets.length,
+        data: verifiedVets,
+      });
+    } catch (error: any) {
+      console.error("Get vet directory error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to retrieve veterinarian directory.",
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/veterinarians/directory/:id
+ * Get details for a single verified veterinarian.
+ */
+router.get(
+  "/directory/:id",
+  protect,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!mongoose.isValidObjectId(req.params.id)) {
+        return res.status(400).json({ success: false, message: "Invalid profile ID." });
+      }
+
+      const profile = await VeterinarianProfile.findOne({
+        _id: new mongoose.Types.ObjectId(String(req.params.id)),
+        verificationStatus: "verified",
+      } as any)
+        .select("-certificates -rejectionReason")
+        .populate("userId", "name email profilePhoto");
+
+      if (!profile) {
+        return res.status(404).json({
+          success: false,
+          message: "Verified veterinarian profile not found.",
+        });
+      }
+
+      return res.json({ success: true, data: profile });
+    } catch (error: any) {
+      console.error("Get vet directory item error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to retrieve veterinarian details.",
+      });
+    }
+  }
+);
+
+/**
  * GET /api/veterinarians/:id
  * Get any veterinarian's profile by ID (for admins, farm managers, inspectors).
  */

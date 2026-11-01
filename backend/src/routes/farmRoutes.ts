@@ -2,7 +2,13 @@ import { Router, Response } from "express";
 import mongoose from "mongoose";
 import Farm from "../models/Farm";
 import User from "../models/User";
-import { protect, authorize, AuthRequest, canAccessFarm } from "../middleware/authMiddleware";
+import {
+  protect,
+  authorize,
+  AuthRequest,
+  getAuthorizedFarmIds,
+  canAccessFarmAsync,
+} from "../middleware/authMiddleware";
 
 const router = Router();
 
@@ -64,24 +70,21 @@ router.post("/", authorize("admin", "farm_manager"), async (req: AuthRequest, re
 });
 
 // GET ALL FARMS
-// @access Private (Authenticated users)
+// @access Private (Authenticated users, strictly isolated by ownership)
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
-    let query: Record<string, any> = {};
+    const farmIds = await getAuthorizedFarmIds(req.user!);
 
-    // If farm_manager is assigned to or owns a specific farm, prioritize
-    if (req.user?.role === "farm_manager") {
-      if (req.user.farmId) {
-        query.$or = [{ _id: req.user.farmId }, { ownerId: req.user._id }];
-      } else {
-        // If not explicitly assigned, allow seeing their created farms or general pool
-        const ownedCount = await Farm.countDocuments({ ownerId: req.user._id });
-        if (ownedCount > 0) {
-          query.ownerId = req.user._id;
-        }
-      }
+    // If non-admin and has no farms associated, return empty array immediately
+    if (farmIds !== null && farmIds.length === 0) {
+      return res.json({
+        success: true,
+        count: 0,
+        data: [],
+      });
     }
 
+    const query: Record<string, any> = farmIds !== null ? { _id: { $in: farmIds } } : {};
     const farms = await Farm.find(query).sort({ createdAt: -1 });
 
     return res.json({
@@ -110,7 +113,8 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
     }
 
     const farmId = String(req.params.id);
-    if (!canAccessFarm(req.user!, farmId)) {
+    const hasAccess = await canAccessFarmAsync(req.user!, farmId);
+    if (!hasAccess) {
       return res.status(403).json({
         success: false,
         message: "Forbidden: You do not have access to this farm.",
@@ -137,7 +141,7 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
 });
 
 // UPDATE FARM
-// @access Private (Admin, or Farm Manager for their assigned farm)
+// @access Private (Admin, or Farm Manager for their owned farm)
 router.put("/:id", authorize("admin", "farm_manager"), async (req: AuthRequest, res: Response) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
@@ -148,7 +152,8 @@ router.put("/:id", authorize("admin", "farm_manager"), async (req: AuthRequest, 
     }
 
     const farmId = String(req.params.id);
-    if (!canAccessFarm(req.user!, farmId)) {
+    const hasAccess = await canAccessFarmAsync(req.user!, farmId);
+    if (!hasAccess) {
       return res.status(403).json({
         success: false,
         message: "Forbidden: You do not have permission to edit this farm.",

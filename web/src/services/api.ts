@@ -96,6 +96,7 @@ export type User = {
     farmId?: any;
     phone?: string;
     isActive?: boolean;
+    profilePhoto?: string;
 };
 
 export type AuthResponse = {
@@ -378,6 +379,28 @@ export const api = {
             method: "PUT",
             body: JSON.stringify(data),
         }),
+
+    // ─── User Profile & Avatar ─────────────────────────────────────────────
+    uploadProfilePhoto: (photo: string) =>
+        request<{ success: boolean; message: string; data: { profilePhoto: string } }>("/users/profile-photo", {
+            method: "POST",
+            body: JSON.stringify({ photo }),
+        }),
+
+    // ─── Verified Veterinarian Directory ────────────────────────────────────
+    getVetDirectory: (params?: { search?: string; specialization?: string; location?: string }) => {
+        const cleanParams: Record<string, string> = {};
+        if (params) {
+            Object.entries(params).forEach(([k, v]) => {
+                if (v && v.trim()) cleanParams[k] = v.trim();
+            });
+        }
+        const q = new URLSearchParams(cleanParams).toString();
+        return request<{ success: boolean; count: number; data: any[] }>(`/veterinarians/directory${q ? `?${q}` : ""}`);
+    },
+
+    getVetDirectoryDetails: (id: string) =>
+        request<{ success: boolean; data: any }>(`/veterinarians/directory/${id}`),
 
     // ─── Admin Vet Verification ─────────────────────────────────────────────
     getPendingVets: () =>

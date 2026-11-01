@@ -131,342 +131,31 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const initialUserProfile: UserProfile = {
-  name: 'Dr. Ananya Reyes',
-  title: 'Senior Biosecurity Veterinarian & Surveillance Lead',
-  bio: 'Lead Epidemiologist with 14+ years specializing in commercial swine & poultry disease surveillance, outbreak containment, and biosecurity audit protocols.',
-  email: 'a.reyes@biosec.vet',
-  phone: '+1 (555) 019-8372',
-  location: 'Midwest Region, Hub A (HQ)',
-  employeeId: 'VET-99201',
-  avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400',
-  certifications: [
-    'Biosecurity Specialist (Level 4 Master)',
-    'Avian Health Master (Board Certified)',
-    'Pathology Diagnostics & Swine PCR (Advanced)',
-  ],
-  assignedFarms: [
-    { name: 'Green Valley Pig Farm', status: 'optimal', sector: 'Sector 1' },
-    { name: 'Sunrise Poultry House', status: 'warning', sector: 'Zone 2' },
-    { name: 'Oak Ridge Site A', status: 'optimal', sector: 'Hub A' },
-    { name: 'Pine Valley North', status: 'optimal', sector: 'Sector 3' },
-    { name: 'Cedar Creek Farms', status: 'optimal', sector: 'Sector 4' },
-    { name: 'Willow Brood Facility', status: 'optimal', sector: 'Hatchery C' },
-  ],
+  name: '',
+  title: 'Farm Drishti User',
+  bio: '',
+  email: '',
+  phone: '',
+  location: '',
+  employeeId: '',
+  avatar: '',
+  certifications: [],
+  assignedFarms: [],
   settings: {
     pushNotifications: true,
     syncFrequency: 'Real-time',
-    biometricLock: true,
+    biometricLock: false,
     soundAlerts: true,
   },
 };
 
-const initialFarms: FarmUnit[] = [
-  {
-    id: 'gv-pig',
-    name: 'Green Valley Pig Farm',
-    type: 'Swine Gestation & Farrowing',
-    biosecurityScore: 82,
-    status: 'Optimal',
-    animalsCount: '1,400 pigs',
-    manager: 'Carlos Miller',
-  },
-  {
-    id: 'sr-poultry',
-    name: 'Sunrise Poultry House',
-    type: 'Broiler & Layer Facility',
-    biosecurityScore: 61,
-    status: 'Monitoring',
-    animalsCount: '1,000 chickens',
-    manager: 'Elena Vance',
-  },
-  {
-    id: 'oak-ridge',
-    name: 'Oak Ridge Site A',
-    type: 'Breeder Nucleus',
-    biosecurityScore: 94,
-    status: 'Optimal',
-    animalsCount: '850 pigs',
-    manager: 'Marcus Thorne',
-  },
-];
-
-const initialAlerts: AlertItem[] = [
-  {
-    id: 'alt-1',
-    title: 'Temperature Spike in Farrowing House 3',
-    location: 'Sector 4 · Farrowing House 3',
-    timeAgo: '10m ago',
-    severity: 'urgent',
-    read: false,
-  },
-  {
-    id: 'alt-2',
-    title: 'Unauthorized Vehicle Near Perimeter Gate B',
-    location: 'Zone 2 · Perimeter Access',
-    timeAgo: '2h ago',
-    severity: 'review',
-    read: false,
-  },
-  {
-    id: 'alt-3',
-    title: 'Routine Sanitation Audit Pending',
-    location: 'Sector 2 · Feed Mill',
-    timeAgo: 'Yesterday',
-    severity: 'low',
-    read: false,
-  },
-  {
-    id: 'alt-4',
-    title: 'Newcastle Disease Vector Warning',
-    location: 'Zone 2 · Poultry House B',
-    timeAgo: '4h ago',
-    severity: 'urgent',
-    read: false,
-  },
-];
-
-const initialVisitors: Visitor[] = [
-  {
-    id: 'v-1',
-    name: 'Rahul Mehta',
-    role: 'Feed Supplier Logistics Manager',
-    company: 'AgriFeed Co.',
-    status: 'IN',
-    entryTime: '08:30 AM',
-    phone: '+91 98765 11111',
-    purpose: 'Bulk Grain Delivery - Sector 1',
-    temperature: '36.6 °C',
-  },
-  {
-    id: 'v-2',
-    name: 'Dr. Ananya Singh',
-    role: 'Associate Field Veterinarian',
-    company: 'Regional Avian Vet Care',
-    status: 'IN',
-    entryTime: '09:15 AM',
-    phone: '+91 98765 43210',
-    purpose: 'Routine Swab Sampling & Inspection',
-    temperature: '36.4 °C',
-  },
-  {
-    id: 'v-3',
-    name: 'Vikram Patel',
-    role: 'HVAC Maintenance Technician',
-    company: 'CoolClimate Tech',
-    status: 'OUT',
-    entryTime: 'Yesterday 02:00 PM',
-    phone: '+91 98765 22222',
-    purpose: 'Ventilation Fan Servicing',
-    temperature: '36.8 °C',
-  },
-  {
-    id: 'v-4',
-    name: 'Suresh Yadav',
-    role: 'Biosecure Waste Transport',
-    company: 'CleanBio Environmental',
-    status: 'OUT',
-    entryTime: 'Yesterday 10:45 AM',
-    phone: '+91 98765 33333',
-    purpose: 'Manure & Waste Disposal',
-    temperature: '36.5 °C',
-  },
-];
-
-const initialChecklist: ChecklistItem[] = [
-  {
-    id: 'chk-1',
-    title: 'Shower & Change Station Sterilization',
-    description: 'Verify 70% ethanol sprayers and clean jumpsuit storage.',
-    category: 'Personnel Hygiene',
-    status: 'passed',
-  },
-  {
-    id: 'chk-2',
-    title: 'Footbath Virucidal Concentration Check',
-    description: 'Ensure pH solution level and 200ppm virucide refill in place.',
-    category: 'Entry Sanitation',
-    status: 'passed',
-  },
-  {
-    id: 'chk-3',
-    title: 'Protective Clothing & Respirator Inspection',
-    description: 'Check seal integrity on N95 masks and Tyvek suits.',
-    category: 'PPE Security',
-    status: 'passed',
-  },
-  {
-    id: 'chk-4',
-    title: 'Vehicle Disinfection Gate UV Pressure Spray',
-    description: 'Test automatic wheel wash nozzle pressure (3.5 bar min).',
-    category: 'Perimeter Barrier',
-    status: 'warning',
-  },
-  {
-    id: 'chk-5',
-    title: 'Visitor Log Thermal Scan Verification',
-    description: 'All entrant temperatures logged and below 37.5°C threshold.',
-    category: 'Access Control',
-    status: 'passed',
-  },
-  {
-    id: 'chk-6',
-    title: 'Quarantine Holding Bay Negative Pressure',
-    description: 'Inspect air pressure differential gauge (-15 Pa required).',
-    category: 'Biosecurity Zone',
-    status: 'critical',
-  },
-];
-
-const initialAudits: Audit[] = [
-  {
-    id: 'aud-1',
-    title: 'Sanitation & Disinfection Audit',
-    sector: 'Sector 2 · Feed Mill & Loading Dock',
-    dueDate: 'In 2 days',
-    severity: 'urgent',
-    progress: 40,
-    status: 'pending',
-    auditor: 'Dr. Ananya Reyes',
-    items: [
-      { text: 'Inspect footbath chemical concentration at Bay 2', done: true },
-      { text: 'Verify tire spray log for feed delivery trucks', done: true },
-      { text: 'Swab surface test at entry shower change room', done: false },
-      { text: 'Check air filter pressure gauge in Sector 2', done: false },
-      { text: 'Review disinfectant batch expiry logs', done: false },
-    ],
-  },
-  {
-    id: 'aud-2',
-    title: 'Visitor Access & PPE Compliance Log',
-    sector: 'Zone 2 · Poultry House Entrance',
-    dueDate: 'Tomorrow',
-    severity: 'attention',
-    progress: 20,
-    status: 'pending',
-    auditor: 'Elena Vance',
-    items: [
-      { text: 'Audit entry log signatures for the past 7 days', done: true },
-      { text: 'Check Tyvek jumpsuit stock & disposal bin hygiene', done: false },
-      { text: 'Verify visitor shower duration records', done: false },
-      { text: 'Inspect boot change line demarcation strip', done: false },
-    ],
-  },
-  {
-    id: 'aud-3',
-    title: 'Ventilation & Environmental Control Protocol',
-    sector: 'Sector 4 · Farrowing House 3',
-    dueDate: 'In 5 days',
-    severity: 'routine',
-    progress: 65,
-    status: 'in_progress',
-    auditor: 'Marcus Thorne',
-    items: [
-      { text: 'Calibrate ammonia NH3 sensors across 12 pens', done: true },
-      { text: 'Test backup emergency fan generator switchover', done: true },
-      { text: 'Inspect cooling pad water circulation lines', done: true },
-      { text: 'Review thermal camera heatmap history', done: false },
-    ],
-  },
-];
-
-const initialDiseaseReports: DiseaseReport[] = [
-  {
-    id: 'dis-1',
-    diseaseName: 'Newcastle Disease Vector Alert',
-    riskLevel: 'High',
-    location: 'Sunrise Poultry House · Zone 2',
-    reportedDate: 'Today 09:30 AM',
-    speciesAffected: 'Broiler Flock B (1,000 Birds)',
-    status: 'Active',
-    details: 'Serology test indicated elevated antibodies for virulent Newcastle disease strain. Perimeter quarantine ring enforced.',
-    coordinates: { x: 62, y: 38 },
-  },
-  {
-    id: 'dis-2',
-    diseaseName: 'African Swine Fever (ASF) Watch',
-    riskLevel: 'Medium',
-    location: 'Green Valley Pig Farm · Sector 4',
-    reportedDate: '2 Days Ago',
-    speciesAffected: 'Gestation Pen 14',
-    status: 'Investigating',
-    details: 'Routine PCR screening flagged positive viral DNA fragments in wild boar perimeter fence swab. Biosecurity buffer expanded.',
-    coordinates: { x: 35, y: 55 },
-  },
-  {
-    id: 'dis-3',
-    diseaseName: 'Porcine Respiratory Syndrome (PRRS)',
-    riskLevel: 'Low',
-    location: 'Oak Ridge Site A · Sector 1',
-    reportedDate: '4 Days Ago',
-    speciesAffected: 'Weaner Barn 2',
-    status: 'Resolved',
-    details: 'Isolated coughing symptoms recorded. Diagnostic swab negative for PRRSv Type 2. Secondary bacterial treatment administered.',
-    coordinates: { x: 22, y: 70 },
-  },
-];
-
-const initialInventory: InventoryItem[] = [
-  {
-    id: 'inv-1',
-    name: 'Virkon S Broad Spectrum Disinfectant (5L)',
-    category: 'Disinfectants',
-    quantity: 2,
-    unit: 'Barrels',
-    minThreshold: 10,
-    location: 'Central Chemical Depot',
-    lastRestocked: '2026-09-15',
-  },
-  {
-    id: 'inv-2',
-    name: 'N95 Respirator Masks (Heavy Duty)',
-    category: 'PPE',
-    quantity: 15,
-    unit: 'Boxes',
-    minThreshold: 50,
-    location: 'Antechamber Bay A',
-    lastRestocked: '2026-09-20',
-  },
-  {
-    id: 'inv-3',
-    name: 'Nitrile Protective Gloves (Size XL)',
-    category: 'PPE',
-    quantity: 4,
-    unit: 'Boxes',
-    minThreshold: 20,
-    location: 'Shower Locker Room',
-    lastRestocked: '2026-09-10',
-  },
-  {
-    id: 'inv-4',
-    name: 'Sterile Swab Diagnostic PCR Kits',
-    category: 'Medical Supplies',
-    quantity: 120,
-    unit: 'Kits',
-    minThreshold: 30,
-    location: 'Veterinary Diagnostic Lab',
-    lastRestocked: '2026-09-28',
-  },
-  {
-    id: 'inv-5',
-    name: 'Avian Influenza Inactivated Vaccine (1000 doses)',
-    category: 'Vaccines',
-    quantity: 12,
-    unit: 'Vials',
-    minThreshold: 5,
-    location: 'Cold Storage Unit 1 (-20°C)',
-    lastRestocked: '2026-10-01',
-  },
-  {
-    id: 'inv-6',
-    name: 'Automated Boot Bath Disinfectant Powder',
-    category: 'Disinfectants',
-    quantity: 18,
-    unit: 'Bags',
-    minThreshold: 10,
-    location: 'Gate B Sanitation Shed',
-    lastRestocked: '2026-09-25',
-  },
-];
+const initialFarms: FarmUnit[] = [];
+const initialAlerts: AlertItem[] = [];
+const initialVisitors: Visitor[] = [];
+const initialChecklist: ChecklistItem[] = [];
+const initialAudits: Audit[] = [];
+const initialDiseaseReports: DiseaseReport[] = [];
+const initialInventory: InventoryItem[] = [];
 
 const initialTrainingTopics: TrainingTopic[] = [
   {
@@ -567,7 +256,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [modalPayload, setModalPayload] = useState<any>(null);
 
   const [userProfile, setUserProfile] = useState<UserProfile>(initialUserProfile);
-  const [farmUnits] = useState<FarmUnit[]>(initialFarms);
+  const [farmUnits, setFarmUnits] = useState<FarmUnit[]>(initialFarms);
   const [alerts, setAlerts] = useState<AlertItem[]>(initialAlerts);
   const [visitors, setVisitors] = useState<Visitor[]>(initialVisitors);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(initialChecklist);
@@ -697,7 +386,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       api.getCurrentUser()
         .then((res) => {
           if (res.success && res.user) {
-            setCurrentUser(res.user);
+            const photo = res.user.profilePhoto || localStorage.getItem('farmdrishti_avatar') || '';
+            if (photo) localStorage.setItem('farmdrishti_avatar', photo);
+            setCurrentUser({ ...res.user, profilePhoto: photo });
             setIsAuthenticated(true);
             setUserProfile((prev) => ({
               ...prev,
@@ -705,6 +396,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               email: res.user.email,
               role: res.user.role,
               phone: res.user.phone || prev.phone,
+              avatar: photo,
               title: res.user.role === 'admin' ? 'System Administrator' :
                      res.user.role === 'veterinarian' ? 'Lead Biosecurity Veterinarian' :
                      res.user.role === 'inspector' ? 'Certified Field Inspector' :
@@ -736,58 +428,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     window.addEventListener('farmdrishti-session-expired', handleSessionExpired);
 
-    // Load Disease Reports & Audits from MongoDB
-    const loadDiseaseAndAudits = () => {
+    // Load Live Data Collections from MongoDB
+    const loadAllCollections = () => {
       api.getDiseaseReports()
         .then((res: any) => {
           const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
-          if (list.length > 0) {
-            const mapped: DiseaseReport[] = list.map((r: any) => ({
-              id: String(r._id || r.id),
-              diseaseName: r.diseaseName || 'Unspecified Vector',
-              riskLevel: r.severity === 'high' ? 'High' : r.severity === 'medium' ? 'Medium' : 'Low',
-              location: r.location || (r.farmId && typeof r.farmId === 'object' ? `${r.farmId.name || 'Farm'}` : 'Sector 1'),
-              reportedDate: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Just Now',
-              speciesAffected: r.speciesAffected || (r.animalType === 'pig' ? 'Swine Herd' : 'Poultry Flock'),
-              status: r.status === 'investigating' ? 'Investigating' : r.status === 'resolved' ? 'Resolved' : 'Active',
-              details: r.description || r.symptoms || '',
-              coordinates: r.coordinates || { x: Math.floor(Math.random() * 60) + 20, y: Math.floor(Math.random() * 60) + 20 },
-            }));
-            setDiseaseReports(mapped);
-          }
+          const mapped: DiseaseReport[] = list.map((r: any) => ({
+            id: String(r._id || r.id),
+            diseaseName: r.diseaseName || 'Unspecified Vector',
+            riskLevel: r.severity === 'high' ? 'High' : r.severity === 'medium' ? 'Medium' : 'Low',
+            location: r.location || (r.farmId && typeof r.farmId === 'object' ? `${r.farmId.name || 'Farm'}` : 'Sector 1'),
+            reportedDate: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Just Now',
+            speciesAffected: r.speciesAffected || (r.animalType === 'pig' ? 'Swine Herd' : 'Poultry Flock'),
+            status: r.status === 'investigating' ? 'Investigating' : r.status === 'resolved' ? 'Resolved' : 'Active',
+            details: r.description || r.symptoms || '',
+            coordinates: r.coordinates || { x: Math.floor(Math.random() * 60) + 20, y: Math.floor(Math.random() * 60) + 20 },
+          }));
+          setDiseaseReports(mapped);
         })
-        .catch(() => {});
+        .catch(() => setDiseaseReports([]));
 
       api.getAudits()
         .then((res: any) => {
           const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
-          if (list.length > 0) {
-            const mapped: Audit[] = list.map((a: any) => ({
-              id: String(a._id || a.id),
-              title: a.title || 'Biosecurity Inspection',
-              sector: a.sector || (a.farmId && typeof a.farmId === 'object' ? `${a.farmId.name || 'Sector 2'}` : 'Sector 2'),
-              dueDate: a.dueDate || 'In 3 days',
-              severity: a.riskLevel === 'high' ? 'urgent' : a.riskLevel === 'low' ? 'routine' : 'attention',
-              progress: typeof a.progress === 'number' ? a.progress : a.status === 'completed' ? 100 : 0,
-              status: a.status === 'in-progress' ? 'in_progress' : a.status === 'completed' ? 'completed' : 'pending',
-              auditor: a.auditor || 'Dr. Ananya Reyes',
-              items: Array.isArray(a.items) && a.items.length > 0 ? a.items : [
-                { text: 'Verify entrance footbath pH & concentration', done: a.status === 'completed' },
-                { text: 'Audit employee shower logs for past 48 hours', done: a.status === 'completed' },
-                { text: 'Check air filtration pressure differentials', done: a.status === 'completed' },
-              ],
-            }));
-            setAudits(mapped);
-          }
+          const mapped: Audit[] = list.map((a: any) => ({
+            id: String(a._id || a.id),
+            title: a.title || 'Biosecurity Inspection',
+            sector: a.sector || (a.farmId && typeof a.farmId === 'object' ? `${a.farmId.name || 'Sector 2'}` : 'Sector 2'),
+            dueDate: a.dueDate || 'In 3 days',
+            severity: a.riskLevel === 'high' ? 'urgent' : a.riskLevel === 'low' ? 'routine' : 'attention',
+            progress: typeof a.progress === 'number' ? a.progress : a.status === 'completed' ? 100 : 0,
+            status: a.status === 'in-progress' ? 'in_progress' : a.status === 'completed' ? 'completed' : 'pending',
+            auditor: a.auditor || 'Dr. Ananya Reyes',
+            items: Array.isArray(a.items) && a.items.length > 0 ? a.items : [],
+          }));
+          setAudits(mapped);
         })
-        .catch(() => {});
-    };
+        .catch(() => setAudits([]));
 
-    // Load Live Alerts from MongoDB
-    const loadLiveAlerts = () => {
       api.getAlerts({ limit: 50 })
         .then((res: any) => {
-          if (res?.success && Array.isArray(res?.data) && res.data.length > 0) {
+          if (res?.success && Array.isArray(res?.data)) {
             const formatTimeAgo = (dateStr?: string) => {
               if (!dateStr) return 'Just now';
               const date = new Date(dateStr);
@@ -812,31 +493,79 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               createdAt: a.createdAt,
             }));
             setAlerts(mapped);
+          } else {
+            setAlerts([]);
           }
         })
-        .catch(() => {});
+        .catch(() => setAlerts([]));
+
+      api.getVisitors()
+        .then((res: any) => {
+          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+          setVisitors(list.map((v: any) => ({
+            id: String(v._id || v.id),
+            name: v.name,
+            role: v.role || 'Visitor',
+            company: v.company || '—',
+            status: v.status || 'IN',
+            entryTime: v.checkIn ? new Date(v.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
+            phone: v.phone || '—',
+            purpose: v.purpose || '—',
+            temperature: v.temperature || '36.5°C',
+          })));
+        })
+        .catch(() => setVisitors([]));
+
+      api.getInventory()
+        .then((res: any) => {
+          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+          setInventory(list.map((i: any) => ({
+            id: String(i._id || i.id),
+            name: i.itemName,
+            category: i.category,
+            quantity: i.quantity,
+            unit: i.unit,
+            minThreshold: i.minimumStock,
+            location: (i.farmId && typeof i.farmId === 'object' ? i.farmId.name : null) || 'Main Site',
+            lastRestocked: i.updatedAt ? new Date(i.updatedAt).toISOString().split('T')[0] : '—',
+          })));
+        })
+        .catch(() => setInventory([]));
+
+      api.getFarms()
+        .then((res: any) => {
+          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+          setFarmUnits(list.map((f: any) => ({
+            id: String(f._id || f.id),
+            name: f.name,
+            type: f.farmType || 'Livestock',
+            biosecurityScore: f.complianceScore ?? 100,
+            status: (f.complianceScore ?? 100) >= 80 ? 'Optimal' : (f.complianceScore ?? 100) >= 60 ? 'Monitoring' : 'Critical',
+            animalsCount: f.animalCount ? `${f.animalCount}` : '0',
+            manager: (f.ownerId && typeof f.ownerId === 'object' ? f.ownerId.name : null) || 'Farm Manager',
+          })));
+        })
+        .catch(() => setFarmUnits([]));
     };
 
-    loadDiseaseAndAudits();
-    loadLiveAlerts();
+    loadAllCollections();
 
     const onDataUpdated = () => {
-      loadDiseaseAndAudits();
-      loadLiveAlerts();
+      loadAllCollections();
     };
 
     window.addEventListener('disease-reports-updated', onDataUpdated);
     window.addEventListener('audits-updated', onDataUpdated);
     window.addEventListener('inventory-updated', onDataUpdated);
     window.addEventListener('checklist-submitted', onDataUpdated);
-    window.addEventListener('alerts-updated', loadLiveAlerts);
+    window.addEventListener('alerts-updated', onDataUpdated);
 
     return () => {
       window.removeEventListener('disease-reports-updated', onDataUpdated);
       window.removeEventListener('audits-updated', onDataUpdated);
       window.removeEventListener('inventory-updated', onDataUpdated);
       window.removeEventListener('checklist-submitted', onDataUpdated);
-      window.removeEventListener('alerts-updated', loadLiveAlerts);
+      window.removeEventListener('alerts-updated', onDataUpdated);
       window.removeEventListener('farmdrishti-session-expired', handleSessionExpired);
     };
   }, []);
@@ -862,10 +591,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('farmdrishti_token');
+      localStorage.removeItem('farmdrishti_avatar');
     }
     setCurrentUser(null);
     setIsAuthenticated(false);
     setIsProfileDropdownOpen(false);
+    setUserProfile(initialUserProfile);
+    setFarmUnits([]);
+    setAlerts([]);
+    setVisitors([]);
+    setChecklist([]);
+    setAudits([]);
+    setDiseaseReports([]);
+    setInventory([]);
     setActiveScreen('dashboard');
     showToast('Signed out of FarmDrishti session.');
   };
@@ -879,7 +617,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await api.login({ email, password });
       if (res.success && res.token) {
         localStorage.setItem('farmdrishti_token', res.token);
-        setCurrentUser(res.user);
+        const photo = res.user.profilePhoto || localStorage.getItem('farmdrishti_avatar') || '';
+        if (photo) localStorage.setItem('farmdrishti_avatar', photo);
+        setCurrentUser({ ...res.user, profilePhoto: photo });
         setIsAuthenticated(true);
         setUserProfile((prev) => ({
           ...prev,
@@ -887,6 +627,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           email: res.user.email,
           role: res.user.role,
           phone: res.user.phone || prev.phone,
+          avatar: photo,
           title: res.user.role === 'admin' ? 'System Administrator' :
                  res.user.role === 'veterinarian' ? 'Lead Biosecurity Veterinarian' :
                  res.user.role === 'inspector' ? 'Certified Field Inspector' :
@@ -916,7 +657,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await api.register(data);
       if (res.success && res.token) {
         localStorage.setItem('farmdrishti_token', res.token);
-        setCurrentUser(res.user);
+        const photo = res.user.profilePhoto || '';
+        if (photo) localStorage.setItem('farmdrishti_avatar', photo);
+        setCurrentUser({ ...res.user, profilePhoto: photo });
         setIsAuthenticated(true);
         setUserProfile((prev) => ({
           ...prev,
@@ -924,6 +667,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           email: res.user.email,
           role: res.user.role,
           phone: res.user.phone || prev.phone,
+          avatar: photo,
           title: res.user.role === 'admin' ? 'System Administrator' :
                  res.user.role === 'veterinarian' ? 'Lead Biosecurity Veterinarian' :
                  res.user.role === 'inspector' ? 'Certified Field Inspector' :
@@ -987,11 +731,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateAvatar = async (newUrl: string) => {
     setUserProfile((prev) => ({ ...prev, avatar: newUrl }));
-    if (typeof window !== 'undefined' && localStorage.getItem('farmdrishti_token')) {
-      try {
-        await api.updateUserProfile({ profilePhoto: newUrl });
-      } catch (err: any) {
-        console.warn('Backend avatar sync failed:', err?.message);
+    setCurrentUser((prev) => prev ? { ...prev, profilePhoto: newUrl } : null);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('farmdrishti_avatar', newUrl);
+      if (localStorage.getItem('farmdrishti_token')) {
+        try {
+          await api.uploadProfilePhoto(newUrl);
+        } catch (err: any) {
+          console.warn('Backend avatar upload endpoint failed, trying profile update:', err?.message);
+          try {
+            await api.updateUserProfile({ profilePhoto: newUrl });
+          } catch (innerErr: any) {
+            console.warn('Backend avatar sync failed:', innerErr?.message);
+          }
+        }
       }
     }
     showToast('Profile picture (DP) updated!');

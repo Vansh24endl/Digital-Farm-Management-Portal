@@ -10,7 +10,6 @@ import {
   User as UserIcon,
   Phone,
   Building2,
-  Sparkles,
   ArrowRight,
   AlertCircle,
   CheckCircle2,
@@ -135,21 +134,6 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
-  const fillDemo = (demoRole: 'admin' | 'veterinarian' | 'manager') => {
-    setErrorMessage('');
-    setSuccessMessage('');
-    if (demoRole === 'admin') {
-      setEmail('admin@farmdrishti.org');
-      setPassword('Admin@1234');
-    } else if (demoRole === 'veterinarian') {
-      setEmail('ananya.reyes@biosec.vet');
-      setPassword('VetSecret@123');
-    } else {
-      setEmail('manager@greenvalley.farm');
-      setPassword('Manager@123');
-    }
-  };
-
   return (
     <div
       className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans relative overflow-x-hidden"
@@ -223,40 +207,15 @@ export const LoginScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Demo Credentials */}
-          <div className="p-4 rounded-sm border border-[var(--border-dim)] bg-[var(--card-bg)]/80 backdrop-blur-sm space-y-2.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-mono font-bold uppercase text-[var(--text-secondary)]">Quick Demo Credentials:</span>
-              <span className="text-[11px] font-mono text-[var(--lime)] flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> 1-Click Load
-              </span>
+          {/* Security & Access Notice */}
+          <div className="p-4 rounded-sm border border-[var(--border-dim)] bg-[var(--card-bg)]/80 backdrop-blur-sm space-y-2">
+            <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase text-[var(--lime)]">
+              <Lock className="w-3.5 h-3.5" />
+              <span>Role-Based Secure Workstation</span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => fillDemo('admin')}
-                className="px-2.5 py-1 text-xs font-mono rounded-sm border border-[var(--border-dim)] hover:border-[var(--lime)] bg-[var(--bg-main)] text-[var(--text-primary)] transition-colors flex items-center gap-1.5"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--lime)]" />
-                Administrator
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('veterinarian')}
-                className="px-2.5 py-1 text-xs font-mono rounded-sm border border-[var(--border-dim)] hover:border-[var(--lime)] bg-[var(--bg-main)] text-[var(--text-primary)] transition-colors flex items-center gap-1.5"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                Veterinarian
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('manager')}
-                className="px-2.5 py-1 text-xs font-mono rounded-sm border border-[var(--border-dim)] hover:border-[var(--lime)] bg-[var(--bg-main)] text-[var(--text-primary)] transition-colors flex items-center gap-1.5"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                Farm Manager
-              </button>
-            </div>
+            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed font-sans">
+              Sign in with your registered account credentials. Each operator role (Farm Manager, Field Veterinarian, Biosecurity Inspector, or Administrator) accesses an isolated, compliant workspace.
+            </p>
           </div>
         </div>
 
@@ -601,7 +560,7 @@ export const LoginScreen: React.FC = () => {
             </div>
 
             <p className="text-xs text-[var(--text-dim)]">
-              If you are testing the platform in a staging environment, please use one of the quick 1-click demo logins provided on the sign-in page.
+              If you require credential assistance or emergency access to your farm dashboard, please contact your facility biosecurity director or email support@farmdrishti.org.
             </p>
 
             <button

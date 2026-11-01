@@ -7,6 +7,8 @@ import {
   authorize,
   AuthRequest,
   canAccessFarm,
+  canAccessFarmAsync,
+  getAuthorizedFarmIds,
 } from "../middleware/authMiddleware";
 
 const router = Router();
@@ -46,22 +48,21 @@ router.post(
         if (req.user?.farmId) {
           targetFarmId = req.user.farmId;
         } else {
-          const existingFarm = await Farm.findOne();
-          if (existingFarm) {
-            targetFarmId = existingFarm._id;
+          const authorizedFarmIds = await getAuthorizedFarmIds(req.user!);
+          if (authorizedFarmIds && authorizedFarmIds.length > 0) {
+            targetFarmId = authorizedFarmIds[0];
           } else {
-            const newFarm = await Farm.create({
-              name: "Main Production Site",
-              farmType: "mixed",
-              location: "Central Facility",
+            return res.status(400).json({
+              success: false,
+              message: "A valid farmId is required. Please select or create an authorized farm first.",
             });
-            targetFarmId = newFarm._id;
           }
         }
       }
 
       // Check farm access permission
-      if (!canAccessFarm(req.user!, targetFarmId)) {
+      const hasAccess = await canAccessFarmAsync(req.user!, targetFarmId);
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: "Forbidden: You do not have permission to schedule audits for this farm.",
@@ -122,11 +123,20 @@ router.post(
 // @access Private (Authenticated users, scoped by farm permissions)
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
+    const authorizedFarmIds = await getAuthorizedFarmIds(req.user!);
+
+    // If non-admin user has 0 authorized farms, return empty list immediately
+    if (authorizedFarmIds !== null && authorizedFarmIds.length === 0) {
+      return res.json({
+        success: true,
+        count: 0,
+        data: [],
+      });
+    }
+
     const filter: Record<string, unknown> = {};
 
-    if (req.user?.role === "farm_manager" && req.user.farmId) {
-      filter.farmId = req.user.farmId;
-    } else if (req.query.farmId) {
+    if (req.query.farmId) {
       if (!mongoose.isValidObjectId(req.query.farmId)) {
         return res.status(400).json({
           success: false,
@@ -134,7 +144,8 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         });
       }
 
-      if (!canAccessFarm(req.user!, String(req.query.farmId))) {
+      const hasAccess = await canAccessFarmAsync(req.user!, String(req.query.farmId));
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: "Forbidden: You do not have permission to view audits for this farm.",
@@ -142,6 +153,8 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       }
 
       filter.farmId = req.query.farmId;
+    } else if (authorizedFarmIds !== null) {
+      filter.farmId = { $in: authorizedFarmIds };
     }
 
     const audits = await Audit.find(filter)
@@ -184,7 +197,8 @@ router.patch(
         });
       }
 
-      if (!canAccessFarm(req.user!, existingAudit.farmId)) {
+      const hasAccess = await canAccessFarmAsync(req.user!, existingAudit.farmId);
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: "Forbidden: You do not have permission to update audits for this farm.",
@@ -248,7 +262,8 @@ router.patch(
         });
       }
 
-      if (!canAccessFarm(req.user!, existingAudit.farmId)) {
+      const hasAccess = await canAccessFarmAsync(req.user!, existingAudit.farmId);
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: "Forbidden: You do not have permission to update audits for this farm.",

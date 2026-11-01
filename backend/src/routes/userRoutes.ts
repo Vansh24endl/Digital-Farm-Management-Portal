@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
 import User, { IUser } from "../models/User";
+import VeterinarianProfile from "../models/VeterinarianProfile";
 import { protect, AuthRequest } from "../middleware/authMiddleware";
 
 const router = Router();
@@ -110,6 +111,80 @@ router.put("/profile", protect, async (req: AuthRequest, res: Response) => {
     return res.status(500).json({
       success: false,
       message: error?.message || "Failed to update profile.",
+    });
+  }
+});
+
+/**
+ * POST /api/users/profile-photo
+ * Upload/update personal profile photo (base64 data URI or valid image URL).
+ * Validates size (< 5MB) and supported formats (data:image/jpeg, png, webp or http(s) url).
+ */
+router.post("/profile-photo", protect, async (req: AuthRequest, res: Response) => {
+  try {
+    const { photo } = req.body;
+
+    if (!photo || typeof photo !== "string" || !photo.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Profile photo data or URL is required.",
+      });
+    }
+
+    const trimmedPhoto = photo.trim();
+
+    // Check size limit (max 5MB: ~7MB in base64)
+    if (trimmedPhoto.length > 7 * 1024 * 1024) {
+      return res.status(400).json({
+        success: false,
+        message: "Photo size exceeds 5MB limit.",
+      });
+    }
+
+    // Validate format: either data:image/(jpeg|jpg|png|webp);base64,... or http/https URL
+    const isDataUri = /^data:image\/(jpeg|jpg|png|webp);base64,/i.test(trimmedPhoto);
+    const isHttpUrl = /^https?:\/\/.+/i.test(trimmedPhoto);
+
+    if (!isDataUri && !isHttpUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid image format. Supported formats: JPEG, PNG, WebP, or valid image URL.",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user!._id,
+      { $set: { profilePhoto: trimmedPhoto } },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // Also update VeterinarianProfile if user is veterinarian
+    if (user.role === "veterinarian") {
+      await VeterinarianProfile.findOneAndUpdate(
+        { userId: user._id },
+        { $set: { profilePhoto: trimmedPhoto } }
+      );
+    }
+
+    return res.json({
+      success: true,
+      message: "Profile photo updated successfully.",
+      data: {
+        profilePhoto: user.profilePhoto,
+      },
+    });
+  } catch (error: any) {
+    console.error("Update profile photo error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error?.message || "Failed to update profile photo.",
     });
   }
 });

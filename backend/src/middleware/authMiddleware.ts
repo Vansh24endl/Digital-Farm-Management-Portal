@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import User, { IUser, UserRole } from "../models/User";
+import Farm from "../models/Farm";
 
 export interface AuthRequest extends Request {
   user?: IUser;
@@ -29,7 +30,7 @@ export const protect = async (
 
   if (
     req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer ")
+    req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
   }
@@ -37,7 +38,7 @@ export const protect = async (
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: "Access denied. No authorization token provided.",
+      message: "Access denied. Authentication token is required.",
     });
   }
 
@@ -96,10 +97,64 @@ export const authorize = (...roles: UserRole[]) => {
 };
 
 /**
- * Helper to check whether a user has permission to access a specific farm.
- * - Admin: Full access to any farm.
- * - Farm Manager: Only their assigned farmId.
- * - Inspector / Veterinarian: Assigned farmId, or regional access if not restricted to a single farm.
+ * Resolves all farm ObjectIds accessible to the authenticated user based on role and ownership.
+ * Returns null if user is admin (unrestricted).
+ * Returns array of farm ObjectIds if user is farm_manager, veterinarian, or inspector.
+ */
+export async function getAuthorizedFarmIds(user: IUser): Promise<mongoose.Types.ObjectId[] | null> {
+  if (user.role === "admin") {
+    return null; // Admins have global access
+  }
+
+  const conditions: any[] = [];
+  if (user.farmId) {
+    conditions.push({ _id: user.farmId });
+  }
+
+  if (user.role === "farm_manager") {
+    // Farm managers own farms created by them
+    conditions.push({ ownerId: user._id });
+  }
+
+  if (conditions.length === 0) {
+    return []; // No farms associated with this user yet
+  }
+
+  const farms = await Farm.find({ $or: conditions }).select("_id");
+  return farms.map((f) => f._id as mongoose.Types.ObjectId);
+}
+
+/**
+ * Checks whether user has permission to access a specific farm (async to verify DB ownership).
+ */
+export async function canAccessFarmAsync(
+  user: IUser,
+  targetFarmId?: string | mongoose.Types.ObjectId | null
+): Promise<boolean> {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  if (!targetFarmId) return false;
+
+  const targetStr = String(targetFarmId);
+  const userFarmStr = user.farmId ? String(user.farmId) : null;
+
+  if (userFarmStr && userFarmStr === targetStr) {
+    return true;
+  }
+
+  if (user.role === "farm_manager") {
+    if (mongoose.isValidObjectId(targetFarmId)) {
+      const isOwner = await Farm.exists({ _id: targetFarmId, ownerId: user._id });
+      return Boolean(isOwner);
+    }
+    return false;
+  }
+
+  return false;
+}
+
+/**
+ * Synchronous farm permission check for backward compatibility.
  */
 export const canAccessFarm = (
   user: IUser,
@@ -107,25 +162,19 @@ export const canAccessFarm = (
 ): boolean => {
   if (!user) return false;
   if (user.role === "admin") return true;
-
-  if (!targetFarmId) {
-    // If resource has no specific farm, allow if user has general access
-    return true;
-  }
+  if (!targetFarmId) return false;
 
   const targetStr = String(targetFarmId);
   const userFarmStr = user.farmId ? String(user.farmId) : null;
 
   if (user.role === "farm_manager") {
-    // Farm managers are strictly bounded to their assigned farm
     return Boolean(userFarmStr && userFarmStr === targetStr);
   }
 
-  // Inspectors and Veterinarians
   if (userFarmStr) {
     return userFarmStr === targetStr;
   }
-  return true;
+  return false;
 };
 
 /**
@@ -135,19 +184,21 @@ export const requireFarmAccess = (
   source: "body" | "query" | "params" = "body",
   key = "farmId"
 ) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     const targetFarmId = req[source]?.[key];
-    if (targetFarmId && !canAccessFarm(req.user, targetFarmId)) {
-      return res.status(403).json({
-        success: false,
-        message: "Forbidden: You do not have permission to access or modify records for this farm.",
-      });
+    if (targetFarmId) {
+      const allowed = await canAccessFarmAsync(req.user, targetFarmId);
+      if (!allowed) {
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden: You do not have permission to access or modify records for this farm.",
+        });
+      }
     }
     next();
   };
 };
-

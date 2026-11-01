@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Alert, { IAlert, AlertType, AlertSeverity } from "../models/Alert";
 import { IUser } from "../models/User";
-import { canAccessFarm } from "../middleware/authMiddleware";
+import { canAccessFarm, canAccessFarmAsync, getAuthorizedFarmIds } from "../middleware/authMiddleware";
 
 export interface CreateAlertDto {
   farmId?: string | mongoose.Types.ObjectId | null;
@@ -26,7 +26,7 @@ class AlertService {
   /**
    * Helper to construct farm-scoping query based on user role and permissions.
    */
-  private getFarmScopeFilter(user: IUser, requestedFarmId?: string): Record<string, any> {
+  private async getFarmScopeFilter(user: IUser, requestedFarmId?: string): Promise<Record<string, any>> {
     if (user.role === "admin") {
       if (requestedFarmId && mongoose.isValidObjectId(requestedFarmId)) {
         return { farmId: new mongoose.Types.ObjectId(requestedFarmId) };
@@ -34,34 +34,26 @@ class AlertService {
       return {};
     }
 
-    if (user.role === "farm_manager") {
-      // Must be restricted to their assigned farm, or general system alerts (farmId: null)
-      if (user.farmId) {
-        return {
-          $or: [
-            { farmId: user.farmId },
-            { farmId: null },
-          ],
-        };
+    const authorizedFarmIds = await getAuthorizedFarmIds(user);
+    if (authorizedFarmIds && authorizedFarmIds.length > 0) {
+      if (requestedFarmId && mongoose.isValidObjectId(requestedFarmId)) {
+        const reqObjId = new mongoose.Types.ObjectId(requestedFarmId);
+        if (authorizedFarmIds.some((id) => id.equals(reqObjId))) {
+          return { farmId: reqObjId };
+        }
+        // Requested farm not authorized
+        return { _id: new mongoose.Types.ObjectId() };
       }
-      return { farmId: null };
-    }
-
-    // Inspector and Veterinarian
-    if (user.farmId) {
       return {
         $or: [
-          { farmId: user.farmId },
+          { farmId: { $in: authorizedFarmIds } },
           { farmId: null },
         ],
       };
     }
 
-    if (requestedFarmId && mongoose.isValidObjectId(requestedFarmId)) {
-      return { farmId: new mongoose.Types.ObjectId(requestedFarmId) };
-    }
-
-    return {};
+    // User has no farms: can only see general system alerts (farmId: null)
+    return { farmId: null };
   }
 
   /**
@@ -95,7 +87,7 @@ class AlertService {
     const limit = Math.min(100, Math.max(1, Number(filter.limit) || 20));
     const skip = (page - 1) * limit;
 
-    const query: Record<string, any> = this.getFarmScopeFilter(user, filter.farmId);
+    const query: Record<string, any> = await this.getFarmScopeFilter(user, filter.farmId);
 
     if (filter.type) {
       query.type = filter.type;
@@ -135,8 +127,9 @@ class AlertService {
    * Get unread count visible to the user.
    */
   async getUnreadCount(user: IUser): Promise<number> {
+    const scopeFilter = await this.getFarmScopeFilter(user);
     const query = {
-      ...this.getFarmScopeFilter(user),
+      ...scopeFilter,
       isRead: false,
     };
     return Alert.countDocuments(query);
@@ -156,7 +149,8 @@ class AlertService {
     }
 
     // Check farm access permission
-    if (!canAccessFarm(user, alert.farmId)) {
+    const hasAccess = await canAccessFarmAsync(user, alert.farmId);
+    if (!hasAccess) {
       const err = new Error("Forbidden: You do not have permission to modify alerts for this farm.");
       (err as any).status = 403;
       throw err;
@@ -174,8 +168,9 @@ class AlertService {
    * Mark all visible alerts as read for the authenticated user.
    */
   async markAllAsRead(user: IUser): Promise<number> {
+    const scopeFilter = await this.getFarmScopeFilter(user);
     const query = {
-      ...this.getFarmScopeFilter(user),
+      ...scopeFilter,
       isRead: false,
     };
 
@@ -196,7 +191,8 @@ class AlertService {
       return false;
     }
 
-    if (!canAccessFarm(user, alert.farmId)) {
+    const hasAccess = await canAccessFarmAsync(user, alert.farmId);
+    if (!hasAccess) {
       const err = new Error("Forbidden: You do not have permission to dismiss alerts for this farm.");
       (err as any).status = 403;
       throw err;

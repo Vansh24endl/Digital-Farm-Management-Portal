@@ -1,4 +1,3 @@
-
 import { Router, Response } from "express";
 import Farm from "../models/Farm";
 import Visitor from "../models/Visitor";
@@ -6,18 +5,39 @@ import Audit from "../models/Audit";
 import DiseaseReport from "../models/DiseaseReport";
 import Inventory from "../models/Inventory";
 import ChecklistSubmission from "../models/ChecklistSubmission";
-import { protect, AuthRequest } from "../middleware/authMiddleware";
+import { protect, AuthRequest, getAuthorizedFarmIds } from "../middleware/authMiddleware";
 
 const router = Router();
 
 // Protect all dashboard routes
 router.use(protect);
 
-// ─── Stats endpoint (preserved for backwards compatibility) ───────────────────
+// ─── Stats endpoint (Strict user ownership isolation) ─────────────────────────
 router.get("/stats", async (req: AuthRequest, res: Response) => {
   try {
-    const isFarmManager = Boolean(req.user?.role === "farm_manager" && req.user.farmId);
-    const farmFilter: Record<string, any> = isFarmManager ? { farmId: req.user!.farmId } : {};
+    const authorizedFarmIds = await getAuthorizedFarmIds(req.user!);
+
+    // New or unassigned user with 0 farms sees zero statistics
+    if (authorizedFarmIds !== null && authorizedFarmIds.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          totalFarms: 0,
+          totalVisitors: 0,
+          totalAudits: 0,
+          pendingAudits: 0,
+          totalDiseaseReports: 0,
+          activeDiseaseReports: 0,
+          totalInventoryItems: 0,
+          lowStockItems: 0,
+        },
+      });
+    }
+
+    const farmFilter: Record<string, any> =
+      authorizedFarmIds !== null ? { farmId: { $in: authorizedFarmIds } } : {};
+    const farmIdFilter: Record<string, any> =
+      authorizedFarmIds !== null ? { _id: { $in: authorizedFarmIds } } : {};
 
     const [
       totalFarms,
@@ -29,23 +49,23 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
       totalInventoryItems,
       lowStockItems,
     ] = await Promise.all([
-      isFarmManager ? Farm.countDocuments({ _id: req.user!.farmId } as any) : Farm.countDocuments(),
-      Visitor.countDocuments(farmFilter as any),
-      Audit.countDocuments(farmFilter as any),
+      Farm.countDocuments(farmIdFilter),
+      Visitor.countDocuments(farmFilter),
+      Audit.countDocuments(farmFilter),
       Audit.countDocuments({
         ...farmFilter,
         status: { $in: ["pending", "in-progress"] },
-      } as any),
-      DiseaseReport.countDocuments(farmFilter as any),
+      }),
+      DiseaseReport.countDocuments(farmFilter),
       DiseaseReport.countDocuments({
         ...farmFilter,
         status: { $in: ["reported", "investigating"] },
-      } as any),
-      Inventory.countDocuments(farmFilter as any),
+      }),
+      Inventory.countDocuments(farmFilter),
       Inventory.countDocuments({
         ...farmFilter,
         $expr: { $lte: ["$quantity", "$minimumStock"] },
-      } as any),
+      }),
     ]);
 
     return res.json({
@@ -63,7 +83,6 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error("Dashboard stats error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Failed to fetch dashboard statistics",
@@ -71,13 +90,44 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
   }
 });
 
-// ─── Comprehensive dashboard summary (includes checklist metrics) ─────────────
+// ─── Comprehensive dashboard summary (Strict user ownership isolation) ───────
 router.get("/summary", async (req: AuthRequest, res: Response) => {
   try {
-    const isFarmManager = Boolean(req.user?.role === "farm_manager" && req.user.farmId);
-    const farmFilter: Record<string, any> = isFarmManager ? { farmId: req.user!.farmId } : {};
+    const authorizedFarmIds = await getAuthorizedFarmIds(req.user!);
 
-    const checklistMatchStage = isFarmManager ? [{ $match: farmFilter }] : [];
+    // New or unassigned user with 0 farms sees zero statistics and clean empty state
+    if (authorizedFarmIds !== null && authorizedFarmIds.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          totalFarms: 0,
+          totalVisitors: 0,
+          totalAudits: 0,
+          pendingAudits: 0,
+          totalDiseaseReports: 0,
+          activeDiseaseReports: 0,
+          totalInventoryItems: 0,
+          lowStockItems: 0,
+          checklistSummary: {
+            totalSubmissions: 0,
+            totalItems: 0,
+            passed: 0,
+            warning: 0,
+            critical: 0,
+            compliancePercentage: 0,
+          },
+          recentChecklistActivity: [],
+        },
+      });
+    }
+
+    const farmFilter: Record<string, any> =
+      authorizedFarmIds !== null ? { farmId: { $in: authorizedFarmIds } } : {};
+    const farmIdFilter: Record<string, any> =
+      authorizedFarmIds !== null ? { _id: { $in: authorizedFarmIds } } : {};
+
+    const checklistMatchStage =
+      authorizedFarmIds !== null ? [{ $match: { farmId: { $in: authorizedFarmIds } } }] : [];
 
     const [
       totalFarms,
@@ -91,20 +141,20 @@ router.get("/summary", async (req: AuthRequest, res: Response) => {
       checklistAgg,
       recentSubmissions,
     ] = await Promise.all([
-      isFarmManager ? Farm.countDocuments({ _id: req.user!.farmId } as any) : Farm.countDocuments(),
-      Visitor.countDocuments(farmFilter as any),
-      Audit.countDocuments(farmFilter as any),
-      Audit.countDocuments({ ...farmFilter, status: { $in: ["pending", "in-progress"] } } as any),
-      DiseaseReport.countDocuments(farmFilter as any),
+      Farm.countDocuments(farmIdFilter),
+      Visitor.countDocuments(farmFilter),
+      Audit.countDocuments(farmFilter),
+      Audit.countDocuments({ ...farmFilter, status: { $in: ["pending", "in-progress"] } }),
+      DiseaseReport.countDocuments(farmFilter),
       DiseaseReport.countDocuments({
         ...farmFilter,
         status: { $in: ["reported", "investigating"] },
-      } as any),
-      Inventory.countDocuments(farmFilter as any),
+      }),
+      Inventory.countDocuments(farmFilter),
       Inventory.countDocuments({
         ...farmFilter,
         $expr: { $lte: ["$quantity", "$minimumStock"] },
-      } as any),
+      }),
 
       ChecklistSubmission.aggregate([
         ...checklistMatchStage,
@@ -120,7 +170,7 @@ router.get("/summary", async (req: AuthRequest, res: Response) => {
         },
       ]),
 
-      ChecklistSubmission.find(farmFilter as any)
+      ChecklistSubmission.find(farmFilter)
         .populate("farmId", "name")
         .sort({ submittedAt: -1 })
         .limit(5)
@@ -175,7 +225,6 @@ router.get("/summary", async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error("Dashboard summary error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Failed to fetch dashboard summary",

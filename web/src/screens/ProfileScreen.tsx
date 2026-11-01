@@ -63,10 +63,19 @@ export const ProfileScreen: React.FC = () => {
       })
     : 'Oct 2026';
 
+  const getInitials = (name?: string) => {
+    if (!name || !name.trim()) return 'FD';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
   const avatarUrl =
     dbUser?.profilePhoto ||
     userProfile.avatar ||
-    'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400';
+    currentUser?.profilePhoto ||
+    (typeof window !== 'undefined' ? localStorage.getItem('farmdrishti_avatar') : null) ||
+    '';
 
   const isVet = displayRole === 'veterinarian';
   const isAdmin = displayRole === 'admin';
@@ -77,11 +86,23 @@ export const ProfileScreen: React.FC = () => {
       <div className="fd-card rounded-[3px] p-5 relative overflow-hidden border border-[var(--border)]">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 relative z-10">
           <div className="relative flex-shrink-0 group">
-            <img
-              src={avatarUrl}
-              alt={displayName}
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-[3px] object-cover border border-[var(--border)] shadow-md"
-            />
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={displayName}
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-[3px] object-cover border border-[var(--border)] shadow-md"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-[3px] flex items-center justify-center font-bold font-display text-2xl border border-[var(--border)] shadow-md"
+                style={{ background: 'rgba(163, 230, 53, 0.15)', color: 'var(--lime)' }}
+              >
+                {getInitials(displayName)}
+              </div>
+            )}
             <button
               onClick={() => openModal('change-dp')}
               className="absolute inset-0 rounded-[2px] bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-[var(--lime)] text-[10px] font-mono font-bold transition-opacity"

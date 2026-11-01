@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import type { ScreenId } from '../types';
 import {
-  ChevronLeft, Bell, Layers, User, Camera, Settings, LogOut, ChevronDown, ShieldCheck,
+  ChevronLeft, Bell, User, Camera, Settings, LogOut, ChevronDown, ShieldCheck,
   Sun, Moon, Globe,
 } from 'lucide-react';
 
@@ -26,7 +26,7 @@ const screenTitles: Record<ScreenId, { title: string; subtitle: string }> = {
 export const Navbar: React.FC = () => {
   const {
     activeScreen, navigateTo, goBack, userProfile, alerts,
-    setIsPrototypeDrawerOpen, setIsAlertDrawerOpen,
+    setIsAlertDrawerOpen,
     isProfileDropdownOpen, setIsProfileDropdownOpen, openModal,
     isAuthenticated, currentUser, logout,
     theme, toggleTheme, language, setLanguage, t,
@@ -36,6 +36,13 @@ export const Navbar: React.FC = () => {
   const langDropdownRef = useRef<HTMLDivElement>(null);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const unreadCount = alerts.filter((a) => !a.read).length;
+
+  const getInitials = (name?: string) => {
+    if (!name || !name.trim()) return 'FD';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
 
   const getTitleInfo = () => {
     const fallback = screenTitles[activeScreen] || screenTitles.dashboard;
@@ -92,12 +99,28 @@ export const Navbar: React.FC = () => {
                 aria-label="Profile menu"
               >
                 <div className="relative">
-                  <img
-                    src={userProfile.avatar}
-                    alt={userProfile.name}
-                    className="w-8 h-8 rounded-sm object-cover"
-                    style={{ border: '1px solid var(--border)' }}
-                  />
+                  {userProfile.avatar ? (
+                    <img
+                      src={userProfile.avatar}
+                      alt={userProfile.name}
+                      className="w-8 h-8 rounded-sm object-cover"
+                      style={{ border: '1px solid var(--border)' }}
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="w-8 h-8 rounded-sm flex items-center justify-center font-bold font-display text-xs"
+                      style={{
+                        background: 'rgba(163, 230, 53, 0.15)',
+                        color: 'var(--lime)',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      {getInitials(userProfile.name || currentUser?.name)}
+                    </div>
+                  )}
                   <span
                     className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
                     style={{ background: 'var(--success)', border: '2px solid var(--bg-panel)' }}
@@ -268,19 +291,6 @@ export const Navbar: React.FC = () => {
             ) : (
               <Moon className="w-4 h-4 text-[var(--text-primary)] transition-transform hover:-rotate-12" />
             )}
-          </button>
-
-          <button
-            onClick={() => setIsPrototypeDrawerOpen(true)}
-            className="fd-btn-ghost flex items-center gap-1.5"
-            title="Switch screens"
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span className="hidden md:inline text-xs">{t('common.screens')}</span>
-            <span
-              className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm"
-              style={{ background: 'var(--lime)', color: '#111311' }}
-            >13</span>
           </button>
 
           <button

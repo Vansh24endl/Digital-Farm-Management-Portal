@@ -7,6 +7,8 @@ import {
   authorize,
   AuthRequest,
   canAccessFarm,
+  canAccessFarmAsync,
+  getAuthorizedFarmIds,
 } from "../middleware/authMiddleware";
 import { alertService } from "../services/alertService";
 
@@ -37,22 +39,21 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       if (req.user?.farmId) {
         targetFarmId = req.user.farmId;
       } else {
-        const existingFarm = await Farm.findOne();
-        if (existingFarm) {
-          targetFarmId = existingFarm._id;
+        const authorizedFarmIds = await getAuthorizedFarmIds(req.user!);
+        if (authorizedFarmIds && authorizedFarmIds.length > 0) {
+          targetFarmId = authorizedFarmIds[0];
         } else {
-          const newFarm = await Farm.create({
-            name: "Primary Livestock Facility",
-            farmType: animalType === "pig" ? "pig" : "poultry",
-            location: location || "Sector 1",
+          return res.status(400).json({
+            success: false,
+            message: "A valid farmId is required. Please select or create an authorized farm first.",
           });
-          targetFarmId = newFarm._id;
         }
       }
     }
 
     // Farm-level IDOR check
-    if (!canAccessFarm(req.user!, targetFarmId)) {
+    const hasAccess = await canAccessFarmAsync(req.user!, targetFarmId);
+    if (!hasAccess) {
       return res.status(403).json({
         success: false,
         message: "Forbidden: You do not have permission to file reports for this farm.",
@@ -107,11 +108,20 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 // @access Private (Authenticated users, scoped by farm permissions)
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
+    const authorizedFarmIds = await getAuthorizedFarmIds(req.user!);
+
+    // If non-admin user has 0 authorized farms, return empty list immediately
+    if (authorizedFarmIds !== null && authorizedFarmIds.length === 0) {
+      return res.json({
+        success: true,
+        count: 0,
+        data: [],
+      });
+    }
+
     const filter: Record<string, unknown> = {};
 
-    if (req.user?.role === "farm_manager" && req.user.farmId) {
-      filter.farmId = req.user.farmId;
-    } else if (req.query.farmId) {
+    if (req.query.farmId) {
       if (!mongoose.isValidObjectId(req.query.farmId)) {
         return res.status(400).json({
           success: false,
@@ -119,7 +129,8 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         });
       }
 
-      if (!canAccessFarm(req.user!, String(req.query.farmId))) {
+      const hasAccess = await canAccessFarmAsync(req.user!, String(req.query.farmId));
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: "Forbidden: You do not have permission to view reports for this farm.",
@@ -127,6 +138,8 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       }
 
       filter.farmId = req.query.farmId;
+    } else if (authorizedFarmIds !== null) {
+      filter.farmId = { $in: authorizedFarmIds };
     }
 
     const reports = await DiseaseReport.find(filter)
@@ -171,7 +184,8 @@ router.patch(
         });
       }
 
-      if (!canAccessFarm(req.user!, existingReport.farmId)) {
+      const hasAccess = await canAccessFarmAsync(req.user!, existingReport.farmId);
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: "Forbidden: You do not have permission to review cases for this farm.",

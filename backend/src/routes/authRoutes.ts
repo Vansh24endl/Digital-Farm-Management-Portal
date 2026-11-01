@@ -95,6 +95,7 @@ router.post("/register", async (req, res: Response) => {
         role: user.role,
         farmId: user.farmId,
         phone: user.phone,
+        profilePhoto: user.profilePhoto || "",
       },
     });
   } catch (error: any) {
@@ -164,6 +165,7 @@ router.post("/login", async (req, res: Response) => {
         role: user.role,
         farmId: user.farmId,
         phone: user.phone,
+        profilePhoto: user.profilePhoto || "",
       },
     });
   } catch (error: any) {
@@ -202,11 +204,12 @@ router.get("/me", protect, async (req: AuthRequest, res: Response) => {
 // @access  Private
 router.put("/profile", protect, async (req: AuthRequest, res: Response) => {
   try {
-    const { name, phone } = req.body;
+    const { name, phone, profilePhoto } = req.body;
     const updates: Partial<IUser> = {};
 
     if (name?.trim()) updates.name = name.trim();
     if (typeof phone === "string") updates.phone = phone.trim();
+    if (typeof profilePhoto === "string") updates.profilePhoto = profilePhoto.trim();
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user!._id,

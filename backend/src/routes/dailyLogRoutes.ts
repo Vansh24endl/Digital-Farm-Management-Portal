@@ -2,7 +2,13 @@ import { Router, Response } from "express";
 import mongoose from "mongoose";
 import DailyLog from "../models/DailyLog";
 import Alert from "../models/Alert";
-import { protect, AuthRequest, canAccessFarm } from "../middleware/authMiddleware";
+import {
+  protect,
+  AuthRequest,
+  canAccessFarm,
+  canAccessFarmAsync,
+  getAuthorizedFarmIds,
+} from "../middleware/authMiddleware";
 
 const router = Router();
 
@@ -38,7 +44,8 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       });
     }
 
-    if (!canAccessFarm(req.user!, String(farmId))) {
+    const hasAccess = await canAccessFarmAsync(req.user!, String(farmId));
+    if (!hasAccess) {
       return res.status(403).json({
         success: false,
         message: "Forbidden: You are not authorized to log data for this farm.",
@@ -140,18 +147,30 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
     const { farmId, limit = 30 } = req.query;
+    const authorizedFarmIds = await getAuthorizedFarmIds(req.user!);
+
+    // If non-admin user has 0 authorized farms, return empty list immediately
+    if (authorizedFarmIds !== null && authorizedFarmIds.length === 0) {
+      return res.json({
+        success: true,
+        count: 0,
+        data: [],
+      });
+    }
+
     let query: Record<string, any> = {};
 
     if (farmId) {
       if (!mongoose.isValidObjectId(String(farmId))) {
         return res.status(400).json({ success: false, message: "Invalid farm ID." });
       }
-      if (!canAccessFarm(req.user!, String(farmId))) {
+      const hasAccess = await canAccessFarmAsync(req.user!, String(farmId));
+      if (!hasAccess) {
         return res.status(403).json({ success: false, message: "Forbidden: No access to this farm." });
       }
       query.farmId = farmId;
-    } else if (req.user?.role === "farm_manager" && req.user.farmId) {
-      query.farmId = req.user.farmId;
+    } else if (authorizedFarmIds !== null) {
+      query.farmId = { $in: authorizedFarmIds };
     }
 
     const logs = await DailyLog.find(query)
@@ -181,15 +200,28 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 router.get("/latest", async (req: AuthRequest, res: Response) => {
   try {
     const { farmId } = req.query;
+    const authorizedFarmIds = await getAuthorizedFarmIds(req.user!);
+
+    if (authorizedFarmIds !== null && authorizedFarmIds.length === 0) {
+      return res.json({
+        success: true,
+        data: null,
+      });
+    }
+
     let query: Record<string, any> = {};
 
     if (farmId) {
       if (!mongoose.isValidObjectId(String(farmId))) {
         return res.status(400).json({ success: false, message: "Invalid farm ID." });
       }
+      const hasAccess = await canAccessFarmAsync(req.user!, String(farmId));
+      if (!hasAccess) {
+        return res.status(403).json({ success: false, message: "Forbidden: No access to this farm." });
+      }
       query.farmId = farmId;
-    } else if (req.user?.role === "farm_manager" && req.user.farmId) {
-      query.farmId = req.user.farmId;
+    } else if (authorizedFarmIds !== null) {
+      query.farmId = { $in: authorizedFarmIds };
     }
 
     const latest = await DailyLog.findOne(query)

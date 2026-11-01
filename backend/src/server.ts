@@ -1,11 +1,14 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
 import path from "path";
+import dotenv from "dotenv";
 
+// Load environment variables immediately before any other module evaluation
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 dotenv.config();
-import connectDB from "./config/db";
+
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+import { connectDB, disconnectDB } from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import farmRoutes from "./routes/farmRoutes";
 import auditRoutes from "./routes/auditRoutes";
@@ -21,18 +24,18 @@ import vetProfileRoutes from "./routes/vetProfileRoutes";
 import userRoutes from "./routes/userRoutes";
 import adminRoutes from "./routes/adminRoutes";
 
-dotenv.config();
-
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Public health check endpoint
+// Public health check endpoint reporting DB connection state
 app.get("/api/health", (_req, res) => {
-  res.json({
-    success: true,
-    message: "FarmDrishti API is running",
+  const isConnected = mongoose.connection.readyState === 1;
+  res.status(isConnected ? 200 : 503).json({
+    success: isConnected,
+    message: isConnected ? "FarmDrishti API is healthy and connected to database" : "Database connection unavailable",
+    database: isConnected ? "connected" : "disconnected",
     timestamp: new Date().toISOString(),
   });
 });
@@ -64,18 +67,38 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 const PORT = Number(process.env.PORT) || 5000;
+let server: any = null;
 
 if (process.env.NODE_ENV !== "test") {
   connectDB()
     .then(() => {
-      app.listen(PORT, "0.0.0.0", () => {
-        console.log(`FarmDrishti API running on port ${PORT}`);
+      server = app.listen(PORT, "0.0.0.0", () => {
+        console.log(`[Server] FarmDrishti API running on port ${PORT}`);
       });
     })
     .catch((error: unknown) => {
-      console.error("Database connection failed:", error);
+      console.error("[Server] Fatal error: Database connection failed during startup:", error);
       process.exit(1);
     });
+
+  // Graceful shutdown handlers
+  const handleShutdown = async (signal: string) => {
+    console.log(`\n[Server] Received ${signal}. Initiating graceful shutdown...`);
+    if (server) {
+      server.close(() => {
+        console.log("[Server] HTTP server closed.");
+      });
+    }
+    try {
+      await disconnectDB();
+    } catch (e) {
+      console.error("[Server] Error closing database connection:", e);
+    }
+    process.exit(0);
+  };
+
+  process.on("SIGINT", () => handleShutdown("SIGINT"));
+  process.on("SIGTERM", () => handleShutdown("SIGTERM"));
 }
 
 export { app };

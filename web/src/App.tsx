@@ -112,7 +112,7 @@ const MainContent: React.FC = () => {
       <Navbar />
       <div className="flex flex-1 w-full">
         <Sidebar />
-        <main className="flex-1 min-w-0 w-full p-3 sm:p-4 md:p-6 overflow-x-hidden">
+        <main className="flex-1 min-w-0 w-full p-3 sm:p-4 md:p-6 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-6 overflow-x-hidden">
           {renderScreen()}
         </main>
       </div>

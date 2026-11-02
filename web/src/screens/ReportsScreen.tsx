@@ -238,10 +238,10 @@ export const ReportsScreen: React.FC = () => {
 
         {/* Custom Date Pickers */}
         {preset === 'custom' && (
-          <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-mono bg-[var(--bg-main)] p-2.5 rounded-sm border border-[var(--border-dim)]">
+          <div className="grid grid-cols-1 sm:flex sm:flex-wrap sm:items-center gap-3 pt-1 text-xs font-mono bg-[var(--bg-main)] p-2.5 rounded-sm border border-[var(--border-dim)]">
             <span className="text-[var(--text-dim)]">Custom Period:</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[var(--text-secondary)]">From:</span>
+            <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+              <span className="text-[var(--text-secondary)] min-w-[36px]">From:</span>
               <input
                 type="date"
                 value={customStart}
@@ -249,11 +249,11 @@ export const ReportsScreen: React.FC = () => {
                   setCustomStart(e.target.value);
                   setPage(1);
                 }}
-                className="fd-input px-2 py-1 text-xs rounded-sm"
+                className="fd-input px-2 py-1 text-xs rounded-sm w-full sm:w-auto"
               />
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[var(--text-secondary)]">To:</span>
+            <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+              <span className="text-[var(--text-secondary)] min-w-[36px]">To:</span>
               <input
                 type="date"
                 value={customEnd}
@@ -261,7 +261,7 @@ export const ReportsScreen: React.FC = () => {
                   setCustomEnd(e.target.value);
                   setPage(1);
                 }}
-                className="fd-input px-2 py-1 text-xs rounded-sm"
+                className="fd-input px-2 py-1 text-xs rounded-sm w-full sm:w-auto"
               />
             </div>
           </div>

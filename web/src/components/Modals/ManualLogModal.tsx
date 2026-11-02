@@ -101,9 +101,9 @@ export const ManualLogModal: React.FC<ManualLogModalProps> = ({ onSaved }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
       <div
-        className="w-full max-w-2xl rounded-sm p-5 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto"
+        className="w-full max-w-2xl rounded-sm p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90dvh] sm:max-h-[92vh] overflow-y-auto"
         style={{
           background: 'var(--bg-panel)',
           border: '1.5px solid var(--border)',
@@ -327,11 +327,11 @@ export const ManualLogModal: React.FC<ManualLogModalProps> = ({ onSaved }) => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-2 sm:gap-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
             <button
               type="button"
               onClick={closeModal}
-              className="fd-btn-ghost text-xs"
+              className="fd-btn-ghost text-xs w-full sm:w-auto justify-center"
               disabled={submitting}
             >
               Cancel
@@ -339,7 +339,7 @@ export const ManualLogModal: React.FC<ManualLogModalProps> = ({ onSaved }) => {
             <button
               type="submit"
               disabled={submitting}
-              className="fd-btn text-xs flex items-center gap-1.5"
+              className="fd-btn text-xs flex items-center justify-center gap-1.5 w-full sm:w-auto"
               style={{ background: 'var(--lime)', color: '#111311', borderColor: 'var(--lime)' }}
             >
               {submitting ? (

@@ -11,7 +11,6 @@ import {
   Eye,
   EyeOff,
   Building2,
-  Sparkles,
 } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
@@ -81,24 +80,10 @@ export const AuthModal: React.FC = () => {
     }
   };
 
-  const fillDemoCredentials = (demoRole: 'admin' | 'veterinarian' | 'farm_manager') => {
-    if (demoRole === 'admin') {
-      setEmail('admin@farmdrishti.org');
-      setPassword('Admin@1234');
-    } else if (demoRole === 'veterinarian') {
-      setEmail('ananya.reyes@biosec.vet');
-      setPassword('VetSecret@123');
-    } else {
-      setEmail('manager@greenvalley.farm');
-      setPassword('Manager@123');
-    }
-    setError('');
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
       <div
-        className="w-full max-w-md rounded-[3px] overflow-hidden shadow-2xl relative bg-[var(--bg-panel)] border border-[var(--border)]"
+        className="w-full max-w-md rounded-[3px] overflow-hidden shadow-2xl relative bg-[var(--bg-panel)] border border-[var(--border)] max-h-[90dvh] sm:max-h-[92vh] flex flex-col"
       >
         {/* Top Header */}
         <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
@@ -165,7 +150,7 @@ export const AuthModal: React.FC = () => {
         )}
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-3 font-sans">
+        <form onSubmit={handleSubmit} className="p-4 space-y-3 font-sans overflow-y-auto flex-1">
           {mode === 'register' && (
             <>
               <div>
@@ -210,6 +195,8 @@ export const AuthModal: React.FC = () => {
                     <Phone className="w-4 h-4 text-[var(--text-dim)] absolute left-3 top-2.5" />
                     <input
                       type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
                       placeholder="+91 98765 43210"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
@@ -296,38 +283,6 @@ export const AuthModal: React.FC = () => {
             )}
           </button>
         </form>
-
-        {/* Demo Fast-Fill helper for Viva / Presentation */}
-        {mode === 'login' && (
-          <div className="p-3 pt-0 border-t border-[var(--border-dim)]">
-            <p className="text-[10px] text-[var(--text-dim)] mb-1.5 flex items-center gap-1.5 font-mono uppercase tracking-wider">
-              <Sparkles className="w-3 h-3 text-[var(--lime)]" /> Quick Credentials:
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() => fillDemoCredentials('admin')}
-                className="px-2 py-0.5 rounded-[2px] text-[10px] font-mono bg-[var(--bg-raised)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-dim)]"
-              >
-                Admin (admin@farmdrishti.org)
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoCredentials('veterinarian')}
-                className="px-2 py-0.5 rounded-[2px] text-[10px] font-mono bg-[var(--bg-raised)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-dim)]"
-              >
-                Vet (ananya.reyes@biosec.vet)
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoCredentials('farm_manager')}
-                className="px-2 py-0.5 rounded-[2px] text-[10px] font-mono bg-[var(--bg-raised)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-dim)]"
-              >
-                Manager (manager@greenvalley.farm)
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

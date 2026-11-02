@@ -43,7 +43,7 @@ const badgeStyle: Record<string, React.CSSProperties> = {
 
 const ROLE_ALLOWED_SCREENS: Record<string, ScreenId[]> = {
   admin: ['dashboard', 'farm-map', 'surveillance', 'health', 'audits', 'checklist', 'visitors', 'weather', 'emergency', 'training', 'inventory', 'reports', 'profile', 'vet-profile'],
-  farm_manager: ['dashboard', 'farm-map', 'health', 'checklist', 'visitors', 'inventory', 'weather', 'training', 'emergency', 'profile'],
+  farm_manager: ['dashboard', 'farm-map', 'audits', 'health', 'checklist', 'visitors', 'inventory', 'weather', 'training', 'emergency', 'profile'],
   veterinarian: ['dashboard', 'vet-profile', 'surveillance', 'health', 'weather', 'emergency', 'training', 'reports', 'farm-map', 'profile'],
   inspector: ['dashboard', 'audits', 'reports', 'checklist', 'farm-map', 'weather', 'training', 'profile'],
 };

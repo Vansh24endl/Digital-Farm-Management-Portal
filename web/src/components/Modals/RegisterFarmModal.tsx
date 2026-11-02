@@ -238,9 +238,9 @@ export const RegisterFarmModal: React.FC<RegisterFarmModalProps> = ({ onFarmCrea
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
       <div
-        className="w-full max-w-2xl rounded-sm p-5 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto"
+        className="w-full max-w-2xl rounded-sm p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90dvh] sm:max-h-[92vh] overflow-y-auto"
         style={{
           background: 'var(--bg-panel)',
           border: '1.5px solid var(--border)',
@@ -305,7 +305,7 @@ export const RegisterFarmModal: React.FC<RegisterFarmModalProps> = ({ onFarmCrea
             <label className="fd-label block mb-1">
               Livestock Type <span className="text-red-400">*</span>
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {[
                 { type: 'poultry', label: '🐔 Poultry (कुक्कुट)', desc: 'Broiler / Layer' },
                 { type: 'pig',     label: '🐖 Swine (शूकर)',   desc: 'Breeding / Finisher' },
@@ -336,7 +336,7 @@ export const RegisterFarmModal: React.FC<RegisterFarmModalProps> = ({ onFarmCrea
 
           {/* Location & GPS Section */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
               <label className="fd-label">
                 Farm GPS Location & Satellite Pin <span className="text-red-400">*</span>
               </label>
@@ -346,7 +346,7 @@ export const RegisterFarmModal: React.FC<RegisterFarmModalProps> = ({ onFarmCrea
                 type="button"
                 onClick={handleDetectGPS}
                 disabled={isDetectingGPS}
-                className="fd-btn text-xs py-1 px-2.5 flex items-center gap-1.5"
+                className="fd-btn text-xs py-1.5 px-2.5 flex items-center justify-center gap-1.5 w-full sm:w-auto"
                 style={{ background: 'var(--lime)', color: '#111311', borderColor: 'var(--lime)' }}
               >
                 <Navigation className={`w-3.5 h-3.5 ${isDetectingGPS ? 'animate-spin' : ''}`} />
@@ -427,11 +427,11 @@ export const RegisterFarmModal: React.FC<RegisterFarmModalProps> = ({ onFarmCrea
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-2 sm:gap-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
             <button
               type="button"
               onClick={closeModal}
-              className="fd-btn-ghost text-xs"
+              className="fd-btn-ghost text-xs w-full sm:w-auto justify-center"
               disabled={submitting}
             >
               Cancel
@@ -439,7 +439,7 @@ export const RegisterFarmModal: React.FC<RegisterFarmModalProps> = ({ onFarmCrea
             <button
               type="submit"
               disabled={submitting}
-              className="fd-btn text-xs flex items-center gap-1.5"
+              className="fd-btn text-xs flex items-center justify-center gap-1.5 w-full sm:w-auto"
               style={{ background: 'var(--lime)', color: '#111311', borderColor: 'var(--lime)' }}
             >
               {submitting ? (

@@ -94,15 +94,14 @@ export const ChecklistScreen: React.FC = () => {
         </div>
 
         {/* Zone Selector */}
-        <div className="flex flex-col gap-1 self-start">
+        <div className="flex flex-col gap-1 w-full sm:w-auto self-stretch sm:self-start">
           <label className="fd-label" htmlFor="zone-select">Inspection Zone</label>
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <select
               id="zone-select"
               value={selectedZone}
               onChange={(e) => setSelectedZone(e.target.value)}
-              className="fd-select pr-8"
-              style={{ minWidth: '220px' }}
+              className="fd-select pr-8 w-full sm:w-auto sm:min-w-[220px]"
             >
               {zones.map((zone) => (
                 <option key={zone} value={zone}>{zone}</option>

@@ -10,10 +10,10 @@ export const SOPReaderModal: React.FC = () => {
   const topic = activeTrainingTopic;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-2xl bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-2xl bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl max-h-[90dvh] sm:max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
+        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <BookOpen className="w-5 h-5 text-[var(--lime)]" />
             <div>
@@ -29,7 +29,7 @@ export const SOPReaderModal: React.FC = () => {
         </div>
 
         {/* Content Body */}
-        <div className="p-4 space-y-4 max-h-[75vh] overflow-y-auto font-sans">
+        <div className="p-4 space-y-4 overflow-y-auto font-sans flex-1">
           {/* Hero Banner */}
           <div className="relative rounded-[2px] overflow-hidden h-36 border border-[var(--border-dim)] bg-[var(--bg-raised)]">
             <img src={topic.image} alt={topic.title} className="w-full h-full object-cover opacity-90" />
@@ -79,8 +79,8 @@ export const SOPReaderModal: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="p-3 bg-[var(--bg-main)] border-t border-[var(--border)] flex items-center justify-between">
-          <button onClick={closeModal} className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider">
+        <div className="p-3 bg-[var(--bg-main)] border-t border-[var(--border)] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 flex-shrink-0">
+          <button onClick={closeModal} className="fd-btn-ghost px-3.5 py-2 text-xs font-mono uppercase tracking-wider w-full sm:w-auto justify-center">
             Close Reader
           </button>
           <button
@@ -88,7 +88,7 @@ export const SOPReaderModal: React.FC = () => {
               showToast(`Completed reading: ${topic.title}`);
               closeModal();
             }}
-            className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5"
+            className="fd-btn px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 w-full sm:w-auto"
           >
             <ShieldCheck className="w-3.5 h-3.5" /> Mark SOP Read & Complete
           </button>

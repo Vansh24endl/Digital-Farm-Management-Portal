@@ -42,8 +42,8 @@ export const EditProfileModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl max-h-[90dvh] sm:max-h-[92vh] overflow-y-auto">
         {/* Header */}
         <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
           <h3 className="text-sm font-bold font-display uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
@@ -79,7 +79,9 @@ export const EditProfileModal: React.FC = () => {
               <Phone className="w-3 h-3 text-[var(--lime)]" /> Phone Number
             </label>
             <input
-              type="text"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               value={formData.phone}
               onChange={e => setFormData({ ...formData, phone: e.target.value })}
               className="fd-input w-full text-xs font-mono"
@@ -91,18 +93,18 @@ export const EditProfileModal: React.FC = () => {
             Email and role cannot be changed here. Contact an administrator if needed.
           </p>
 
-          <div className="pt-2.5 border-t border-[var(--border-dim)] flex items-center justify-end gap-2">
+          <div className="pt-2.5 border-t border-[var(--border-dim)] flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-2">
             <button
               type="button"
               onClick={closeModal}
-              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider"
+              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider w-full sm:w-auto justify-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 disabled:opacity-50"
+              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50 w-full sm:w-auto"
             >
               {isSubmitting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

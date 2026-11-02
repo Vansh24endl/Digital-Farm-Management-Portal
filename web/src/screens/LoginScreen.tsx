@@ -189,7 +189,7 @@ export const LoginScreen: React.FC = () => {
           </p>
 
           {/* Biosecurity Feature Badges */}
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div className="p-3 rounded-sm border border-[var(--border-dim)] bg-[var(--card-bg)] space-y-1">
               <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)]">
                 <Activity className="w-3.5 h-3.5 text-[var(--lime)]" />
@@ -222,7 +222,7 @@ export const LoginScreen: React.FC = () => {
         {/* ── Right Column: Authentication Card ── */}
         <div className="lg:col-span-6">
           <div
-            className="fd-card p-6 sm:p-8 rounded-sm shadow-xl border border-[var(--border-dim)] relative"
+            className="fd-card p-4 sm:p-8 rounded-sm shadow-xl border border-[var(--border-dim)] relative"
             style={{ background: 'var(--card-bg)' }}
           >
             {/* Mode Tabs */}

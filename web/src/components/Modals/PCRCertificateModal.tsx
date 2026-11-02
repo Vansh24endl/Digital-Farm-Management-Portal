@@ -8,10 +8,10 @@ export const PCRCertificateModal: React.FC = () => {
   if (activeModal !== 'pcr-certificate') return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-2xl bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-2xl bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl max-h-[90dvh] sm:max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
+        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <Dna className="w-5 h-5 text-[var(--text-primary)]" />
             <div>
@@ -25,7 +25,7 @@ export const PCRCertificateModal: React.FC = () => {
         </div>
 
         {/* Certificate Body */}
-        <div className="p-4 space-y-4 max-h-[80vh] overflow-y-auto font-sans">
+        <div className="p-4 space-y-4 overflow-y-auto font-sans flex-1">
           {/* Top Info Banner */}
           <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
             <div>
@@ -90,15 +90,15 @@ export const PCRCertificateModal: React.FC = () => {
           </div>
 
           {/* Attestation & Signature */}
-          <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex items-center justify-between">
+          <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <Award className="w-7 h-7 text-[var(--text-primary)]" />
+              <Award className="w-7 h-7 text-[var(--text-primary)] flex-shrink-0" />
               <div>
                 <p className="text-xs font-bold font-display uppercase tracking-wide text-[var(--text-primary)]">Certified by Dr. Ananya Reyes</p>
                 <p className="text-[11px] font-mono text-[var(--text-secondary)]">Lead Veterinary Pathologist · Central Bio-Lab</p>
               </div>
             </div>
-            <div className="text-right font-mono">
+            <div className="text-left sm:text-right font-mono">
               <span className="text-[10px] text-[var(--text-dim)] block">Timestamp: 2026-10-04 14:20 UTC</span>
               <p className="text-xs text-[var(--success)] font-bold">Digital Signature Verified</p>
             </div>
@@ -106,19 +106,19 @@ export const PCRCertificateModal: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="p-3 bg-[var(--bg-main)] border-t border-[var(--border)] flex items-center justify-between">
+        <div className="p-3 bg-[var(--bg-main)] border-t border-[var(--border)] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 flex-shrink-0">
           <button
             onClick={() => {
               showToast('Diagnostic PCR PDF downloaded to local storage.');
               closeModal();
             }}
-            className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5"
+            className="fd-btn px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 w-full sm:w-auto"
           >
             <Download className="w-3.5 h-3.5" /> Download Official PDF Report
           </button>
           <button
             onClick={closeModal}
-            className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider"
+            className="fd-btn-ghost px-3.5 py-2 text-xs font-mono uppercase tracking-wider w-full sm:w-auto justify-center"
           >
             Close
           </button>

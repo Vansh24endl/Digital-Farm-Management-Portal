@@ -17,7 +17,10 @@ export const AlertDrawer: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-[var(--bg-panel)] h-full flex flex-col border-l border-[var(--border)] shadow-2xl">
+      <div
+        className="w-full max-w-md bg-[var(--bg-panel)] h-full flex flex-col border-l border-[var(--border)] shadow-2xl"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
+      >
         {/* Drawer Header */}
         <div className="p-4 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2.5">

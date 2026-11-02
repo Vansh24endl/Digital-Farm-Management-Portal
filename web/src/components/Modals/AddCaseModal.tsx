@@ -56,8 +56,8 @@ export const AddCaseModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--critical-dim)] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--critical-dim)] overflow-hidden shadow-2xl max-h-[90dvh] sm:max-h-[92vh] overflow-y-auto">
         {/* Header */}
         <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -102,7 +102,7 @@ export const AddCaseModal: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="fd-label block mb-1">Livestock Species</label>
               <select
@@ -129,7 +129,7 @@ export const AddCaseModal: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="fd-label block mb-1">Zone / Sector</label>
               <input
@@ -166,18 +166,18 @@ export const AddCaseModal: React.FC = () => {
             />
           </div>
 
-          <div className="pt-2.5 border-t border-[var(--border-dim)] flex items-center justify-end gap-2">
+          <div className="pt-2.5 border-t border-[var(--border-dim)] flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-2">
             <button
               type="button"
               onClick={closeModal}
-              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider"
+              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider w-full sm:w-auto justify-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider bg-[var(--critical)] text-[#111311] hover:bg-[#e05a45] rounded-[2px] flex items-center gap-1.5 shadow-sm transition-all"
+              className="px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider bg-[var(--critical)] text-[#111311] hover:bg-[#e05a45] rounded-[2px] flex items-center justify-center gap-1.5 shadow-sm transition-all w-full sm:w-auto"
             >
               {loading ? (
                 <span className="w-3.5 h-3.5 border-2 border-[#111311] border-t-transparent rounded-full animate-spin" />

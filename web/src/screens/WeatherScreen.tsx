@@ -293,16 +293,15 @@ export const WeatherScreen: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start flex-wrap">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 self-stretch sm:self-start flex-wrap">
           {/* Farm Location Selector */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 w-full sm:w-auto">
             <label className="fd-label" htmlFor="weather-location">{t('weather.location')}</label>
             <select
               id="weather-location"
               value={selectedWeatherLocation}
               onChange={(e) => handleSelectLocation(e.target.value)}
-              className="fd-select text-xs font-mono"
-              style={{ minWidth: '260px' }}
+              className="fd-select text-xs font-mono w-full sm:w-auto sm:min-w-[260px]"
             >
               {locationList.map((loc) => (
                 <option key={loc.name} value={loc.name}>
@@ -312,49 +311,51 @@ export const WeatherScreen: React.FC = () => {
             </select>
           </div>
 
-          {/* Unit Toggle */}
-          <div className="flex flex-col gap-1">
-            <span className="fd-label">Unit</span>
-            <button
-              id="temperature-toggle"
-              onClick={toggleTemperatureUnit}
-              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono"
-            >
-              °{temperatureUnit} Switch
-            </button>
-          </div>
+          <div className="flex items-center gap-2">
+            {/* Unit Toggle */}
+            <div className="flex flex-col gap-1">
+              <span className="fd-label">Unit</span>
+              <button
+                id="temperature-toggle"
+                onClick={toggleTemperatureUnit}
+                className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono"
+              >
+                °{temperatureUnit} Switch
+              </button>
+            </div>
 
-          {/* Refresh */}
-          <div className="flex flex-col gap-1">
-            <span className="fd-label">Refresh</span>
-            <button
-              onClick={() => fetchWeather(activeCoords.lat, activeCoords.lon, selectedWeatherLocation)}
-              disabled={isLoading}
-              className="fd-btn-ghost px-2.5 py-1.5 text-xs disabled:opacity-50"
-              title="Refresh meteorological telemetry"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
+            {/* Refresh */}
+            <div className="flex flex-col gap-1">
+              <span className="fd-label">Refresh</span>
+              <button
+                onClick={() => fetchWeather(activeCoords.lat, activeCoords.lon, selectedWeatherLocation)}
+                disabled={isLoading}
+                className="fd-btn-ghost px-2.5 py-1.5 text-xs disabled:opacity-50"
+                title="Refresh meteorological telemetry"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ── Manual Location Search Bar ── */}
       <div className="fd-card p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <form onSubmit={handleManualSearch} className="flex items-center gap-2 w-full sm:w-auto flex-1">
+        <form onSubmit={handleManualSearch} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto flex-1">
           <div className="relative flex-1">
             <input
               type="text"
               value={customSearchQuery}
               onChange={(e) => setCustomSearchQuery(e.target.value)}
-              placeholder="Search custom MP city, farm location or GPS coordinates (e.g. Sanwer, Mhow, 22.7, 75.8)..."
+              placeholder="Search MP city or GPS (e.g. Sanwer, 22.7, 75.8)..."
               className="fd-input w-full text-xs font-mono pl-8"
             />
             <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
           <button
             type="submit"
-            className="fd-btn text-xs px-3 py-2 flex items-center gap-1.5"
+            className="fd-btn text-xs px-3 py-2 flex items-center justify-center gap-1.5"
             style={{ background: 'var(--lime)', color: '#111311', borderColor: 'var(--lime)' }}
           >
             Locate Weather

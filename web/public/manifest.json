@@ -1,0 +1,19 @@
+{
+  "name": "FarmDrishti Biosecurity Console",
+  "short_name": "FarmDrishti",
+  "description": "Commercial farm biosecurity surveillance, real-time disease tracking, and veterinary compliance management.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111411",
+  "theme_color": "#111411",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

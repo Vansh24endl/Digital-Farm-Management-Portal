@@ -133,22 +133,22 @@ export const ProfileScreen: React.FC = () => {
               {displayEmail}
             </p>
 
-            <div className="pt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
+            <div className="pt-2 flex flex-col sm:flex-row flex-wrap gap-2 justify-center sm:justify-start">
               <button
                 onClick={() => openModal('edit-profile')}
-                className="fd-btn px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider flex items-center gap-1.5"
+                className="fd-btn px-3.5 py-2 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-1.5 w-full sm:w-auto"
               >
                 <Edit className="w-3.5 h-3.5" /> Edit Personal Information
               </button>
               <button
                 onClick={() => openModal('change-password')}
-                className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider flex items-center gap-1.5 text-[var(--lime)] border-[var(--border)]"
+                className="fd-btn-ghost px-3.5 py-2 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-1.5 text-[var(--lime)] border-[var(--border)] w-full sm:w-auto"
               >
                 <KeyRound className="w-3.5 h-3.5" /> Change Password
               </button>
               <button
                 onClick={() => openModal('change-dp')}
-                className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider flex items-center gap-1.5"
+                className="fd-btn-ghost px-3.5 py-2 text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-1.5 w-full sm:w-auto"
               >
                 <Camera className="w-3.5 h-3.5" /> Update Photo
               </button>

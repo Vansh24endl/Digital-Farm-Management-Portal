@@ -110,24 +110,24 @@ export const VisitorLogScreen: React.FC = () => {
       </div>
 
       {/* ── Summary Metrics ── */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="fd-card p-4 text-center" style={{ borderColor: 'var(--success-dim)', background: 'var(--success-bg)' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+        <div className="fd-card p-3 sm:p-4 text-center" style={{ borderColor: 'var(--success-dim)', background: 'var(--success-bg)' }}>
           <span className="fd-label block mb-1">Active On-Premise</span>
-          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--success)' }}>
+          <p className="font-display text-2xl sm:text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--success)' }}>
             {activeOnPremiseCount}
           </p>
           <span className="text-xs font-bold" style={{ color: 'var(--success)', fontFamily: 'IBM Plex Mono, monospace' }}>Checked IN</span>
         </div>
 
-        <div className="fd-card p-4 text-center">
+        <div className="fd-card p-3 sm:p-4 text-center">
           <span className="fd-label block mb-1">This Week</span>
-          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>45</p>
+          <p className="font-display text-2xl sm:text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>45</p>
           <span className="text-xs" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>Entrants Logged</span>
         </div>
 
-        <div className="fd-card p-4 text-center">
+        <div className="fd-card p-3 sm:p-4 text-center">
           <span className="fd-label block mb-1">This Month</span>
-          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>120</p>
+          <p className="font-display text-2xl sm:text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>120</p>
           <span className="text-xs" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>Bio-Pass Passes</span>
         </div>
       </div>

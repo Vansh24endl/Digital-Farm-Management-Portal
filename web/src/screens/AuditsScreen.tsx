@@ -130,34 +130,34 @@ export const AuditsScreen: React.FC = () => {
       </div>
 
       {/* ── Summary Metric Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="fd-card p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="fd-card p-3 sm:p-4">
           <span className="fd-label block mb-1">Pending</span>
-          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
+          <p className="font-display text-2xl sm:text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
             {loading ? '—' : pendingAudits.length}
           </p>
           <span className="text-xs" style={{ color: 'var(--text-dim)', fontFamily: 'IBM Plex Mono, monospace' }}>Active Schedules</span>
         </div>
 
-        <div className="fd-card p-4" style={{ borderColor: 'var(--critical-dim)', background: 'var(--critical-bg)' }}>
+        <div className="fd-card p-3 sm:p-4" style={{ borderColor: 'var(--critical-dim)', background: 'var(--critical-bg)' }}>
           <span className="fd-label block mb-1">Overdue</span>
-          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--critical)' }}>
+          <p className="font-display text-2xl sm:text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--critical)' }}>
             {loading ? '—' : overdueCount}
           </p>
           <span className="text-xs font-bold" style={{ color: 'var(--critical)', fontFamily: 'IBM Plex Mono, monospace' }}>Action Required</span>
         </div>
 
-        <div className="fd-card p-4">
+        <div className="fd-card p-3 sm:p-4">
           <span className="fd-label block mb-1">Completed</span>
-          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
+          <p className="font-display text-2xl sm:text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--text-primary)' }}>
             {loading ? '—' : completedCount}
           </p>
           <span className="text-xs font-semibold" style={{ color: 'var(--success)', fontFamily: 'IBM Plex Mono, monospace' }}>From database</span>
         </div>
 
-        <div className="fd-card p-4" style={{ borderColor: 'var(--success-dim)', background: 'var(--success-bg)' }}>
+        <div className="fd-card p-3 sm:p-4" style={{ borderColor: 'var(--success-dim)', background: 'var(--success-bg)' }}>
           <span className="fd-label block mb-1">Completion</span>
-          <p className="font-display text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--success)' }}>
+          <p className="font-display text-2xl sm:text-3xl font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: 'var(--success)' }}>
             {loading ? '—' : `${complianceScore}%`}
           </p>
           <span className="text-xs font-semibold flex items-center gap-1" style={{ color: 'var(--success)', fontFamily: 'IBM Plex Mono, monospace' }}>

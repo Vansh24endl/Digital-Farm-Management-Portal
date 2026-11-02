@@ -54,8 +54,8 @@ export const AddAuditModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl max-h-[90dvh] sm:max-h-[92vh] overflow-y-auto">
         <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ClipboardCheck className="w-4 h-4 text-[var(--lime)]" />
@@ -98,7 +98,7 @@ export const AddAuditModal: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="fd-label block mb-1">Target Sector</label>
               <input
@@ -123,7 +123,7 @@ export const AddAuditModal: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="fd-label block mb-1">Due Date</label>
               <input
@@ -157,18 +157,18 @@ export const AddAuditModal: React.FC = () => {
             />
           </div>
 
-          <div className="pt-2.5 border-t border-[var(--border-dim)] flex items-center justify-end gap-2">
+          <div className="pt-2.5 border-t border-[var(--border-dim)] flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-2">
             <button
               type="button"
               onClick={closeModal}
-              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider"
+              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider w-full sm:w-auto justify-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all"
+              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all w-full sm:w-auto"
             >
               {loading ? (
                 <span className="w-3.5 h-3.5 border-2 border-[#111311] border-t-transparent rounded-full animate-spin" />
@@ -193,9 +193,9 @@ export const AuditInspectorModal: React.FC = () => {
   const is100 = audit.progress === 100;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-lg bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl">
-        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-lg bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl max-h-[90dvh] sm:max-h-[92vh] flex flex-col">
+        <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between flex-shrink-0">
           <div>
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--lime)]">
               Active Audit Inspector
@@ -207,7 +207,7 @@ export const AuditInspectorModal: React.FC = () => {
           </button>
         </div>
 
-        <div className="p-4 space-y-3.5 max-h-[75vh] overflow-y-auto font-sans">
+        <div className="p-4 space-y-3.5 overflow-y-auto font-sans flex-1">
           {/* Progress Header */}
           <div className="fd-raised p-3 rounded-[3px] border border-[var(--border-dim)] flex items-center justify-between font-mono">
             <div>
@@ -257,12 +257,12 @@ export const AuditInspectorModal: React.FC = () => {
           </div>
 
           {/* Action Footer */}
-          <div className="pt-2.5 border-t border-[var(--border-dim)] flex items-center justify-between gap-3 font-mono">
-            <span className="text-xs text-[var(--text-secondary)]">Inspector: {audit.auditor}</span>
+          <div className="pt-2.5 border-t border-[var(--border-dim)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 font-mono">
+            <span className="text-xs text-[var(--text-secondary)] text-center sm:text-left">Inspector: {audit.auditor}</span>
             <button
               onClick={() => completeAudit(audit.id)}
               disabled={is100}
-              className={`px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider rounded-[2px] flex items-center gap-1.5 transition-all ${
+              className={`px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider rounded-[2px] flex items-center justify-center gap-1.5 transition-all w-full sm:w-auto ${
                 is100
                   ? 'bg-[var(--success-bg)] text-[var(--success)] border border-[var(--success-dim)] cursor-default'
                   : 'fd-btn'

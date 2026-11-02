@@ -106,8 +106,8 @@ export const AddInventoryModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-md bg-[var(--bg-panel)] rounded-[3px] border border-[var(--border)] overflow-hidden shadow-2xl max-h-[90dvh] sm:max-h-[92vh] overflow-y-auto">
         <div className="p-3.5 bg-[var(--bg-main)] border-b border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <PackagePlus className="w-4 h-4 text-[var(--lime)]" />
@@ -151,7 +151,7 @@ export const AddInventoryModal: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="fd-label block mb-1">Category</label>
               <select
@@ -178,11 +178,12 @@ export const AddInventoryModal: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="fd-label block mb-1">Initial Quantity</label>
               <input
                 type="number"
+                inputMode="numeric"
                 min="0"
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
@@ -194,6 +195,7 @@ export const AddInventoryModal: React.FC = () => {
               <label className="fd-label block mb-1">Minimum Alert Threshold</label>
               <input
                 type="number"
+                inputMode="numeric"
                 min="0"
                 value={minimumStock}
                 onChange={(e) => setMinimumStock(Number(e.target.value))}
@@ -209,11 +211,11 @@ export const AddInventoryModal: React.FC = () => {
             </p>
           )}
 
-          <div className="pt-2.5 border-t border-[var(--border-dim)] flex items-center justify-end gap-2">
+          <div className="pt-2.5 border-t border-[var(--border-dim)] flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-2">
             <button
               type="button"
               onClick={closeModal}
-              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider"
+              className="fd-btn-ghost px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider w-full sm:w-auto justify-center"
               disabled={saving}
             >
               Cancel
@@ -221,7 +223,7 @@ export const AddInventoryModal: React.FC = () => {
             <button
               type="submit"
               disabled={saving || loadingFarms || farms.length === 0}
-              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 disabled:opacity-50"
+              className="fd-btn px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50 w-full sm:w-auto"
             >
               <Plus className="w-3.5 h-3.5" /> {saving ? 'Saving...' : 'Add Item'}
             </button>

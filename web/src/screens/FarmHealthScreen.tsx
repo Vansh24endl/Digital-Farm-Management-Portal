@@ -122,8 +122,7 @@ export const FarmHealthScreen: React.FC = () => {
               id="farm-selector"
               value={selectedFarmId}
               onChange={(e) => setSelectedFarmId(e.target.value)}
-              className="fd-select"
-              style={{ minWidth: '240px' }}
+              className="fd-select w-full sm:w-auto sm:min-w-[240px]"
             >
               {farms.map((farm) => (
                 <option key={farm.id} value={farm.id}>

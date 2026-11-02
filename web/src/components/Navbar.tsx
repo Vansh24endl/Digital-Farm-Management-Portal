@@ -75,10 +75,10 @@ export const Navbar: React.FC = () => {
       className="sticky top-0 z-40 font-sans"
       style={{ background: 'var(--bg-panel)', borderBottom: '1px solid var(--border)' }}
     >
-      <div className="w-full flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 h-14">
+      <div className="w-full flex items-center justify-between gap-2 sm:gap-4 px-2.5 sm:px-6 lg:px-8 h-14">
 
         {/* ── Left: back / avatar + title ── */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           {!isHome && (
             <button
               onClick={goBack}
@@ -227,7 +227,7 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* ── Right: Language + Theme + screens + alerts ── */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           {/* Language Selector Dropdown */}
           <div className="relative" ref={langDropdownRef}>
             <button

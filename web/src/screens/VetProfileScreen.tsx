@@ -237,39 +237,43 @@ export const VetProfileScreen: React.FC = () => {
                 />
               </div>
 
-              {/* Specialization Filter */}
-              <div className="flex items-center gap-2">
-                <Filter className="w-3.5 h-3.5 text-[var(--lime)] shrink-0 hidden sm:block" />
-                <select
-                  value={specializationFilter}
-                  onChange={(e) => setSpecializationFilter(e.target.value)}
-                  className="fd-input py-2 px-3 text-xs font-mono rounded-[2px]"
-                >
-                  <option value="all">All Specializations</option>
-                  <option value="Swine">Swine / Pig Health</option>
-                  <option value="Poultry">Poultry / Avian Medicine</option>
-                  <option value="Epidemiology">Epidemiology & Surveillance</option>
-                  <option value="Pathology">Veterinary Pathology & PCR</option>
-                  <option value="Livestock">Mixed Livestock & Biosecurity</option>
-                </select>
+              {/* Specialization Filter & Location */}
+              <div className="grid grid-cols-1 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+                <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+                  <Filter className="w-3.5 h-3.5 text-[var(--lime)] shrink-0 hidden sm:block" />
+                  <select
+                    value={specializationFilter}
+                    onChange={(e) => setSpecializationFilter(e.target.value)}
+                    className="fd-input py-2 px-3 text-xs font-mono rounded-[2px] w-full sm:w-auto"
+                  >
+                    <option value="all">All Specializations</option>
+                    <option value="Swine">Swine / Pig Health</option>
+                    <option value="Poultry">Poultry / Avian Medicine</option>
+                    <option value="Epidemiology">Epidemiology & Surveillance</option>
+                    <option value="Pathology">Veterinary Pathology & PCR</option>
+                    <option value="Livestock">Mixed Livestock & Biosecurity</option>
+                  </select>
+                </div>
 
-                {/* Location Filter */}
-                <input
-                  type="text"
-                  placeholder="Filter Location..."
-                  value={locationFilter}
-                  onChange={(e) => setLocationFilter(e.target.value)}
-                  className="fd-input py-2 px-3 text-xs font-mono w-32 sm:w-40 rounded-[2px]"
-                />
+                {/* Location Filter & Refresh */}
+                <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+                  <input
+                    type="text"
+                    placeholder="Filter Location..."
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    className="fd-input py-2 px-3 text-xs font-mono flex-1 sm:w-40 rounded-[2px]"
+                  />
 
-                <button
-                  type="button"
-                  onClick={() => void loadDirectory()}
-                  className="fd-btn-ghost py-2 px-3 text-xs font-mono flex items-center gap-1"
-                  title="Refresh Directory"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${directoryLoading ? 'animate-spin' : ''}`} />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => void loadDirectory()}
+                    className="fd-btn-ghost py-2 px-3 text-xs font-mono flex items-center justify-center gap-1 shrink-0"
+                    title="Refresh Directory"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${directoryLoading ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
               </div>
             </div>
 

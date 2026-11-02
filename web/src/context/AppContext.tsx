@@ -19,22 +19,17 @@ import type {
 import { getTranslation } from '../utils/translations';
 
 interface AppContextType {
-  // Navigation
   activeScreen: ScreenId;
   previousScreen: ScreenId | null;
   navigateTo: (screen: ScreenId) => void;
   goBack: () => void;
 
-  // Sidebar state
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
   toggleSidebar: () => void;
-
-  // Profile Dropdown
   isProfileDropdownOpen: boolean;
   setIsProfileDropdownOpen: React.Dispatch<React.SetStateAction<boolean>>;
 
-  // Auth & Session
   isAuthenticated: boolean;
   isAuthChecking: boolean;
   currentUser: User | null;
@@ -50,7 +45,6 @@ interface AppContextType {
   logout: () => void;
   login: () => void;
 
-  // Modals & Drawers
   isPrototypeDrawerOpen: boolean;
   setIsPrototypeDrawerOpen: (open: boolean) => void;
   isAlertDrawerOpen: boolean;
@@ -60,13 +54,11 @@ interface AppContextType {
   closeModal: () => void;
   modalPayload: any;
 
-  // Active Emergency Call
   activeCallContact: EmergencyContact | null;
   callDurationSeconds: number;
   startEmergencyCall: (contact: EmergencyContact) => void;
   endEmergencyCall: () => void;
 
-  // Data Collections
   userProfile: UserProfile;
   updateUserProfile: (updated: Partial<UserProfile>) => Promise<void> | void;
   updateAvatar: (newUrl: string) => void;

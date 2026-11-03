@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import User, { IUser, UserRole } from "../models/User";
 import Farm from "../models/Farm";
 import { protect, authorize, AuthRequest } from "../middleware/authMiddleware";
+import { validate, registerSchema, loginSchema, updateProfileSchema } from "../validation";
 
 const router = Router();
 
@@ -21,7 +22,7 @@ const generateToken = (user: IUser): string => {
 // @route   POST /api/auth/register
 // @desc    Register a new user (Farm Manager, Inspector, Veterinarian, Admin)
 // @access  Public
-router.post("/register", async (req, res: Response) => {
+router.post("/register", validate(registerSchema), async (req, res: Response) => {
   try {
     const { name, email, password, role, farmId, phone } = req.body;
 
@@ -110,7 +111,7 @@ router.post("/register", async (req, res: Response) => {
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
 // @access  Public
-router.post("/login", async (req, res: Response) => {
+router.post("/login", validate(loginSchema), async (req, res: Response) => {
   try {
     const { email, password } = req.body;
 

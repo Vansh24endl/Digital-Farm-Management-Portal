@@ -9,6 +9,7 @@ import {
   canAccessFarmAsync,
   getAuthorizedFarmIds,
 } from "../middleware/authMiddleware";
+import { validate, createDailyLogSchema } from "../validation";
 
 const router = Router();
 
@@ -19,7 +20,7 @@ router.use(protect);
  * POST /api/daily-logs
  * Manual daily farm record submission by farmer (Non-IoT)
  */
-router.post("/", async (req: AuthRequest, res: Response) => {
+router.post("/", validate(createDailyLogSchema), async (req: AuthRequest, res: Response) => {
   try {
     const {
       farmId,

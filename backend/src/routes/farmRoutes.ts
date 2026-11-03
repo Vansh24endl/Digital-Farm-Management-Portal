@@ -9,6 +9,7 @@ import {
   getAuthorizedFarmIds,
   canAccessFarmAsync,
 } from "../middleware/authMiddleware";
+import { validate, createFarmSchema } from "../validation";
 
 const router = Router();
 
@@ -17,7 +18,7 @@ router.use(protect);
 
 // CREATE / REGISTER FARM
 // @access Private (Admin or Farm Manager)
-router.post("/", authorize("admin", "farm_manager"), async (req: AuthRequest, res: Response) => {
+router.post("/", authorize("admin", "farm_manager"), validate(createFarmSchema), async (req: AuthRequest, res: Response) => {
   try {
     const { name, farmType, location, coordinates } = req.body;
 

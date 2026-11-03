@@ -46,8 +46,8 @@ const invalidRegister = registerSchema.safeParse({
 assert(!invalidRegister.success, "Invalid registration rejected");
 if (!invalidRegister.success) {
   const errors = formatZodErrors(invalidRegister.error);
-  assert(errors.some((e) => e.field === "email"), "Email error identified correctly");
-  assert(errors.some((e) => e.field === "password"), "Password length error identified");
+  assert(errors.some((e: any) => e.field === "email"), "Email error identified correctly");
+  assert(errors.some((e: any) => e.field === "password"), "Password length error identified");
 }
 
 // 2. Farm Validation Test

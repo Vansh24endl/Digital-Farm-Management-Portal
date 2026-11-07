@@ -6,6 +6,7 @@ import {
   ArrowUpRight, TrendingUp, ChevronRight, AlertCircle, Info, Clock,
   RefreshCw, CheckCircle2, ClipboardPen,
 } from 'lucide-react';
+import { FallingLeaves } from 'falling-leaves/react';
 
 type Farm = { _id?: string; id?: string; name?: string; farmType?: string; location?: string };
 type Audit = { _id?: string; id?: string; title?: string; status?: string; dueDate?: string; riskLevel?: string; createdAt?: string; farmId?: any };
@@ -478,6 +479,11 @@ export const DashboardScreen: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <FallingLeaves 
+        fullScreen
+        shapes={['maple']}
+      />
 
       {/* ── Metric Cards Grid ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

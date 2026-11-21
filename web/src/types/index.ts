@@ -49,6 +49,7 @@ export interface ChecklistItem {
   description: string;
   category: string;
   status: 'passed' | 'warning' | 'critical';
+  zone?: string;
 }
 
 export interface Audit {

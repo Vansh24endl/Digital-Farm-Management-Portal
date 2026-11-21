@@ -144,7 +144,92 @@ const initialUserProfile: UserProfile = {
 const initialFarms: FarmUnit[] = [];
 const initialAlerts: AlertItem[] = [];
 const initialVisitors: Visitor[] = [];
-const initialChecklist: ChecklistItem[] = [];
+const initialChecklist: ChecklistItem[] = [
+  // Zone A Rearing Facility
+  {
+    id: 'chk-a1',
+    zone: 'Zone A Rearing Facility',
+    title: 'Entrance Footbath Chemical Concentration',
+    category: 'Chemical Sanitation',
+    description: 'Verify Virkon-S dilution is active (pH 2.4 - 2.8, minimum 200 ppm). Check liquid is free of organic soil.',
+    status: 'passed',
+  },
+  {
+    id: 'chk-a2',
+    zone: 'Zone A Rearing Facility',
+    title: 'Shower-In / Shower-Out Compliance Log',
+    category: 'Personnel Hygiene',
+    description: 'Audit mandatory 3-minute warm soapy shower register for all operators crossing Danish bench line.',
+    status: 'passed',
+  },
+  {
+    id: 'chk-a3',
+    zone: 'Zone A Rearing Facility',
+    title: 'Red/Green Demarcation Footwear Protocol',
+    category: 'Physical Barriers',
+    description: 'Zero street shoes allowed past clean barrier. Farm dedicated boots donning verified.',
+    status: 'passed',
+  },
+  // Zone B Poultry House
+  {
+    id: 'chk-b1',
+    zone: 'Zone B Poultry House',
+    title: 'HEPA Negative Pressure Ventilation Check',
+    category: 'Air & Biosafety',
+    description: 'Exhaust louvers and dust intake filters intact. Pressure differential gauge reads within 20-40 Pa.',
+    status: 'passed',
+  },
+  {
+    id: 'chk-b2',
+    zone: 'Zone B Poultry House',
+    title: 'Wild Avian & Rodent Wire Mesh Integrity',
+    category: 'Vector Exclusion',
+    description: 'No tears or breaches in perimeter 1/2-inch bird netting along eaves and air inlets.',
+    status: 'passed',
+  },
+  {
+    id: 'chk-b3',
+    zone: 'Zone B Poultry House',
+    title: 'Daily Mortality Carcass Container Lockdown',
+    category: 'Waste Management',
+    description: 'Mortality storage container airtight, dusted with slaked lime, and locked pending incineration.',
+    status: 'passed',
+  },
+  // Zone C Hatchery
+  {
+    id: 'chk-c1',
+    zone: 'Zone C Hatchery',
+    title: 'Incubation Chamber Thermal & Humidity Telemetry',
+    category: 'Environmental Control',
+    description: 'Dial thermometer cross-checked with handheld sensor (37.5°C ± 0.5°C, 55% RH).',
+    status: 'passed',
+  },
+  {
+    id: 'chk-c2',
+    zone: 'Zone C Hatchery',
+    title: 'Egg Surface Sanitize & UV-C Disinfection Pass',
+    category: 'Pathogen Screening',
+    description: 'Batch certificate signed for incoming hatching eggs following hydrogen peroxide misting.',
+    status: 'passed',
+  },
+  // Zone D Storage & Chemical Depot
+  {
+    id: 'chk-d1',
+    zone: 'Zone D Storage & Chemical Depot',
+    title: 'Feed Silo Moisture & Rodent Seal Verification',
+    category: 'Feed Security',
+    description: 'Ensure bulk feed intake chute is locked and free of fungal clumping or pest droppings.',
+    status: 'passed',
+  },
+  {
+    id: 'chk-d2',
+    zone: 'Zone D Storage & Chemical Depot',
+    title: 'Automated Vehicle Tire Spray Arch Pressure',
+    category: 'Perimeter Defense',
+    description: 'Disinfectant pump pressure at minimum 40 PSI covering wheel arches and chassis of feed trucks.',
+    status: 'passed',
+  },
+];
 const initialAudits: Audit[] = [];
 const initialDiseaseReports: DiseaseReport[] = [];
 const initialInventory: InventoryItem[] = [];
@@ -801,28 +886,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const unreadAlertCount = alerts.filter((a) => !a.read).length;
 
-  // Visitor Actions
-  const toggleVisitorStatus = (id: string) => {
-    setVisitors((prev) =>
-      prev.map((v) => {
-        if (v.id === id) {
-          const newStatus = v.status === 'IN' ? 'OUT' : 'IN';
-          showToast(`Visitor ${v.name} marked as ${newStatus}`);
-          return { ...v, status: newStatus };
-        }
-        return v;
-      })
-    );
+  // Visitor Actions (MongoDB Persisted)
+  const toggleVisitorStatus = async (id: string) => {
+    try {
+      const current = visitors.find((v) => v.id === id);
+      if (current?.status === 'IN' && /^[a-f\d]{24}$/i.test(id)) {
+        await api.checkoutVisitor(id);
+      }
+      setVisitors((prev) =>
+        prev.map((v) => {
+          if (v.id === id) {
+            const newStatus = v.status === 'IN' ? 'OUT' : 'IN';
+            return { ...v, status: newStatus };
+          }
+          return v;
+        })
+      );
+      window.dispatchEvent(new Event('visitors-updated'));
+      showToast('Visitor status updated in MongoDB.');
+    } catch (err: any) {
+      showToast(err.message || 'Could not update visitor status.');
+    }
   };
 
-  const addVisitor = (newV: Omit<Visitor, 'id'>) => {
-    const vObj: Visitor = {
-      ...newV,
-      id: `v-${Date.now()}`,
-    };
-    setVisitors((prev) => [vObj, ...prev]);
-    showToast(`Visitor ${newV.name} added to Log!`);
-    closeModal();
+  const addVisitor = async (newV: Omit<Visitor, 'id'>) => {
+    try {
+      const farmId = selectedFarmId || (farmUnits.length > 0 ? farmUnits[0].id : undefined);
+      if (!farmId) {
+        showToast('Please select or register a farm first.');
+        return;
+      }
+      const res = await api.createVisitor({
+        farmId,
+        name: newV.name,
+        role: newV.role || 'Visitor',
+        company: newV.company || 'Independent',
+        phone: newV.phone || '—',
+        purpose: newV.purpose,
+        temperature: newV.temperature || '36.5°C',
+        status: newV.status || 'IN',
+      });
+      const created = res.data;
+      const vObj: Visitor = {
+        id: String(created._id || created.id),
+        name: created.name,
+        role: created.role || 'Visitor',
+        company: created.company || '—',
+        status: created.status || 'IN',
+        entryTime: created.checkIn ? new Date(created.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
+        phone: created.phone || '—',
+        purpose: created.purpose || '—',
+        temperature: created.temperature || '36.5°C',
+      };
+      setVisitors((prev) => [vObj, ...prev]);
+      window.dispatchEvent(new Event('visitors-updated'));
+      showToast(`Visitor ${newV.name} saved to MongoDB!`);
+      closeModal();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to save visitor to MongoDB.');
+    }
   };
 
   // Checklist Actions
@@ -1063,15 +1185,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Inventory Actions
-  const addInventoryItem = (item: Omit<InventoryItem, 'id'>) => {
-    const invObj: InventoryItem = {
-      ...item,
-      id: `inv-${Date.now()}`,
-    };
-    setInventory((prev) => [invObj, ...prev]);
-    showToast(`Item "${item.name}" added to Inventory!`);
-    closeModal();
+  // Inventory Actions (MongoDB Persisted)
+  const addInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
+    try {
+      const farmId = selectedFarmId || (farmUnits.length > 0 ? farmUnits[0].id : undefined);
+      if (!farmId) {
+        showToast('Please select or register a farm first.');
+        return;
+      }
+      const res = await api.createInventoryItem({
+        farmId,
+        itemName: item.name,
+        category: item.category,
+        quantity: Number(item.quantity) || 0,
+        unit: item.unit || 'Units',
+        minimumStock: Number(item.minThreshold) || 0,
+      });
+      const created = res.data;
+      const invObj: InventoryItem = {
+        id: String(created._id || created.id),
+        name: created.itemName,
+        category: created.category,
+        quantity: created.quantity,
+        unit: created.unit,
+        minThreshold: created.minimumStock,
+        location: created.farmId?.name || 'Main Site',
+        lastRestocked: new Date().toISOString().split('T')[0],
+      };
+      setInventory((prev) => [invObj, ...prev]);
+      window.dispatchEvent(new Event('inventory-updated'));
+      showToast(`Item "${item.name}" saved to MongoDB inventory!`);
+      closeModal();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to save inventory to MongoDB.');
+    }
   };
 
   // Training Topic

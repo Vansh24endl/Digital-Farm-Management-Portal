@@ -6,7 +6,6 @@ import {
   ArrowUpRight, TrendingUp, ChevronRight, AlertCircle, Info, Clock,
   RefreshCw, CheckCircle2, ClipboardPen,
 } from 'lucide-react';
-import { FallingLeaves } from 'falling-leaves/react';
 
 type Farm = { _id?: string; id?: string; name?: string; farmType?: string; location?: string };
 type Audit = { _id?: string; id?: string; title?: string; status?: string; dueDate?: string; riskLevel?: string; createdAt?: string; farmId?: any };
@@ -148,14 +147,14 @@ export const DashboardScreen: React.FC = () => {
       setAudits(normalizedAudits);
       setDiseaseReports(normalizedReports);
       setStats({
-        totalFarms:           Number(base.totalFarms           ?? farmData.length),
-        totalVisitors:        Number(base.totalVisitors         ?? 0),
-        totalAudits:          Number(base.totalAudits           ?? auditData.length),
-        pendingAudits:        Number(base.pendingAudits         ?? normalizedAudits.filter((a) => a.status !== 'completed').length),
-        totalDiseaseReports:  Number(base.totalDiseaseReports   ?? diseaseData.length),
-        activeDiseaseReports: Number(base.activeDiseaseReports  ?? normalizedReports.filter((r) => r.status !== 'resolved').length),
-        totalInventoryItems:  Number(base.totalInventoryItems   ?? 0),
-        lowStockItems:        Number(base.lowStockItems         ?? 0),
+        totalFarms: Number(base.totalFarms ?? farmData.length),
+        totalVisitors: Number(base.totalVisitors ?? 0),
+        totalAudits: Number(base.totalAudits ?? auditData.length),
+        pendingAudits: Number(base.pendingAudits ?? normalizedAudits.filter((a) => a.status !== 'completed').length),
+        totalDiseaseReports: Number(base.totalDiseaseReports ?? diseaseData.length),
+        activeDiseaseReports: Number(base.activeDiseaseReports ?? normalizedReports.filter((r) => r.status !== 'resolved').length),
+        totalInventoryItems: Number(base.totalInventoryItems ?? 0),
+        lowStockItems: Number(base.lowStockItems ?? 0),
       });
       setChecklistSummary(base.checklistSummary ?? emptyChecklist);
       setRecentChecklistActivity(base.recentChecklistActivity ?? []);
@@ -191,31 +190,31 @@ export const DashboardScreen: React.FC = () => {
   const pendingAudits = audits.filter((a) => a.status !== 'completed');
   const recentAlerts = alerts && alerts.length > 0
     ? alerts.slice(0, 5).map((a) => ({
-        id: a.id,
-        title: a.title,
-        detail: a.message || a.location,
-        severity: a.severity,
-        time: a.timeAgo,
-        kind: 'alert' as const,
-      }))
+      id: a.id,
+      title: a.title,
+      detail: a.message || a.location,
+      severity: a.severity,
+      time: a.timeAgo,
+      kind: 'alert' as const,
+    }))
     : [
-        ...activeReports.map((r) => ({
-          id: String(r._id || r.id),
-          title: r.symptoms || 'Disease report',
-          detail: `${r.farmId && typeof r.farmId === 'object' ? r.farmId.name || 'Farm' : 'Farm'} · ${r.animalType || 'Animal type not recorded'}`,
-          severity: String(r.severity || 'unknown').toLowerCase(),
-          time: r.createdAt ? new Date(r.createdAt).toLocaleString() : 'Date not recorded',
-          kind: 'disease' as const,
-        })),
-        ...pendingAudits.map((a) => ({
-          id: String(a._id || a.id),
-          title: a.title || 'Pending audit',
-          detail: 'Audit requires completion',
-          severity: String(a.riskLevel || 'routine').toLowerCase(),
-          time: a.createdAt ? new Date(a.createdAt).toLocaleString() : 'Date not recorded',
-          kind: 'audit' as const,
-        })),
-      ].slice(0, 5);
+      ...activeReports.map((r) => ({
+        id: String(r._id || r.id),
+        title: r.symptoms || 'Disease report',
+        detail: `${r.farmId && typeof r.farmId === 'object' ? r.farmId.name || 'Farm' : 'Farm'} · ${r.animalType || 'Animal type not recorded'}`,
+        severity: String(r.severity || 'unknown').toLowerCase(),
+        time: r.createdAt ? new Date(r.createdAt).toLocaleString() : 'Date not recorded',
+        kind: 'disease' as const,
+      })),
+      ...pendingAudits.map((a) => ({
+        id: String(a._id || a.id),
+        title: a.title || 'Pending audit',
+        detail: 'Audit requires completion',
+        severity: String(a.riskLevel || 'routine').toLowerCase(),
+        time: a.createdAt ? new Date(a.createdAt).toLocaleString() : 'Date not recorded',
+        kind: 'audit' as const,
+      })),
+    ].slice(0, 5);
 
   const urgentCount = urgentReports.length;
   const auditScore = stats.totalAudits ? Math.round(((stats.totalAudits - stats.pendingAudits) / stats.totalAudits) * 100) : 0;
@@ -395,19 +394,19 @@ export const DashboardScreen: React.FC = () => {
                 {activeRole === 'veterinarian'
                   ? 'Veterinary Outbreak & Clinical Surveillance'
                   : activeRole === 'inspector'
-                  ? 'Biosecurity Compliance & Regulatory Inspection'
-                  : activeRole === 'farm_manager'
-                  ? 'Farm Operations & Manual Observation Console'
-                  : 'System Administration & Multi-Facility Command'}
+                    ? 'Biosecurity Compliance & Regulatory Inspection'
+                    : activeRole === 'farm_manager'
+                      ? 'Farm Operations & Manual Observation Console'
+                      : 'System Administration & Multi-Facility Command'}
               </h2>
               <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                 {activeRole === 'veterinarian'
                   ? 'Pathogen vector surveillance, laboratory swab screening & clinical case assessments.'
                   : activeRole === 'inspector'
-                  ? 'Regulatory facility audits, pass/fail grading & corrective action compliance monitoring.'
-                  : activeRole === 'farm_manager'
-                  ? 'Physical thermometer readings, water meter logs, visitor disinfection & daily checklists (100% Non-IoT).'
-                  : 'Real-time biosecurity telemetry across all registered facilities, audits, and user access control.'}
+                    ? 'Regulatory facility audits, pass/fail grading & corrective action compliance monitoring.'
+                    : activeRole === 'farm_manager'
+                      ? 'Physical thermometer readings, water meter logs, visitor disinfection & daily checklists (100% Non-IoT).'
+                      : 'Real-time biosecurity telemetry across all registered facilities, audits, and user access control.'}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
@@ -479,11 +478,6 @@ export const DashboardScreen: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <FallingLeaves 
-        fullScreen
-        shapes={['maple']}
-      />
 
       {/* ── Metric Cards Grid ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -751,9 +745,9 @@ export const DashboardScreen: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: 'Disease Reports', value: stats.totalDiseaseReports, color: 'var(--critical)' },
-              { label: 'Audit Sessions',  value: stats.totalAudits,          color: 'var(--text-primary)' },
+              { label: 'Audit Sessions', value: stats.totalAudits, color: 'var(--text-primary)' },
               { label: 'Checklist Submissions', value: checklistSummary.totalSubmissions, color: 'var(--success)' },
-              { label: 'Visitor Records', value: stats.totalVisitors,        color: 'var(--warning)' },
+              { label: 'Visitor Records', value: stats.totalVisitors, color: 'var(--warning)' },
             ].map(({ label, value, color }) => (
               <div key={label} className="fd-raised p-4 text-center">
                 <p

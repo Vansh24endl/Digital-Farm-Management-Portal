@@ -145,6 +145,23 @@ export const api = {
 
     getInventory: () => request<any>("/inventory"),
 
+    createInventoryItem: (data: any) =>
+        request<{ success: boolean; data: any }>("/inventory", {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
+
+    updateInventoryStock: (id: string, data: { quantity: number; operation?: 'add' | 'subtract' | 'set' }) =>
+        request<{ success: boolean; data: any }>(`/inventory/${id}/stock`, {
+            method: "PATCH",
+            body: JSON.stringify(data),
+        }),
+
+    deleteInventoryItem: (id: string) =>
+        request<{ success: boolean; message: string }>(`/inventory/${id}`, {
+            method: "DELETE",
+        }),
+
     createAudit: (data: any) =>
         request<{ success: boolean; data: any }>("/audits", {
             method: "POST",
